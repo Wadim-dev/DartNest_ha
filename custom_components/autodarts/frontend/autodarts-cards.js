@@ -674,7 +674,7 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
     setTimeout(() => { d.classList.remove('zu'); if (d.open) d.close(); }, 230);
   };
   // Nach unten ziehen schließt (nur ganz oben gescrollt, nicht auf Knöpfen); nach oben = normal scrollen
-  const ziehenZu = (bl, d) => {
+  const ziehenZu = (bl, d, unter) => {
     let y0 = null, dy = 0, zieh = false;
     const ende = () => {
       if (zieh) {
@@ -683,8 +683,9 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
       }
       y0 = null; zieh = false;
     };
-    bl.addEventListener('touchstart', e => { y0 = e.touches.length === 1 && !e.composedPath().some(x => x.tagName === 'BUTTON' || x.tagName === 'INPUT' || x.tagName === 'SELECT') ? e.touches[0].clientY : null; dy = 0; zieh = false; }, { passive: true });
+    bl.addEventListener('touchstart', e => { if (unter) e.stopPropagation(); if (!unter && window.__feUfOffen) { y0 = null; return; } y0 = e.touches.length === 1 && !e.composedPath().some(x => x.tagName === 'BUTTON' || x.tagName === 'INPUT' || x.tagName === 'SELECT') ? e.touches[0].clientY : null; dy = 0; zieh = false; }, { passive: true });
     bl.addEventListener('touchmove', e => {
+      if (unter) e.stopPropagation();
       if (y0 === null) return;
       const dd = e.touches[0].clientY - y0;
       if (!zieh) { if (Math.abs(dd) < 8) return; if (dd < 0 || bl.scrollTop > 0) { y0 = null; return; } zieh = true; bl.style.transition = 'none'; }
@@ -720,14 +721,16 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
     d.addEventListener('close', () => {
       window.removeEventListener('popstate', pop); window.removeEventListener('location-changed', weg);
       bl.style.transition = ''; bl.style.transform = '';
+      if (merker === 'unterFenster') window.__feUfOffen = false;
       if (beimZu) beimZu();
       if (f.hist) { f.hist = false; history.back(); }
     });
-    ziehenZu(bl, d);
+    ziehenZu(bl, d, merker === 'unterFenster');
     f.auf = () => {
       if (d.open) return false;
       bl.style.transition = ''; bl.style.transform = '';
       try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+      if (merker === 'unterFenster') window.__feUfOffen = true;
       d.scrollTop = 0; bl.scrollTop = 0;
       try { const s = Object.assign({}, history.state); s[merker] = 1; history.pushState(s, ''); f.hist = true; window.addEventListener('popstate', pop); window.addEventListener('location-changed', weg); } catch (e) {}
       return true;
