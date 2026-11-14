@@ -214,7 +214,7 @@ strom_setzen:
           domain: binary_sensor
 fernseher_zeigen:
   name: Darts auf dem Fernseher zeigen
-  description: Startet die DartNest-Fernseher-Seite (Spielstand, sonst Uhr und Rangliste) auf Fire TV, Google TV oder Chromecast. Ohne Angabe die Fernseher aus den DartNest-Einstellungen.
+  description: Startet die DartNest-Fernseher-Seite (Spielstand, sonst Uhr und Rangliste) auf Fire TV oder Google TV. Ohne Angabe die Fernseher aus den DartNest-Einstellungen.
   fields:
     geraete:
       name: Fernseher (optional)
@@ -224,7 +224,7 @@ fernseher_zeigen:
           multiple: true
 fernseher_beenden:
   name: Darts vom Fernseher nehmen
-  description: Schließt die DartNest-Seite auf dem Fernseher (Fire/Google TV gehen zum Startbildschirm, Chromecast beendet die Anzeige).
+  description: Schließt die DartNest-Seite auf dem Fernseher (Fire/Google TV gehen zum Startbildschirm).
   fields:
     geraete:
       name: Fernseher (optional)

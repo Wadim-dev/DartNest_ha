@@ -3,6 +3,24 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.34.0
+
+Changes from the review for the Home Assistant Marketplace (HACS):
+
+- **Updates only through HACS.** The optional update entity *DartNest* (installing from the folder `custom_templates/autodarts_update`) is gone. DartNest is updated through HACS like every other integration, so the version HACS shows is always the one that runs. The old entity is removed by itself.
+- **TV: Fire TV and Google TV.** Chromecast is no longer offered: it needed internal parts of the Google Cast integration, and Google Cast has no public way to open a web page. Fire TV, Android TV and Google TV work as before, and the link works in the browser of any other screen.
+- **Settings for admins only.** The settings actions (TV, caller, highlights, power plug, light effects, pixel displays) and deleting statistics or clips need a Home Assistant admin now. Playing stays open for everyone in the household.
+- **TV link no longer in an entity.** The link of the TV page holds a secret key. It is no longer in the attributes of `sensor.autodarts_board_players`; the TV card gets it from Home Assistant directly, and only for admins.
+
+**Deutsch**
+
+Änderungen aus der Prüfung für den Home-Assistant-Marketplace (HACS):
+
+- **Updates nur noch über HACS.** Die optionale Update-Entität *DartNest* (Installieren aus dem Ordner `custom_templates/autodarts_update`) gibt es nicht mehr. DartNest wird wie jede andere Integration über HACS aktualisiert, die Version in HACS ist also immer die, die läuft. Die alte Entität verschwindet von selbst.
+- **Fernseher: Fire TV und Google TV.** Chromecast wird nicht mehr angeboten: Dafür waren interne Teile der Google-Cast-Integration nötig, und Google Cast hat keinen offiziellen Weg, eine Webseite zu öffnen. Fire TV, Android TV und Google TV gehen wie bisher, und der Link funktioniert im Browser jedes anderen Bildschirms.
+- **Einstellungen nur für Admins.** Die Einstellungs-Aktionen (Fernseher, Ansager, Highlights, Steckdose, Lichteffekte, Pixel-Anzeigen) und das Löschen von Statistik oder Clips brauchen jetzt einen Home-Assistant-Admin. Spielen bleibt für alle im Haushalt offen.
+- **TV-Link nicht mehr in einer Entität.** Der Link der Fernseher-Seite enthält einen geheimen Schlüssel. Er steht nicht mehr in den Attributen von `sensor.autodarts_board_players`; die Fernseher-Karte holt ihn direkt bei Home Assistant, und nur für Admins.
+
 ## 1.33.0
 
 - **The board no longer hangs at "remove darts".** Sometimes the board stays at *remove darts* although the darts are out, and then counts no more throws. DartNest now keeps a picture of each camera while the board is empty. If *remove darts* lasts longer than five seconds, DartNest compares the cameras with those pictures. Only when no camera shows a dart any more, it frees the board by itself. While a dart still sticks, the board keeps waiting as before.

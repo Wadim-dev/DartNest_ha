@@ -3150,19 +3150,19 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   }
   customElements.define('autodarts-caller-card', AutodartsCallerCard);
 
-  /* ---------- TV card: the scoreboard on Fire TV, Google TV, Chromecast or any browser ---------- */
+  /* ---------- TV card: the scoreboard on Fire TV, Google TV or any browser ---------- */
   Object.assign(TEXTE.en, { tv_title: 'TV', d_tv: 'Shows the game big on the TV, with clock and ranking in between', tv_sub_none: 'No TV chosen yet', tv_show: 'Show on TV', tv_stop: 'Take off TV', tv_pick: 'Which TV?', tv_auto: 'Show by itself when a game starts', tv_auto_s: 'The TV switches on and opens the scoreboard', tv_link: 'Link for any browser', tv_copy: 'Copy', tv_open: 'Open', tv_new: 'New link', tv_new_q: 'Old link stops working – sure?', tv_copied: 'Link copied',
-    tv_none: 'No suitable TV found yet. Add it in Home Assistant first:', tv_firetv: 'Fire TV and Android TV: integration "Android Debug Bridge"', tv_gtv: 'Google TV: integration "Android TV Remote"', tv_cc: 'Chromecast: integration "Google Cast" (usually found by itself)',
+    tv_none: 'No suitable TV found yet. Add it in Home Assistant first:', tv_firetv: 'Fire TV and Android TV: integration "Android Debug Bridge"', tv_gtv: 'Google TV: integration "Android TV Remote"',
     tv_hint: 'Between games the TV shows the clock, the ranking and the last games. The link works without login – share it only at home.', tv_sent: 'Sent to the TV', tv_off: 'off', tv_on_state: 'on', tv_preview: 'Preview', settings_title: 'Settings', d_settings: 'All DartNest settings behind clear buttons: board, lights, caller, TV',
     m_board: 'Board', m_board_s: 'Cameras, calibration, power', m_lights_s: 'Lights at 180, checkout …', m_caller_s: 'Speakers, voice, walk-on songs', m_tv_s: 'Scoreboard and clock on the TV', online: 'online', offline: 'offline', n_tv: '{n} TV',
     tv_board: 'Show the dartboard', tv_board_s: 'Next to the score, with the darts of the visit', tv_v_g: 'Drawn', tv_v_c: 'Camera {n}', tv_v_hint: 'The camera image appears while the board detects darts, otherwise the drawn board.', tv_board_on: 'Dartboard on the TV' });
   Object.assign(TEXTE.de, { tv_title: 'Fernseher', d_tv: 'Zeigt das Spiel groß auf dem Fernseher, dazwischen Uhr und Rangliste', tv_sub_none: 'Noch kein Fernseher gewählt', tv_show: 'Auf dem Fernseher zeigen', tv_stop: 'Vom Fernseher nehmen', tv_pick: 'Welcher Fernseher?', tv_auto: 'Von selbst zeigen, wenn ein Spiel startet', tv_auto_s: 'Der Fernseher geht an und öffnet die Anzeige', tv_link: 'Link für jeden Browser', tv_copy: 'Kopieren', tv_open: 'Öffnen', tv_new: 'Neuer Link', tv_new_q: 'Alter Link geht dann nicht mehr – sicher?', tv_copied: 'Link kopiert',
-    tv_none: 'Noch kein passender Fernseher gefunden. Zuerst in Home Assistant hinzufügen:', tv_firetv: 'Fire TV und Android TV: Integration „Android Debug Bridge“', tv_gtv: 'Google TV: Integration „Android TV Remote“', tv_cc: 'Chromecast: Integration „Google Cast“ (meist schon von selbst gefunden)',
+    tv_none: 'Noch kein passender Fernseher gefunden. Zuerst in Home Assistant hinzufügen:', tv_firetv: 'Fire TV und Android TV: Integration „Android Debug Bridge“', tv_gtv: 'Google TV: Integration „Android TV Remote“',
     tv_hint: 'Zwischen den Spielen zeigt der Fernseher Uhr, Rangliste und die letzten Spiele. Der Link geht ohne Anmeldung – nur zu Hause weitergeben.', tv_sent: 'An den Fernseher geschickt', tv_off: 'aus', tv_on_state: 'an', tv_preview: 'Vorschau', settings_title: 'Einstellungen', d_settings: 'Alle DartNest-Einstellungen hinter klaren Knöpfen: Board, Licht, Ansager, Fernseher',
     m_board: 'Board', m_board_s: 'Kameras, Kalibrierung, Strom', m_lights_s: 'Licht bei 180, Checkout …', m_caller_s: 'Lautsprecher, Stimme, Einlaufmusik', m_tv_s: 'Spielstand und Uhr auf dem Fernseher', online: 'online', offline: 'offline', n_tv: '{n} Fernseher',
     tv_board: 'Dartscheibe zeigen', tv_board_s: 'Neben dem Spielstand, mit den Darts der Aufnahme', tv_v_g: 'Gezeichnet', tv_v_c: 'Kamera {n}', tv_v_hint: 'Das Kamerabild erscheint, solange das Board Darts erkennt, sonst die gezeichnete Scheibe.', tv_board_on: 'Dartscheibe am Fernseher' });
-  const TV_ART = { androidtv: 'Fire TV / Android TV', androidtv_remote: 'Google TV', cast: 'Chromecast' };
-  const tvInfo = h => att(h, E(h, 'sensor.players')).tv || { geraete: [], auto: false, url: '', brett: false, ansicht: 'camera_1' };
+  const TV_ART = { androidtv: 'Fire TV / Android TV', androidtv_remote: 'Google TV' };
+  const tvInfo = h => att(h, E(h, 'sensor.players')).tv || { geraete: [], auto: false, brett: false, ansicht: 'camera_1' };
   const meldung = (el, text) => el.dispatchEvent(new CustomEvent('hass-notification', { detail: { message: text }, bubbles: true, composed: true }));
   // starts the page on the chosen TVs; errors (TV off, not reachable) come back as a message
   const tvZeigen = (el, h) => h.callService('autodarts', 'fernseher_zeigen', {}).then(() => meldung(el, t('tv_sent')), e => meldung(el, (e && e.message) || String(e)));
@@ -3198,9 +3198,15 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         .map(e => e.entity_id).sort((a, b) => this._name(a).localeCompare(this._name(b)));
     }
     _name(id) { const s = st(this._h, id); return (s && s.attributes.friendly_name) || id; }
+    // the link holds the secret key of the page: admins get it over the websocket, it is never in a state
+    _linkLaden() {
+      this._url = this._url || '';
+      this._h.callWS({ type: 'autodarts/tv/link' }).then(r => { this._url = (r && r.url) || ''; this._alt = null; this._zeichnen(); }, () => { this._url = ''; });
+    }
     _zeichnen() {
       if (this._fehlt()) return;
-      const h = this._h, tv = tvInfo(h), gew = this._gew || tv.geraete || [], alle = this._tvs();
+      if (this._url === undefined) this._linkLaden();
+      const h = this._h, tv = { ...tvInfo(h), url: this._url || '' }, gew = this._gew || tv.geraete || [], alle = this._tvs();
       if (this._gew && JSON.stringify(this._gew) === JSON.stringify(tv.geraete)) this._gew = null;
       const auto = this._auto != null ? this._auto : tv.auto;
       if (this._auto != null && this._auto === tv.auto) this._auto = null;
@@ -3209,7 +3215,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         '<div class="zwei"><button class="start" data-act="zeigen"' + (gew.length ? '' : ' disabled') + '><ha-icon icon="mdi:television-play"></ha-icon>' + t('tv_show') + '</button>' +
         '<button class="stop feld" data-act="stop"' + (gew.length ? '' : ' disabled') + ' title="' + t('tv_stop') + '"><ha-icon icon="mdi:television-off"></ha-icon></button></div>' +
         '<div class="titel"><ha-icon icon="mdi:television"></ha-icon>' + t('tv_pick') + '</div>';
-      if (!alle.length) s += '<div class="ohne feld">' + t('tv_none') + '<ul><li>' + t('tv_firetv') + '</li><li>' + t('tv_gtv') + '</li><li>' + t('tv_cc') + '</li></ul></div>';
+      if (!alle.length) s += '<div class="ohne feld">' + t('tv_none') + '<ul><li>' + t('tv_firetv') + '</li><li>' + t('tv_gtv') + '</li></ul></div>';
       alle.forEach(id => {
         const an = gew.includes(id), z = zst(h, id), e = h.entities[id];
         s += '<button class="wahl feld' + (an ? ' an' : '') + '" data-act="geraet" data-id="' + id + '"><ha-icon icon="' + (an ? 'mdi:checkbox-marked-circle' : 'mdi:checkbox-blank-circle-outline') + '"></ha-icon><span><b>' + esc(this._name(id)) + '</b><small>' + TV_ART[e.platform] + '</small></span>' +
@@ -3235,7 +3241,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
     }
     _setzen(daten) { return this._h.callService('autodarts', 'fernseher_setzen', daten).catch(e => meldung(this, (e && e.message) || String(e))); }
     _klick(act, b) {
-      const h = this._h, tv = tvInfo(h), gew = this._gew || tv.geraete || [];
+      const h = this._h, tv = { ...tvInfo(h), url: this._url || '' }, gew = this._gew || tv.geraete || [];
       if (act === 'zeigen') { tvZeigen(this, h); return; }
       if (act === 'stop') { h.callService('autodarts', 'fernseher_beenden', {}).catch(e => meldung(this, (e && e.message) || String(e))); return; }
       if (act === 'geraet') { const id = b.dataset.id; this._gew = gew.includes(id) ? gew.filter(x => x !== id) : gew.concat(id); this._alt = null; this._zeichnen(); this._setzen({ geraete: this._gew }); return; }
@@ -3244,12 +3250,13 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (act === 'ansicht') { this._tvAns = b.dataset.v; this._alt = null; this._zeichnen(); this._setzen({ ansicht: this._tvAns }); return; }
       if (act === 'oeffnen') { if (tv.url) window.open(new URL(tv.url).pathname, '_blank', 'noopener'); return; }
       if (act === 'kopie') {
+        if (!tv.url) return;
         const fertig = () => meldung(this, t('tv_copied')), url = tv.url + (b.dataset.ov ? '/overlay' : '');
         if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(fertig, () => window.prompt('', url));
         else window.prompt('', url);
         return;
       }
-      if (act === 'neu') zweimal(this, b, t('tv_new_q'), () => { this._setzen({ neuer_link: true }); });
+      if (act === 'neu') zweimal(this, b, t('tv_new_q'), () => { this._setzen({ neuer_link: true }).then(() => this._linkLaden()); });
     }
   }
   customElements.define('autodarts-tv-card', AutodartsTvCard);

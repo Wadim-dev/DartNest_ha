@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_HOST
 from .coordinator import DartsEntry
 
-# Address and host details identify the home network.
-VERDECKT = {"hostname", "ip", "macAddress", "mac"}
+# Address and host details identify the home network; the TV key opens the TV page.
+VERDECKT = {"hostname", "ip", "macAddress", "mac", "token", "url"}
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: DartsEntry) -> dict[str, Any]:

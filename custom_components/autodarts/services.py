@@ -6,11 +6,12 @@ from typing import Any
 
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import async_response, websocket_command
+from homeassistant.components.websocket_api.decorators import async_response, require_admin, websocket_command
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 import voluptuous as vol
 
 from .clips import ANLAESSE, KAMERAS as CLIP_KAMERAS
@@ -115,6 +116,16 @@ DIENSTE = {
 }
 
 
+# Settings and everything that reaches other devices or deletes data: admins only.
+# The game itself (start, throws, players, TV on/off) stays open for every user of the household.
+NUR_ADMIN = frozenset({
+    "lichteffekte_setzen", "lichteffekt_testen", "strom_setzen", "fernseher_setzen", "clips_setzen", "clip_loeschen",
+    "pixel_setzen", "pixel_hinzufuegen", "pixel_entfernen", "pixel_testen", "ansager_setzen",
+    "ansager_pack_erzeugen", "ansager_pack_pruefen", "ansager_pack_loeschen", "statistik_loeschen",
+})
+MIT_ANTWORT = frozenset({"spieler_anlegen", "ansager_pack_pruefen", "pixel_hinzufuegen"})
+
+
 def _leiter(hass: HomeAssistant) -> Spielleiter:
     eintrag: DartsEntry
     for eintrag in hass.config_entries.async_loaded_entries(DOMAIN):
@@ -178,6 +189,15 @@ def ws_ansager_hoeren(hass: HomeAssistant, connection: ActiveConnection, msg: di
     connection.send_result(msg["id"])
 
 
+@websocket_command({vol.Required("type"): "autodarts/tv/link"})
+@require_admin
+@callback
+def ws_tv_link(hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]) -> None:
+    """Link of the TV page for the TV card. The link holds the secret key, so it is never in a state."""
+    eintraege = hass.config_entries.async_loaded_entries(DOMAIN)
+    connection.send_result(msg["id"], {"url": eintraege[0].runtime_data.fernseher.url() if eintraege else ""})
+
+
 async def _ansager(hass: HomeAssistant, name: str, d: dict[str, Any]) -> dict[str, Any] | None:
     ansager = _eintrag(hass).runtime_data.ansager
     if name == "ansager_testen":
@@ -211,6 +231,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_lichteffekte)
     async_register_command(hass, ws_ansager)
     async_register_command(hass, ws_ansager_hoeren)
+    async_register_command(hass, ws_tv_link)
 
     async def ausfuehren(call: ServiceCall) -> ServiceResponse:
         s = _leiter(hass)
@@ -278,9 +299,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         return None
 
     for name, schema in DIENSTE.items():
-        hass.services.async_register(
-            DOMAIN, name, ausfuehren, schema=schema,
-            supports_response=SupportsResponse.OPTIONAL if name in ("spieler_anlegen", "ansager_pack_pruefen", "pixel_hinzufuegen") else SupportsResponse.NONE,
-        )
+        antwort = SupportsResponse.OPTIONAL if name in MIT_ANTWORT else SupportsResponse.NONE
+        if name in NUR_ADMIN:
+            async_register_admin_service(hass, DOMAIN, name, ausfuehren, schema=schema, supports_response=antwort)
+        else:
+            hass.services.async_register(DOMAIN, name, ausfuehren, schema=schema, supports_response=antwort)
 
 

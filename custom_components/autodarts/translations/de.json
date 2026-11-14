@@ -95,12 +95,6 @@
     "light_rule": {
       "message": "Ungültige Lichtregel: {error}"
     },
-    "no_update": {
-      "message": "Es wartet keine neue Version der Integration."
-    },
-    "update_failed": {
-      "message": "Das Update ließ sich nicht installieren (eine Datei passt nicht). Es wurde nichts geändert."
-    },
     "caller_settings": {
       "message": "Ungültige Ansager-Einstellungen: {error}"
     },
@@ -123,7 +117,7 @@
       "message": "Noch kein Fernseher gewählt. Unter DartNest-Einstellungen → Fernseher auswählen."
     },
     "tv_unsupported": {
-      "message": "{entity} ist kein Fire TV, Android-/Google-TV oder Chromecast."
+      "message": "{entity} ist kein Fire TV oder Android-/Google-TV."
     },
     "tv_failed": {
       "message": "Die DartNest-Seite konnte auf {entity} nicht gestartet werden: {error}"
@@ -277,9 +271,6 @@
     "update": {
       "board_software": {
         "name": "Board-Software"
-      },
-      "integration": {
-        "name": "Integration"
       }
     },
     "event": {

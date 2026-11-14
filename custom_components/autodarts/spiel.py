@@ -61,7 +61,6 @@ class Spielleiter:
         self._aktiv = 0.0  # last change in the game (dart, undo, new game …)
         self._geweckt = 0.0  # last time the detection was woken from the standby
         self._ereignis_hoerer: list[Callable[[str, dict[str, Any]], None]] = []
-        self.tv_url: Callable[[], str] | None = None  # set by the TV page (fernseher.py)
         self.clips_info: Callable[[], dict[str, Any]] | None = None  # set by the highlight clips (clips.py)
         self.pixel_info: Callable[[], dict[str, Any]] | None = None  # set by the pixel displays (pixel.py)
         self._ev_spiel: str | None = None
@@ -935,7 +934,7 @@ class Spielleiter:
         tv = self.daten.get("tv") or {}
         return {"spieler": liste, "verlauf": self.daten.get("verlauf", [])[:20], "letzte": self.daten.get("letzte"),
                 "strom": self.daten.get("strom") or {},
-                "tv": {"geraete": tv.get("geraete") or [], "auto": bool(tv.get("auto")), "url": self.tv_url() if self.tv_url else "",
+                "tv": {"geraete": tv.get("geraete") or [], "auto": bool(tv.get("auto")),
                        "brett": bool(tv.get("brett")), "ansicht": tv.get("ansicht") or "camera_1"},
                 "clips": self.clips_info() if self.clips_info else {},
                 "pixel": self.pixel_info() if self.pixel_info else {}}

@@ -1,4 +1,4 @@
-"""TV scoreboard: a page without login for Fire TV, Google TV, Chromecast or any browser.
+"""TV scoreboard: a page without login for Fire TV, Google TV or any browser.
 
 The page (frontend/tv.html) gets the game live over server-sent events. It shows the
 scoreboard while a game runs and a rest screen (clock, ranking, last games) otherwise.
@@ -34,8 +34,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 TV_URL = f"/{DOMAIN}/tv"
-# TV platforms DartNest can start the page on
-PLATTFORMEN = ("androidtv", "androidtv_remote", "cast")
+# TV platforms DartNest can start the page on (only through their public actions)
+PLATTFORMEN = ("androidtv", "androidtv_remote")
 SILK = "com.amazon.cloud9"
 PING = 20.0
 # dartboard next to the scoreboard: drawn board or the straightened image of a board camera
@@ -89,10 +89,6 @@ class Fernseher:
                 return ""  # no network address set in Home Assistant yet
         return f"{basis}{TV_URL}/{self.einst['token']}"
 
-    def attribute(self) -> dict[str, Any]:
-        e = self.einst
-        return {"geraete": list(e["geraete"]), "auto": bool(e["auto"]), "url": self.url(), "brett": bool(e["brett"]), "ansicht": e["ansicht"]}
-
     async def setzen(self, geraete: list[str] | None, auto: bool | None, neuer_link: bool,
                      brett: bool | None = None, ansicht: str | None = None) -> None:
         e = self.einst
@@ -141,11 +137,9 @@ class Fernseher:
                         raise _fehler("tv_silk_off", entity=eid)
                     if "Error" in antwort:
                         raise _fehler("tv_failed", entity=eid, error=antwort.strip().splitlines()[-1])
-                elif p == "androidtv_remote":
+                else:  # androidtv_remote
                     await self._dienst("media_player", "turn_on", eid)
                     await self._dienst("media_player", "play_media", eid, {"media_content_type": "url", "media_content_id": url})
-                else:
-                    await self._cast(eid, url)
             except ServiceValidationError:
                 raise
             except HomeAssistantError as err:
@@ -157,12 +151,8 @@ class Fernseher:
             try:
                 if p == "androidtv":
                     await self._dienst("androidtv", "adb_command", eid, {"command": "HOME"})
-                elif p == "androidtv_remote":
-                    fernbedienung = self._fernbedienung(eid)
-                    if fernbedienung:
-                        await self.hass.services.async_call("remote", "send_command", {"entity_id": fernbedienung, "command": "HOME"}, blocking=True)
-                else:
-                    await self._dienst("media_player", "turn_off", eid)  # Chromecast: quits the page
+                elif fernbedienung := self._fernbedienung(eid):  # androidtv_remote
+                    await self.hass.services.async_call("remote", "send_command", {"entity_id": fernbedienung, "command": "HOME"}, blocking=True)
             except HomeAssistantError as err:
                 raise _fehler("tv_failed", entity=eid, error=str(err)) from err
 
@@ -178,23 +168,6 @@ class Fernseher:
 
     async def _dienst(self, domain: str, dienst: str, eid: str, daten: dict[str, Any] | None = None) -> None:
         await self.hass.services.async_call(domain, dienst, {"entity_id": eid, **(daten or {})}, blocking=True)
-
-    async def _cast(self, eid: str, url: str) -> None:
-        """Chromecast and Google TV with Chromecast built-in: the page via DashCast."""
-        komponente = self.hass.data.get("media_player")
-        entitaet = komponente.get_entity(eid) if komponente is not None else None
-        cc = getattr(entitaet, "_chromecast", None)
-        if cc is None:
-            raise _fehler("tv_failed", entity=eid, error="not connected")
-
-        def laden() -> None:
-            from pychromecast.controllers.dashcast import DashCastController  # type: ignore[import-not-found,unused-ignore]
-
-            dash = DashCastController()
-            cc.register_handler(dash)
-            dash.load_url(url, force=True)
-
-        await self.hass.async_add_executor_job(laden)
 
     def ereignis(self, typ: str, daten: dict[str, Any]) -> None:
         """Show the page by itself when a game starts (if switched on)."""

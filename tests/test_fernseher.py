@@ -4,9 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import sys
-import types
-from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -63,9 +60,22 @@ async def test_einstellungen(hass: HomeAssistant, geladen) -> None:
     tv = _tv(hass)
     assert tv["geraete"] == ["media_player.a", "media_player.b"] and tv["auto"] is True and _token(hass) == alt
     await _dienst(hass, "fernseher_setzen", neuer_link=True)
-    assert _tv(hass)["url"] == _url(hass) and _token(hass) != alt and _tv(hass)["geraete"] == ["media_player.a", "media_player.b"]
+    assert "url" not in _tv(hass) and _token(hass) != alt and _tv(hass)["geraete"] == ["media_player.a", "media_player.b"]
     await _dienst(hass, "fernseher_setzen", geraete=[])
     assert _tv(hass)["geraete"] == []
+
+
+async def test_link_nur_fuer_admins(hass: HomeAssistant, geladen, hass_ws_client, hass_read_only_access_token) -> None:
+    """The secret key is never in a state: the TV card gets the link over an admin-only websocket command."""
+    assert _token(hass) not in json.dumps(dict(hass.states.get("sensor.autodarts_board_players").attributes), default=str)
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": "autodarts/tv/link"})
+    antwort = await ws.receive_json()
+    assert antwort["success"] and antwort["result"]["url"] == _url(hass)
+    gast = await hass_ws_client(hass, hass_read_only_access_token)
+    await gast.send_json({"id": 1, "type": "autodarts/tv/link"})
+    antwort = await gast.receive_json()
+    assert not antwort["success"] and antwort["error"]["code"] == "unauthorized"
 
 
 async def test_seite_und_live(hass: HomeAssistant, mit_http, hass_client_no_auth) -> None:
@@ -149,27 +159,12 @@ async def test_google_tv(hass: HomeAssistant, geladen) -> None:
     assert senden[0].data["entity_id"] == fb and senden[0].data["command"] in ("HOME", ["HOME"])
 
 
-async def test_chromecast(hass: HomeAssistant, geladen, monkeypatch) -> None:
-    aus = async_mock_service(hass, "media_player", "turn_off")
+async def test_chromecast_nicht_unterstuetzt(hass: HomeAssistant, geladen) -> None:
+    """Google Cast has no public way to open a web page: Chromecast is not offered."""
     tv = _geraet(hass, "cast", "wohnzimmer", geladen)
     with pytest.raises(ServiceValidationError) as fehler:
         await _dienst(hass, "fernseher_zeigen", geraete=[tv])
-    assert fehler.value.translation_key == "tv_failed"
-
-    dash = MagicMock()
-    modul = types.ModuleType("pychromecast.controllers.dashcast")
-    modul.DashCastController = lambda: dash  # type: ignore[attr-defined]
-    for name in ("pychromecast", "pychromecast.controllers"):
-        monkeypatch.setitem(sys.modules, name, types.ModuleType(name))
-    monkeypatch.setitem(sys.modules, "pychromecast.controllers.dashcast", modul)
-    entitaet = types.SimpleNamespace(_chromecast=MagicMock())
-    komponente = types.SimpleNamespace(get_entity=lambda eid: entitaet if eid == tv else None)
-    monkeypatch.setitem(hass.data, "media_player", komponente)
-    await _dienst(hass, "fernseher_zeigen", geraete=[tv])
-    entitaet._chromecast.register_handler.assert_called_once_with(dash)
-    dash.load_url.assert_called_once_with(_url(hass), force=True)
-    await _dienst(hass, "fernseher_beenden", geraete=[tv])
-    assert aus[0].data["entity_id"] == tv
+    assert fehler.value.translation_key == "tv_unsupported"
 
 
 async def test_falsches_geraet_und_fehler(hass: HomeAssistant, geladen) -> None:
