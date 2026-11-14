@@ -112,7 +112,7 @@ Got an **AWTRIX 3** (Ulanzi TC001) or a **PixelIt** clock? Open **DartNest → P
 
 <p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/manager.png" alt="Settings overview, Board Manager with cameras and power plug, power states and camera settings" width="900"></p>
 
-All three cameras with the calibration grid, start/stop, calibrate, camera settings and board software updates – without opening another web page. **Smart plug friendly:** pick the plug of the board PC once under *Board Manager → Board PC power plug* – every DartNest screen then has the on/off button. DartNest shows *Off* and carries on by itself when the board is back. **Light on small PCs:** live views share one image source (at most 10 images per second, only while someone watches), the camera standby is shown as *Standby* and DartNest wakes the detection by itself when a game starts.
+All three cameras with the calibration grid, start/stop, calibrate, camera settings and board software updates – without opening another web page. **Smart plug friendly:** pick the plug of the board PC once under *Board Manager → Board PC power plug* – every DartNest screen then has the on/off button. DartNest shows *Off* and carries on by itself when the board is back. **Light on small PCs:** live views share one image source (at most 10 images per second, only while someone watches), the camera standby is shown as *Standby* and DartNest wakes the detection by itself when a game starts. **Never stuck at "remove darts":** if the board hangs there although it is empty, DartNest checks the three cameras against a picture of the empty board and frees it by itself; while a dart still sticks, it waits. The game card shows the board status and a **Free board** button.
 
 <sub>Screenshots with the German interface come from a real board at home.</sub>
 
@@ -681,7 +681,7 @@ Home Assistant ── DartNest integration (board.py) ── entities, actions, 
 Dashboard cards (loaded automatically) · automations · voice assistants
 ```
 
-Only the documented local endpoints of the Board Manager are used. The connection itself is the small typed async client `board.py` inside the integration, which uses the web session of Home Assistant. Nothing extra is installed. Camera images are only fetched while a card or the more-info dialog shows them.
+Only the documented local endpoints of the Board Manager are used. The connection itself is the small typed async client `board.py` inside the integration, which uses the web session of Home Assistant. Nothing extra is installed. Camera images are only fetched while a card or the more-info dialog shows them, plus one still picture per camera while the board is empty and a few while it waits at "remove darts" (takeout guard).
 
 </details>
 

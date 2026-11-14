@@ -3,6 +3,16 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.33.0
+
+- **The board no longer hangs at "remove darts".** Sometimes the board stays at *remove darts* although the darts are out, and then counts no more throws. DartNest now keeps a picture of each camera while the board is empty. If *remove darts* lasts longer than five seconds, DartNest compares the cameras with those pictures. Only when no camera shows a dart any more, it frees the board by itself. While a dart still sticks, the board keeps waiting as before.
+- **Board status in the game.** The game card (also in full screen) shows above the score what the board is doing: ready, remove darts, standby, calibrating or off. If it hangs at *remove darts*, the line turns red and the button **Free board** resets it with one tap. Tap the status for its history.
+
+**Deutsch**
+
+- **Das Board hängt nicht mehr bei „Darts ziehen“.** Manchmal bleibt das Board bei *Darts ziehen* stehen, obwohl die Darts raus sind, und zählt dann keine Würfe mehr. DartNest merkt sich jetzt ein Bild jeder Kamera, solange das Board leer ist. Dauert *Darts ziehen* länger als fünf Sekunden, vergleicht DartNest die Kameras mit diesen Bildern. Erst wenn keine Kamera mehr einen Dart zeigt, gibt DartNest das Board selbst frei. Steckt noch ein Dart, wartet das Board wie bisher.
+- **Board-Status im Spiel.** Die Spielkarte (auch im Vollbild) zeigt über dem Spielstand, was das Board gerade macht: bereit, Darts ziehen, Standby, kalibriert oder aus. Hängt es bei *Darts ziehen*, wird die Zeile rot und der Knopf **Board freigeben** setzt es mit einem Tippen zurück. Tippen auf den Status zeigt den Verlauf.
+
 ## 1.32.1
 
 - **No more flicker in windows.** Some Home Assistant cards finish loading a moment after a window opens, for example the 24-hour history in the info window or cards added with `cards`. They used to send a rebuild signal to the whole tile, so the window was drawn again and flickered. Now only that card is rebuilt. Cards inside windows also skip the glass blur, because the window already has one. That makes scrolling smoother and saves battery.
