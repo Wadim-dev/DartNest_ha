@@ -1462,6 +1462,15 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
 .vor .b{color:var(--red-color,#e53935)}.vor .c{color:var(--green-color,#43a047)}
 .seg.breit{margin:0 0 10px;flex-wrap:nowrap}.seg.breit button{flex:1;display:flex;align-items:center;justify-content:center;gap:4px}
 .tban{display:flex;align-items:center;gap:8px;justify-content:center;margin:0 0 10px;padding:7px 12px;border-radius:14px;font-weight:700;font-size:14px;background:color-mix(in srgb,var(--amber-color,#ffc107) 18%,transparent)}
+.bleiste{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.bleiste .bl-info{flex:1;display:flex;align-items:center;gap:8px;min-width:0;padding:6px 12px;border:0;border-radius:14px;font:inherit;font-size:13px;font-weight:600;color:var(--secondary-text-color);background:color-mix(in srgb,var(--primary-text-color) 6%,transparent);cursor:pointer;text-align:left}
+.bleiste .bl-info ha-icon{--mdc-icon-size:18px;flex:none}
+.bleiste.gut .bl-info ha-icon{color:var(--green-color,#43a047)}
+.bleiste.warn .bl-info{color:var(--primary-text-color);background:color-mix(in srgb,var(--amber-color,#ffc107) 18%,transparent)}
+.bleiste.schlecht .bl-info{color:var(--primary-text-color);background:color-mix(in srgb,var(--red-color,#e53935) 20%,transparent)}
+.bleiste .bl-reset{display:flex;align-items:center;gap:6px;flex:none;padding:6px 10px;border:0;border-radius:14px;font:inherit;font-size:13px;font-weight:700;color:var(--secondary-text-color);background:color-mix(in srgb,var(--primary-text-color) 6%,transparent);cursor:pointer}
+.bleiste .bl-reset ha-icon{--mdc-icon-size:18px}
+.bleiste .bl-reset.an{color:#fff;background:var(--primary-color,#03a9f4)}
 .tban ha-icon{--mdc-icon-size:20px;color:var(--amber-color,#ffc107)}.tban small{font-weight:600;color:var(--secondary-text-color)}
 .baum{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin}
 .brd{display:flex;flex-direction:column;gap:8px;min-width:118px;flex:1}.brd>div{display:flex;flex-direction:column;justify-content:space-around;gap:10px;flex:1}
@@ -1948,8 +1957,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (!this._lob) this._lobbyStart();
       if (ph === 'running' || ph === 'finished') this._sprechen(a);
       let html;
-      if (ph === 'bulloff') html = this._turBanner(a) + this._bulloff(a);
-      else if (ph === 'running') html = this._turBanner(a) + this._match(a);
+      if (ph === 'bulloff') html = this._brettLeiste() + this._turBanner(a) + this._bulloff(a);
+      else if (ph === 'running') html = this._brettLeiste() + this._turBanner(a) + this._match(a);
       else if (ph === 'finished') html = a.turnier ? this._turEnde(a) : this._ende(a);
       else html = this._lobby();
       this._setze(html);
@@ -1966,6 +1975,20 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
     _eintraege(L) {
       if (!L.teams) return L.spieler.slice();
       const out = []; for (let i = 0; i + 1 < L.spieler.length; i += 2) out.push('team:' + L.spieler[i] + '+' + L.spieler[i + 1]); return out;
+    }
+    // board status during a game: what the board is doing right now, with a button to free it when it hangs at "remove darts"
+    _brettLeiste() {
+      const h = this._h, sid = E(h, 'sensor.status'), so = st(h, sid) || {}, s = so.state, v = zst(h, E(h, 'sensor.connection'));
+      const seit = so.last_changed ? (Date.now() - new Date(so.last_changed).getTime()) / 1000 : 0;
+      let ic = 'mdi:target', txt = t('bl_ready'), cls = 'gut', knopf = false;
+      if (v !== 'Online') { ic = 'mdi:power-plug-off-outline'; txt = t('bl_off'); cls = ''; }
+      else if (s === 'takeout' || s === 'takeoutInProgress') { const lang = seit > 8; ic = 'mdi:hand-back-left-outline'; txt = t(lang ? 'bl_stuck' : 'bl_takeout'); cls = lang ? 'schlecht' : 'warn'; knopf = true; }
+      else if (s === 'standby' || s === 'stopped') { ic = 'mdi:sleep'; txt = t('bl_standby'); cls = ''; }
+      else if (s === 'calibrating') { ic = 'mdi:crosshairs-gps'; txt = t('bl_calib'); cls = 'warn'; }
+      else if (s === 'starting') { ic = 'mdi:progress-clock'; txt = t('bl_start'); cls = 'warn'; }
+      else if (s !== 'throw') { ic = 'mdi:wifi-alert'; txt = t('bl_lost'); cls = 'warn'; }
+      return '<div class="bleiste ' + cls + '"><button class="bl-info" data-act="blinfo"><ha-icon icon="' + ic + '"></ha-icon>' + txt + '</button>' +
+        (v === 'Online' ? '<button class="bl-reset' + (knopf ? ' an' : '') + '" data-act="blreset" title="' + t('bl_reset') + '"><ha-icon icon="mdi:restore"></ha-icon>' + (knopf ? '<span>' + t('bl_reset') + '</span>' : '') + '</button>' : '') + '</div>';
     }
     _turBanner(a) {
       const tu = a.turnier, n = tu && tu.match_nr; if (!n) return '';
@@ -2378,6 +2401,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
     }
     _klick(act, b, e) {
       if (act === 'tv') { tvZeigen(this, this._h); return; }
+      if (act === 'blinfo') { mehrInfo(this, E(this._h, 'sensor.status')); return; }
+      if (act === 'blreset') { const id = E(this._h, 'button.reset_throws'); if (id) this._h.callService('button', 'press', { entity_id: id }).then(() => meldung(this, t('bl_done')), e => meldung(this, (e && e.message) || String(e))); return; }
       if (act === 'clip') { this._h.callService('autodarts', 'clip_speichern', {}).then(() => meldung(this, t('clips_saved')), e => meldung(this, (e && e.message) || String(e))); return; }
       if (act === 'tvbrett') { const an = !tvInfo(this._h).brett; this._h.callService('autodarts', 'fernseher_setzen', { brett: an }).then(() => meldung(this, t('tv_board_on') + ': ' + t(an ? 'tv_on_state' : 'tv_off')), e => meldung(this, (e && e.message) || String(e))); return; }
       const h = this._h, L = this._lob, a = att(h, this._spiel);
@@ -3230,6 +3255,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   customElements.define('autodarts-tv-card', AutodartsTvCard);
 
   /* ---------- Highlights card: clips of 180, high finish, match dart ---------- */
+  Object.assign(TEXTE.en, { bl_ready: 'Board ready', bl_takeout: 'Board: remove darts', bl_stuck: 'Board stuck at remove darts?', bl_standby: 'Board in standby – wakes up with the next dart', bl_off: 'Board off – type darts by hand', bl_calib: 'Board calibrating …', bl_start: 'Board starting …', bl_lost: 'Board connection lost', bl_reset: 'Free board', bl_done: 'Board freed' });
+  Object.assign(TEXTE.de, { bl_ready: 'Board bereit', bl_takeout: 'Board: Darts ziehen', bl_stuck: 'Board hängt bei Darts ziehen?', bl_standby: 'Board im Standby – wacht beim nächsten Dart auf', bl_off: 'Board aus – Darts von Hand eintippen', bl_calib: 'Board kalibriert …', bl_start: 'Board startet …', bl_lost: 'Board-Verbindung weg', bl_reset: 'Board freigeben', bl_done: 'Board freigegeben' });
   Object.assign(TEXTE.en, { clips_title: 'Highlights', d_clips: 'Short videos of your 180s, high finishes and match darts from the board camera', clips_on: 'Record highlights', clips_on_s: 'At a highlight the last seconds of the board camera are saved as a short video',
     clips_cam: 'Camera', clips_when: 'When', clips_replay: 'Replay on the TV and the overlay', clips_replay_s: 'Right after the highlight, once', clips_none: 'No clips yet – throw a 180!', clips_off_s: 'off', n_clips: '{n} clips',
     clips_del: 'Delete', clips_del_q: 'Really delete?', clips_all: 'Delete all clips', clips_all_q: 'Delete all clips – sure?', clips_dl: 'Download', clips_save: 'Save clip', clips_saved: 'Clip is being saved',

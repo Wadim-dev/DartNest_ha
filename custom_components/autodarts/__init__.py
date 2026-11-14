@@ -30,6 +30,7 @@ from .pixel import PixelAnzeigen
 from .services import async_setup_services
 from .spiel import Spielleiter
 from .verteiler import Bildverteiler
+from .ziehen import ZiehWaechter
 
 PLATFORMS = [
     Platform.SENSOR,
@@ -111,6 +112,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:
     entry.async_on_unload(spiel.ereignis_hoerer(lichter.ereignis))
     entry.async_on_unload(spiel.ereignis_hoerer(ansager.ereignis))
     entry.async_on_unload(zustand.async_add_listener(spiel.board_aenderung))
+    waechter = ZiehWaechter(hass, board, zustand)
+    entry.async_on_unload(zustand.async_add_listener(waechter.aenderung))
+    entry.async_on_unload(waechter.abbrechen)
     if abmelden := async_setup_assist(hass, lambda: entry.runtime_data.spiel):
         entry.async_on_unload(abmelden)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
