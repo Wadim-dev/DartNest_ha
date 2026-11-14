@@ -3,6 +3,11 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.34.1
+
+- **Windows: dragging down a sub-window closes only that one.** In the phone app, dragging down an info sheet inside a window sometimes closed the window underneath as well. While a sub-window is open, the window underneath now ignores drag gestures.
+- *DE:* Runterziehen eines Unterfensters (Info-Fenster im Fenster) schließt nur noch dieses. Vorher ging in der Handy-App manchmal auch das Fenster darunter mit zu.
+
 ## 1.34.0
 
 Changes from the review for the Home Assistant Marketplace (HACS):
