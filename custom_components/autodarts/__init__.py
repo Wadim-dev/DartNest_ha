@@ -99,7 +99,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:
     ansager = Ansager(hass, lambda: spiel.stand, lambda: [str(p.get("name") or "") for p in spiel.daten["spieler"]])
     await ansager.laden()
     fernseher = Fernseher(hass, spiel)
-    spiel.tv_url = fernseher.url
     clips = Clips(hass)
     pixel = PixelAnzeigen(hass)
     entry.runtime_data = DartsDaten(board, zustand, system, geraet, spiel, lichter, ansager, fernseher, clips, pixel, Bildverteiler(hass, board))

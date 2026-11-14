@@ -95,12 +95,6 @@
     "light_rule": {
       "message": "Invalid light rule: {error}"
     },
-    "no_update": {
-      "message": "No new version of the integration is waiting."
-    },
-    "update_failed": {
-      "message": "The update could not be installed (a file does not fit). Nothing was changed."
-    },
     "caller_settings": {
       "message": "Invalid caller settings: {error}"
     },
@@ -123,7 +117,7 @@
       "message": "No TV chosen yet. Pick it under DartNest settings → TV."
     },
     "tv_unsupported": {
-      "message": "{entity} is not a Fire TV, Android/Google TV or Chromecast."
+      "message": "{entity} is not a Fire TV or Android/Google TV."
     },
     "tv_failed": {
       "message": "The DartNest page could not be started on {entity}: {error}"
@@ -277,9 +271,6 @@
     "update": {
       "board_software": {
         "name": "Board software"
-      },
-      "integration": {
-        "name": "Integration"
       }
     },
     "event": {
