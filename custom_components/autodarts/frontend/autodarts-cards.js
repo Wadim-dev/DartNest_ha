@@ -675,21 +675,27 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
   };
   // Nach unten ziehen schließt (nur ganz oben gescrollt, nicht auf Knöpfen); nach oben = normal scrollen
   const ziehenZu = (bl, d, unter) => {
-    let y0 = null, dy = 0, zieh = false;
+    let y0 = null, dy = 0, zieh = false, vy = 0, ly = 0, lt = 0, raf = 0;
     const ende = () => {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (zieh) {
-        if (dy > Math.min(140, bl.offsetHeight * 0.25)) { bl.style.transition = 'transform .2s cubic-bezier(.4,0,1,1)'; bl.style.transform = 'translateY(100%)'; setTimeout(() => d.close(), 190); }
+        // schließt auch mit kurzem Schwung nach unten
+        const schwung = dy > 30 && vy > .5 && performance.now() - lt < 120;
+        if (schwung || dy > Math.min(140, bl.offsetHeight * 0.25)) { bl.style.transition = 'transform .2s cubic-bezier(.4,0,1,1)'; bl.style.transform = 'translateY(100%)'; setTimeout(() => d.close(), 190); }
         else { bl.style.transition = 'transform .2s ease'; bl.style.transform = ''; }
       }
       y0 = null; zieh = false;
     };
-    bl.addEventListener('touchstart', e => { if (unter) e.stopPropagation(); if (!unter && window.__feUfOffen) { y0 = null; return; } y0 = e.touches.length === 1 && !e.composedPath().some(x => x.tagName === 'BUTTON' || x.tagName === 'INPUT' || x.tagName === 'SELECT') ? e.touches[0].clientY : null; dy = 0; zieh = false; }, { passive: true });
+    bl.addEventListener('touchstart', e => { if (unter) e.stopPropagation(); if (!unter && window.__feUfOffen) { y0 = null; return; } y0 = e.touches.length === 1 && !e.composedPath().some(x => x.tagName === 'BUTTON' || x.tagName === 'INPUT' || x.tagName === 'SELECT') ? e.touches[0].clientY : null; dy = 0; zieh = false; vy = 0; ly = y0 || 0; lt = performance.now(); }, { passive: true });
     bl.addEventListener('touchmove', e => {
       if (unter) e.stopPropagation();
       if (y0 === null) return;
       const dd = e.touches[0].clientY - y0;
       if (!zieh) { if (Math.abs(dd) < 8) return; if (dd < 0 || bl.scrollTop > 0) { y0 = null; return; } zieh = true; bl.style.transition = 'none'; }
-      dy = Math.max(0, dd); bl.style.transform = 'translateY(' + dy + 'px)'; e.preventDefault();
+      const y = e.touches[0].clientY, t = performance.now();
+      if (t > lt) { vy = .6 * vy + .4 * (y - ly) / (t - lt); ly = y; lt = t; }
+      dy = Math.max(0, dd); e.preventDefault();
+      if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (zieh) bl.style.transform = 'translateY(' + dy + 'px)'; });
     }, { passive: false });
     bl.addEventListener('touchend', ende); bl.addEventListener('touchcancel', ende);
   };

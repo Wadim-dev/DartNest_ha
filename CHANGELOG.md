@@ -3,6 +3,11 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.34.2
+
+- **Windows: a short downward flick closes them.** Before, a window only closed after a long drag. Dragging is also smoother (one update per frame).
+- *DE:* Fenster schließen jetzt auch mit einem kurzen Schwung nach unten, nicht nur nach langem Ziehen. Das Ziehen läuft flüssiger.
+
 ## 1.34.1
 
 - **Windows: dragging down a sub-window closes only that one.** In the phone app, dragging down an info sheet inside a window sometimes closed the window underneath as well. While a sub-window is open, the window underneath now ignores drag gestures.
