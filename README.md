@@ -17,6 +17,7 @@
 </p>
 
 <p align="center">
+  <a href="https://hacs.xyz"><img src="https://img.shields.io/badge/HACS-default-41BDF5?style=flat-square" alt="In the default HACS list"></a>
   <a href="https://github.com/Wadim-dev/DartNest_ha/releases"><img src="https://img.shields.io/github/v/release/Wadim-dev/DartNest_ha?style=flat-square&color=ff7a50" alt="Release"></a>
   <a href="https://github.com/Wadim-dev/DartNest_ha/actions/workflows/validate.yml"><img src="https://img.shields.io/github/actions/workflow/status/Wadim-dev/DartNest_ha/validate.yml?branch=main&label=checks&style=flat-square" alt="Checks"></a>
   <a href="custom_components/autodarts/quality_scale.yaml"><img src="https://img.shields.io/badge/quality%20scale-platinum-e5e4e2?style=flat-square" alt="Quality scale: Platinum"></a>
