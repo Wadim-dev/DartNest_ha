@@ -85,6 +85,7 @@ DIENSTE = {
         vol.Optional("anlaesse"): [vol.In(ANLAESSE)],
         vol.Optional("anzahl"): vol.All(vol.Coerce(int), vol.Range(1, 200)),
         vol.Optional("wiederholung"): cv.boolean,
+        vol.Optional("effekt"): cv.boolean,
     }),
     "clip_loeschen": vol.Schema({vol.Optional("id"): cv.string, vol.Optional("alle", default=False): cv.boolean}),
     "clip_speichern": vol.Schema({}),

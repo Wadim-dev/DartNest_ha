@@ -4,6 +4,11 @@ While a game runs (and the board detects), DartNest keeps the last seconds of th
 camera as still images in memory. At a highlight it turns them into an MP4 with ffmpeg,
 straightened with the calibration like the board in the cards, and stores it under
 media/dartnest/clips (also visible in the media browser).
+
+Impact effect: where and when the last dart lands, the clip gets an explosion and the picture
+shakes. The place comes from the board coordinates of the dart, the moment from the images
+themselves (the frame in which the spot around the dart changes most). Burnt into the MP4 once,
+so TV, overlay, cards and downloads show the same and no device has to animate anything.
 """
 
 from __future__ import annotations
@@ -11,6 +16,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable
+import io
 import logging
 from pathlib import Path
 import re
@@ -49,6 +55,15 @@ RAND_MM = 225.0  # straightened clip shows ±225 mm around the bull (like the TV
 DATEI = re.compile(r"^[0-9a-f]{12}\.(mp4|jpg)$")
 CLIP_URL = f"/api/{DOMAIN}/clip"
 RADIEN = (170.0, 162.0, 107.0, 99.0)
+R_D2 = 170.0  # dart coordinates are relative to the outer double ring
+# impact effect
+FX_DAUER = 1.2  # seconds the explosion lasts
+FX_LEINWAND = 300  # explosion drawn at this size and scaled ×2 (soft glow, a quarter of the work)
+FX_BEBEN = 24  # px the picture may move while it shakes (the clip is zoomed by this on each side)
+FX_UMKREIS = 14.0  # mm around the dart compared between frames to find the impact
+FX_SUCHE = 3.0  # seconds before the dart was counted in which the impact is searched
+FX_VERZUG = 0.6  # when the images give no clear answer: impact this long before the dart was counted
+FX_MIN = 4.0  # mean grey change (0–255) that counts as a dart arriving
 
 
 def _rang(art: str) -> int:
@@ -138,6 +153,83 @@ def ecken(kal: dict[str, Any] | None) -> list[tuple[float, float]] | None:
     return punkte
 
 
+def _abbilden(m: list[list[float]], x: float, y: float) -> tuple[float, float] | None:
+    w = m[2][0] * x + m[2][1] * y + m[2][2]
+    if abs(w) < 1e-9:
+        return None
+    return (m[0][0] * x + m[0][1] * y + m[0][2]) / w, (m[1][0] * x + m[1][1] * y + m[1][2]) / w
+
+
+def dart_punkte(kal: dict[str, Any] | None, x: float, y: float) -> tuple[tuple[float, float], float, tuple[float, float]] | None:
+    """For a dart at board coordinates x/y (relative to the double ring, y up): camera pixel, camera pixels
+    for FX_UMKREIS mm, and the pixel in the straightened clip."""
+    H = homographie(kal)
+    inv = _inv(H) if H else None
+    if inv is None:
+        return None
+    mx, my = x * R_D2, -y * R_D2  # board mm, y down like the calibration
+    kamera = _abbilden(inv, mx, my)
+    rand = _abbilden(inv, mx + FX_UMKREIS, my)
+    if kamera is None or rand is None:
+        return None
+    halb = GROESSE / 2
+    return kamera, max(4.0, abs(rand[0] - kamera[0])), (halb + mx / RAND_MM * halb, halb + my / RAND_MM * halb)
+
+
+def einschlag_bild(bilder: list[bytes], kandidaten: list[int], punkt: tuple[float, float], radius: float) -> int | None:
+    """Index of the frame in which the dart arrives: the spot around it changes most from the frame before
+    (runs in the executor). None when nothing changes clearly there."""
+    try:
+        from PIL import Image, ImageChops, ImageStat
+    except ImportError:
+        return None
+    alt = None
+    best: tuple[float, int] | None = None
+    for i in kandidaten:
+        try:
+            with Image.open(io.BytesIO(bilder[i])) as im:
+                breite = im.width
+                im.draft("L", (im.width // 2, im.height // 2))  # JPEG: decode at half size, cheap
+                f = im.width / breite
+                cx, cy, r = punkt[0] * f, punkt[1] * f, max(3.0, radius * f)
+                stueck = im.convert("L").crop((round(cx - r), round(cy - r), round(cx + r), round(cy + r))).resize((24, 24))
+        except (OSError, ValueError):
+            alt = None
+            continue
+        if alt is not None:
+            wert = ImageStat.Stat(ImageChops.difference(stueck, alt)).mean[0]
+            if best is None or wert > best[0]:
+                best = (wert, i)
+        alt = stueck
+    return best[1] if best is not None and best[0] >= FX_MIN else None
+
+
+def _fx_graph(vf: str, fx: tuple[float, float, float]) -> str:
+    """ffmpeg filter graph: straightened clip at 25 fps, explosion at the dart, shake and flash from t0."""
+    t0, px, py = fx
+    G, C, D = FX_LEINWAND, FX_LEINWAND // 2, FX_DAUER
+    p = f"(T/{D})"
+    a = f"atan2(Y-{C},X-{C})"
+    d = f"hypot(X-{C},Y-{C})"
+    rand = f"((11+95*(1-pow(1-{p},2.5)))*(1+0.22*sin(5*{a}+9*T)*sin(3*{a}-2)))"  # ragged edge of the fireball
+    kern = f"exp(-pow({d}/{rand},2))*pow(1-{p},1.6)"
+    weiss = f"exp(-pow({d}/(6+22*{p}),2))*pow(1-{p},3)"
+    welle = f"exp(-pow(({d}-(10+135*(1-pow(1-{p},3))))/(2.5+6*{p}),2))*pow(1-{p},1.5)"
+    funken = f"pow(abs(sin(11*{a}+1.3)*sin(7*{a})),30)*exp(-pow(({d}-(15+140*{p}))/(7+10*{p}),2))*pow(1-{p},0.8)"
+    i = f"min(1,1.3*{kern}+0.8*{welle}+1.2*{funken})"
+    knall = (f"color=c=black@0:s={G}x{G}:r=25:d={D},format=rgba,"
+             f"geq=r='255*min(1,1.6*{i}+{weiss})':g='255*min(1,1.2*pow({i},1.6)+{weiss})':b='255*min(1,pow({kern},3)+{weiss})':a='255*min(1,{i}+{weiss})',"
+             f"scale={2 * G}:{2 * G},setpts=PTS+{t0:.3f}/TB[fx]")
+    s = f"between(t,{t0:.3f},{t0 + 0.8:.3f})*exp(-(t-{t0:.3f})*5)"
+    b, k = FX_BEBEN, GROESSE - 2 * FX_BEBEN
+    basis = vf.replace(",format=yuv420p", "")
+    return (f"[0:v]{basis},fps=25[b];{knall};"
+            f"[b][fx]overlay=x={px - G:.0f}:y={py - G:.0f}:eof_action=pass:format=auto,"
+            f"crop={k}:{k}:x='{b}+{b - 1}*{s}*sin((t-{t0:.3f})*90)':y='{b}+{b - 1}*{s}*cos((t-{t0:.3f})*71)',scale={GROESSE}:{GROESSE},setsar=1,"
+            f"eq=brightness='0.3*exp(-(t-{t0:.3f})*10)*gte(t,{t0:.3f})':saturation='1+0.5*exp(-(t-{t0:.3f})*4)*gte(t,{t0:.3f})':eval=frame,"
+            "format=yuv420p[v]")
+
+
 def _filter(eck: list[tuple[float, float]] | None) -> str:
     if not eck:
         return "scale=960:-2,format=yuv420p"
@@ -145,16 +237,18 @@ def _filter(eck: list[tuple[float, float]] | None) -> str:
     return f"perspective={p}:sense=source:interpolation=linear,scale={GROESSE}:{GROESSE},setsar=1,format=yuv420p"
 
 
-def _kodieren(ffmpeg: str, bilder: list[bytes], fps: float, eck: list[tuple[float, float]] | None, video: Path, vorschau: Path, mitte: int) -> bool:
-    """Write the images as MP4 and a still image (runs in the executor)."""
+def _kodieren(ffmpeg: str, bilder: list[bytes], fps: float, eck: list[tuple[float, float]] | None, video: Path, vorschau: Path, mitte: int,
+              fx: tuple[float, float, float] | None = None) -> bool:
+    """Write the images as MP4 and a still image (runs in the executor). fx = (seconds, x, y) of the impact effect."""
     with tempfile.TemporaryDirectory() as tmp:
         for i, b in enumerate(bilder):
             (Path(tmp) / f"{i:04d}.jpg").write_bytes(b)
         vf = _filter(eck)
         try:
+            filt = ["-filter_complex", _fx_graph(vf, fx), "-map", "[v]"] if fx and eck else ["-vf", vf]
             r = subprocess.run([ffmpeg, "-y", "-v", "error", "-framerate", f"{fps:.3f}", "-i", str(Path(tmp) / "%04d.jpg"),
-                                "-vf", vf, "-c:v", "libx264", "-preset", "veryfast", "-crf", "25", "-r", "25",
-                                "-movflags", "+faststart", str(video)], capture_output=True, timeout=120, check=False)
+                                *filt, "-c:v", "libx264", "-preset", "veryfast", "-crf", "25", "-r", "25",
+                                "-movflags", "+faststart", str(video)], capture_output=True, timeout=180, check=False)
             if r.returncode != 0:
                 _LOGGER.warning("Clip could not be made: %s", r.stderr.decode(errors="replace")[-300:])
                 return False
@@ -176,6 +270,7 @@ class Clips:
         self._puffer: deque[tuple[float, bytes]] = deque(maxlen=int((VORHER + NACHHER + 1) / TAKT) + 10)
         self._aufnahme: asyncio.Task[None] | None = None
         self._offen: dict[str, Any] | None = None  # highlight waiting for the seconds after it
+        self._darts: deque[dict[str, Any]] = deque(maxlen=6)  # last darts: when counted, where
         self._abmelden: list[Callable[[], None]] = []
         self.arbeitet = False
 
@@ -190,16 +285,17 @@ class Clips:
         e["anlaesse"] = [a for a in e.get("anlaesse", STANDARD_ANLAESSE) if a in ANLAESSE]
         e.setdefault("anzahl", 30)
         e.setdefault("wiederholung", True)
+        e.setdefault("effekt", True)
         e.setdefault("liste", [])
         return e
 
     def attribute(self) -> dict[str, Any]:
         e = self.einst
-        return {k: e[k] for k in ("an", "kamera", "anlaesse", "anzahl", "wiederholung")} | {"liste": e["liste"][:60]}
+        return {k: e[k] for k in ("an", "kamera", "anlaesse", "anzahl", "wiederholung", "effekt")} | {"liste": e["liste"][:60]}
 
     async def setzen(self, werte: dict[str, Any]) -> None:
         e = self.einst
-        for k in ("an", "kamera", "anlaesse", "anzahl", "wiederholung"):
+        for k in ("an", "kamera", "anlaesse", "anzahl", "wiederholung", "effekt"):
             if werte.get(k) is not None:
                 e[k] = werte[k]
         if werte.get("kamera") is not None:
@@ -264,6 +360,7 @@ class Clips:
                 pass
         self._aufnahme = None
         self._puffer.clear()
+        self._darts.clear()
 
     async def _aufnehmen(self) -> None:
         # images come from the shared source: a live view on the TV or in a card costs the board nothing extra
@@ -282,6 +379,8 @@ class Clips:
                     return
 
     def ereignis(self, typ: str, daten: dict[str, Any]) -> None:
+        if typ == "dart":
+            self._darts.append({"um": time.monotonic(), "x": daten.get("x"), "y": daten.get("y"), "quelle": daten.get("source")})
         if typ not in self.einst["anlaesse"]:
             return
         self.merken(typ, daten)
@@ -293,6 +392,13 @@ class Clips:
         jetzt = time.monotonic()
         wert = daten.get("finish") or daten.get("score") or daten.get("points")
         neu = {"art": typ, "spieler": str(daten.get("player") or ""), "wert": wert, "um": jetzt, "bis": jetzt + NACHHER, "zeit": dt_util.now().isoformat(timespec="seconds")}
+        if typ != "manual":
+            # the dart that made it: the last one counted, and when the one before was counted (the impact comes after that)
+            darts = [d for d in self._darts if jetzt - 5 <= d["um"] <= jetzt + 0.05]
+            if darts:
+                neu["dart"] = darts[-1]
+                vor = [d["um"] for d in self._darts if d["um"] < darts[-1]["um"]]
+                neu["davor"] = vor[-1] if vor else None
         alt = self._offen
         if alt is not None:
             if _rang(typ) < _rang(alt["art"]):
@@ -329,8 +435,9 @@ class Clips:
             return
         self.arbeitet = True
         try:
+            fx = await self._einschlag(offen, bilder, fps, kal)
             ok = await self.hass.async_add_executor_job(_kodieren, self._ffmpeg(), [b for _, b in bilder], fps, ecken(kal),
-                                                        ordner / f"{cid}.mp4", ordner / f"{cid}.jpg", mitte)
+                                                        ordner / f"{cid}.mp4", ordner / f"{cid}.jpg", mitte, fx)
         finally:
             self.arbeitet = False
         if not ok:
@@ -340,6 +447,29 @@ class Clips:
                               "dauer": round(dauer, 1), "gerade": kal is not None and ecken(kal) is not None})
         await self._aufraeumen()
         self.daten.spiel.einstellung_gespeichert()
+
+    async def _einschlag(self, offen: dict[str, Any], bilder: list[tuple[float, bytes]], fps: float,
+                         kal: dict[str, Any] | None) -> tuple[float, float, float] | None:
+        """(seconds into the clip, x, y in the clip) of the last dart, or None (effect off, typed dart, no calibration)."""
+        dart = offen.get("dart")
+        if not self.einst["effekt"] or not dart or dart.get("quelle") != "board" or ecken(kal) is None:
+            return None
+        x, y = dart.get("x"), dart.get("y")
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            return None
+        punkte = dart_punkte(kal, float(x), float(y))
+        if punkte is None:
+            return None
+        kamera, radius, im_clip = punkte
+        von = max(dart["um"] - FX_SUCHE, offen.get("davor") or 0.0)
+        kandidaten = [i for i, (t, _) in enumerate(bilder) if von <= t <= dart["um"] + 0.3]
+        idx = None
+        if len(kandidaten) >= 2:
+            idx = await self.hass.async_add_executor_job(einschlag_bild, [b for _, b in bilder], kandidaten, kamera, radius)
+        if idx is None:
+            ziel = dart["um"] - FX_VERZUG
+            idx = min(range(len(bilder)), key=lambda i: abs(bilder[i][0] - ziel))
+        return idx / fps, im_clip[0], im_clip[1]
 
     def _ffmpeg(self) -> str:
         try:

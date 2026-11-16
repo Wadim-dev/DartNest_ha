@@ -1391,7 +1391,7 @@ def auswerten(spiel: dict[str, Any]) -> dict[str, Any]:
         "verdeckt": [z in verdeckt for z in art_zahlen] if verdeckt and isinstance(art_zahlen, list) else None,
         "runden": art.runden,
         "am_zug": am_zug,
-        "aufnahme": {**aktuell, "darts": [{"f": d["f"], "x": d.get("x"), "y": d.get("y")} for d in aktuell["darts"]]},
+        "aufnahme": {**aktuell, "darts": [{"f": d["f"], "x": d.get("x"), "y": d.get("y"), "q": d.get("q")} for d in aktuell["darts"]]},
         "weg": weg,
         "ziel": art.ziel(am_zug) if laeuft else None,
         "spieler": sp,

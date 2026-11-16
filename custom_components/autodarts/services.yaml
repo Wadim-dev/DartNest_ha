@@ -443,6 +443,11 @@ clips_setzen:
       name: Wiederholung auf Fernseher und Overlay
       selector:
         boolean:
+    effekt:
+      name: Einschlag-Effekt
+      description: Wo und wann der letzte Dart einschlägt, explodiert es im Video und das Bild bebt (nur mit Kalibrierung).
+      selector:
+        boolean:
 clip_speichern:
   name: Clip speichern
   description: Die letzten Sekunden der Kamera jetzt als Clip speichern (nur während eines Spiels mit eingeschalteten Clips).

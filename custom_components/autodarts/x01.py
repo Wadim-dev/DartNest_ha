@@ -282,7 +282,7 @@ def auswerten(spiel: dict[str, Any]) -> dict[str, Any]:
         })
     return {
         "am_zug": am_zug,
-        "aufnahme": {**aktuell, "darts": [{"f": d["f"], "x": d.get("x"), "y": d.get("y")} for d in aktuell["darts"]]},
+        "aufnahme": {**aktuell, "darts": [{"f": d["f"], "x": d.get("x"), "y": d.get("y"), "q": d.get("q")} for d in aktuell["darts"]]},
         "weg": w,
         "spieler": sp,
         "statistik": st,

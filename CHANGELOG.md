@@ -3,6 +3,11 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.35.0
+
+- **Highlights: impact effect.** Where and when the last dart lands, the clip now explodes and the picture shakes. The place comes from the board coordinates of the dart, the moment from the camera images themselves (the frame in which the spot around the dart changes), so the explosion sits exactly on the dart. The effect is part of the MP4, so the replay on the TV and in the overlay, the highlights card and downloaded clips all show it, and no screen has to animate anything. Needs the calibration (straightened clips); typed darts and bots get the plain clip. Switch it off in the highlights card (*Impact effect*) or with `effekt: false` in `autodarts.clips_setzen`.
+- *DE:* **Highlights: Einschlag-Effekt.** Wo und wann der letzte Dart einschlägt, explodiert es im Clip und das Bild bebt. Der Ort kommt aus den Board-Koordinaten des Darts, der Zeitpunkt aus den Kamerabildern selbst (das Bild, in dem sich die Stelle am Dart ändert), die Explosion sitzt also genau auf dem Dart. Der Effekt ist Teil der MP4: Wiederholung am Fernseher und im Overlay, Highlights-Karte und heruntergeladene Clips zeigen ihn gleich, kein Bildschirm muss etwas animieren. Braucht die Kalibrierung (gerade gerückte Clips); getippte Darts und Bots bekommen den Clip ohne Effekt. Abschalten in der Highlights-Karte (*Einschlag-Effekt*) oder mit `effekt: false` in `autodarts.clips_setzen`.
+
 ## 1.34.2
 
 - **Windows: a short downward flick closes them.** Before, a window only closed after a long drag. Dragging is also smoother (one update per frame).

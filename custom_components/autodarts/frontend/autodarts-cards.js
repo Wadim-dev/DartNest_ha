@@ -3286,7 +3286,9 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
     a_one_eighty: '180', a_high_finish: 'Finish ab 100', a_match_won: 'Matchdart', a_leg_won: 'Leg gewonnen', a_nine_darter: '9-Darter', a_ton_forty: 'Ab 140', a_checkout: 'Jedes Finish', a_bullseye: 'Bullseye', a_three_in_a_bed: 'Drei in einem Feld', a_manual: 'Von Hand gespeichert',
     today: 'heute', yesterday: 'gestern', m_clips_s: '180er, hohe Finishes, Matchdarts als Video', ov_title: 'Stream-Overlay (OBS, Streamlabs)', ov_hint: 'In OBS oder Streamlabs eine Quelle → Browser hinzufügen, Link einfügen, Größe 1920 × 1080. Der Hintergrund ist durchsichtig: zu sehen sind nur der Spielstand unten links und die Wiederholungen.' });
   const CLIP_ANLAESSE = ['one_eighty', 'high_finish', 'match_won', 'leg_won', 'nine_darter', 'ton_forty', 'checkout', 'bullseye', 'three_in_a_bed'];
-  const clipsInfo = h => att(h, E(h, 'sensor.players')).clips || { an: false, kamera: 'camera_1', anlaesse: [], anzahl: 30, wiederholung: true, liste: [] };
+  Object.assign(TEXTE.en, { clips_fx: 'Impact effect', clips_fx_s: 'Where and when the last dart lands: explosion and a shaking picture (needs the calibration)' });
+  Object.assign(TEXTE.de, { clips_fx: 'Einschlag-Effekt', clips_fx_s: 'Wo und wann der letzte Dart einschlägt: Explosion und bebendes Bild (braucht die Kalibrierung)' });
+  const clipsInfo = h => att(h, E(h, 'sensor.players')).clips || { an: false, kamera: 'camera_1', anlaesse: [], anzahl: 30, wiederholung: true, effekt: true, liste: [] };
   // signed links for <img>/<video> (they cannot send the login)
   const signiert = {};
   const signieren = (h, pfad, fertig) => {
@@ -3335,7 +3337,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (c.an) {
         s += '<div class="titel"><ha-icon icon="mdi:cctv"></ha-icon>' + t('clips_cam') + '</div><div class="seg">' + ['camera_1', 'camera_2', 'camera_3'].map((k, i) => '<button class="feld' + (c.kamera === k ? ' an' : '') + '" data-act="kamera" data-v="' + k + '">' + t('tv_v_c', { n: i + 1 }) + '</button>').join('') + '</div>' +
           '<div class="titel"><ha-icon icon="mdi:star-outline"></ha-icon>' + t('clips_when') + '</div><div class="chips">' + CLIP_ANLAESSE.map(a => { const an = (c.anlaesse || []).includes(a); return '<button class="feld' + (an ? ' an' : '') + '" data-act="anlass" data-v="' + a + '"><ha-icon icon="' + (an ? 'mdi:check' : 'mdi:plus') + '"></ha-icon>' + t('a_' + a) + '</button>'; }).join('') + '</div>' +
-          '<button class="schalter feld' + (c.wiederholung ? ' an' : '') + '" data-act="wdh"><ha-icon icon="' + (c.wiederholung ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('clips_replay') + '</b><small>' + t('clips_replay_s') + '</small></span></button>';
+          '<button class="schalter feld' + (c.wiederholung ? ' an' : '') + '" data-act="wdh"><ha-icon icon="' + (c.wiederholung ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('clips_replay') + '</b><small>' + t('clips_replay_s') + '</small></span></button>' +
+          '<button class="schalter feld' + (c.effekt !== false ? ' an' : '') + '" data-act="fx"><ha-icon icon="' + (c.effekt !== false ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('clips_fx') + '</b><small>' + t('clips_fx_s') + '</small></span></button>';
       }
       s += '<div class="titel"><ha-icon icon="mdi:movie-star-outline"></ha-icon>' + t('clips_title') + '</div>';
       if (!liste.length) s += '<div class="leer">' + t('clips_none') + '</div>';
@@ -3356,6 +3359,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       const h = this._h, c = this._w();
       if (act === 'an') return this._setzen({ an: !c.an });
       if (act === 'wdh') return this._setzen({ wiederholung: !c.wiederholung });
+      if (act === 'fx') return this._setzen({ effekt: c.effekt === false });
       if (act === 'kamera') return this._setzen({ kamera: b.dataset.v });
       if (act === 'anlass') { const v = b.dataset.v, l = c.anlaesse || []; return this._setzen({ anlaesse: l.includes(v) ? l.filter(x => x !== v) : CLIP_ANLAESSE.filter(x => x === v || l.includes(x)) }); }
       if (act === 'alle') { zweimal(this, b, t('clips_all_q'), () => h.callService('autodarts', 'clip_loeschen', { alle: true })); return; }

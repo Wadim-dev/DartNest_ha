@@ -142,7 +142,8 @@ class Spielleiter:
         for dart in neu:
             feld = dart["f"]
             punkte, faktor = x01.wert(feld)
-            daten = {"player": spieler[st["am_zug"]]["name"], "field": feld, "points": punkte}
+            daten = {"player": spieler[st["am_zug"]]["name"], "field": feld, "points": punkte,
+                     "x": dart.get("x"), "y": dart.get("y"), "source": dart.get("q")}
             self._ereignis("dart", daten)
             if feld == "D25":
                 self._ereignis("bullseye", daten)
