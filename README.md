@@ -140,7 +140,7 @@ The same screens work on PC, tablet and phone, in English and German. Want them 
 
 ### Marketplace (recommended)
 
-1. Click the button above, or in Home Assistant open the **Marketplace**, choose **Add by link** and enter `https://github.com/Wadim-dev/DartNest_ha` (type **Integration**).
+1. Click the button above, or in Home Assistant open the **Marketplace** (HACS) and search for **DartNest for Autodarts**. DartNest is in the official HACS list, no extra link needed.
 2. Install **DartNest** and restart Home Assistant.
 3. Add the integration (see [Configuration](#configuration)).
 
@@ -763,7 +763,7 @@ Private project, no outside contributions. The code meets all rules of the Home 
 
 **In drei Schritten startklar**
 
-1. **Installieren:** oben auf den *Marketplace*-Knopf tippen, **DartNest** installieren, Home Assistant neu starten.
+1. **Installieren:** oben auf den *Marketplace*-Knopf tippen oder im Marketplace (HACS) nach **DartNest for Autodarts** suchen, installieren, Home Assistant neu starten.
 2. **Board bestätigen:** unter *Einstellungen → Geräte & Dienste* erscheint **Autodarts Board gefunden** – *Hinzufügen* tippen. (Nicht gefunden? *Integration hinzufügen → DartNest* und die IP-Adresse des Board-PCs eintragen, Port 3180.)
 3. **Spielen:** in der Seitenleiste **DartNest** öffnen. Fertig.
 
