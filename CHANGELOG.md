@@ -3,6 +3,16 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.37.1
+
+- **Fixed: own caller packs were often not heard.** When a pack had no sound with the player's name, the whole visit including "you require …" was spoken by the voice, so the pack's own bust or score sound never played. Now a missing name is left out, without "you require" or the rest number only the pack's own sound plays, and the voice speaks only what the pack cannot say at all.
+- **Other spellings of file names.** `gameon`, `Game-On`, `no_score`, `nine_darter`, `you_require` and similar names of packs from elsewhere are recognised.
+
+**Deutsch**
+
+- **Behoben: eigene Ansager-Packs waren oft nicht zu hören.** Fehlte im Pack ein Ton mit dem Spielernamen, sprach die Stimme die ganze Aufnahme samt „du brauchst …“, der Bust- oder Punkte-Ton des Packs kam nie. Jetzt fällt ein fehlender Name weg, ohne „du brauchst“ oder Restzahl spielt nur der Ton des Packs, und die Stimme spricht nur noch, was das Pack gar nicht sagen kann.
+- **Andere Schreibweisen der Dateinamen.** `gameon`, `Game-On`, `no_score`, `nine_darter`, `you_require` und ähnliche Namen fremder Packs werden erkannt.
+
 ## 1.37.0
 
 - **TV: winning a match gets its own show.** The winner screen no longer just appears. The match dart explodes in gold, the screen goes dark, *GAME SHOT!* slams in, the board flies to the middle, spins faster and faster under a drum roll of shock waves and bursts in a white flash. Then the trophy drops in from above, the name slams in letter by letter in front of turning rays, the table slides up, and fireworks, embers and gold confetti keep going in several waves.
