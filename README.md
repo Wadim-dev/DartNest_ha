@@ -97,9 +97,9 @@ Four formats: **knockout** (3–32), **double KO** with winners and losers brack
 
 Open **DartNest → TV**, tick your TV and tap **Show on TV** – the score appears big on **Fire TV or Google TV**, live with every dart. Between games the TV shows the clock, the ranking and the last games. Switch on **Show by itself when a game starts** and you never touch the remote. **Show the dartboard** puts your board next to the score – live from the camera, straightened, with the darts of the visit marked. Any other screen works too: open the link in its browser.
 
-<p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/live.gif" alt="Live effects on the TV: cracks at a 180, the board melts on a bust, gold and confetti on a checkout" width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/live.gif" alt="Live effects on the TV: on for 180, the board cracks at the 180, and the match win with the board bursting into the winner screen" width="900"></p>
 
-The TV **plays along with the match**: every dart sparks where it lands, and what happens depends on the dart and the game – a 180 cracks the board, a bust melts it, a checkout spins it in gold, a match dart makes the whole screen hold its breath.
+The TV **plays along with the match**: every dart sparks where it lands, and what happens depends on the dart and the game – a 180 cracks the board, a bust melts it, a checkout spins it in gold, a match dart makes the whole screen hold its breath. The points of every dart fly to the score, stamps like *On for 180!*, *Bullseye!* or *Takes the lead!* slam in, and a **won match gets its own show**: the board flies to the middle, spins up and bursts into the winner screen with trophy, fireworks and gold confetti.
 
 ## Stream and highlights
 
