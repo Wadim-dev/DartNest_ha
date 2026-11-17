@@ -627,3 +627,61 @@ async def test_wecker_macht_weiter(hass: HomeAssistant, geladen, lautsprecher, o
         await a._hoerprobe
         assert a._gehoert == {"Meisterschaft Puck": True}
     await a.beenden()
+
+
+def test_dateinamen_und_abspielbar(tmp_path) -> None:
+    for n in ("Game-On.wav", "bust.mp3", "92.wav", "Require.wav", "name_anna.wav", "walk.wav", "liesmich.txt"):
+        (tmp_path / n).write_bytes(b"x")
+    pack = ansager_modul._dateien(tmp_path)
+    assert pack["game_on"] == "Game-On.wav" and "liesmich" not in pack and "require" in pack
+    ab = ansager_modul._abspielbar
+    # a missing player name is left out, the rest stays
+    assert ab(["bust", "name_wadim", "require", "92"], pack) == ["bust", "require", "92"]
+    assert ab(["bust", "name_anna", "require", "92"], pack) == ["bust", "name_anna", "require", "92"]
+    # without the rest number the pack still says its own sound
+    assert ab(["bust", "name_wadim", "require", "115"], pack) == ["bust"]
+    assert ab(["leg", "name_wadim"], {"leg": "leg.wav"}) == ["leg"]
+    # the walk-on needs the name, a score the pack does not have is spoken
+    assert ab(["walk", "name_wadim"], pack) == [] and ab(["140", "name_anna"], pack) == []
+
+
+async def test_bust_aus_pack_ohne_namen(hass: HomeAssistant, geladen, lautsprecher) -> None:
+    """Bust with a rest and no name file in the pack: the pack's bust sound plays, not the voice."""
+    a = geladen.runtime_data.ansager
+    pack = lautsprecher["pfad"] / "autodarts" / "caller" / "Russ"
+    pack.mkdir(parents=True)
+    (pack / "bust.mp3").write_bytes(b"x")
+    (pack / "gameon.wav").write_bytes(b"x")
+    await _setzen(hass, pack="Russ")
+    stand = {"art": "x01", "gewinner": None, "am_zug": 0, "weg": ["T20", "D16"], "spieler": [{"name": "Wadim", "rest": 115}]}
+    with patch.object(geladen.runtime_data.spiel, "stand", stand):
+        a.ereignis("visit", {"player": "Wadim", "score": 0})
+        a.ereignis("bust", {"player": "Wadim", "score": 0})
+        await _fertig(hass, a)
+    urls = [c.data["media_content_id"] for c in lautsprecher["play"]]
+    assert urls == ["media-source://media_source/local/autodarts/caller/Russ/bust.mp3"] and not lautsprecher["tts"]
+
+
+async def test_nur_pack_und_neue_toene(hass: HomeAssistant, geladen, lautsprecher) -> None:
+    """"Pack sounds only": what the pack lacks stays silent; sounds uploaded later count at the next game."""
+    a = geladen.runtime_data.ansager
+    pack = lautsprecher["pfad"] / "autodarts" / "caller" / "Russ"
+    pack.mkdir(parents=True)
+    (pack / "180.wav").write_bytes(b"x")
+    await _setzen(hass, pack="Russ", nur_pack=True, rest=False, walkon=False)
+    a.ereignis("visit", {"player": "Wadim", "score": 0})
+    a.ereignis("bust", {"player": "Wadim", "score": 0})
+    await _fertig(hass, a)
+    assert not lautsprecher["tts"] and not lautsprecher["play"]
+    (pack / "bust.mp3").write_bytes(b"x")
+    (pack / "GameOn.wav").write_bytes(b"x")
+    a.ereignis("game_started", {"players": ["Wadim"], "player_ids": ["w"]})
+    await _fertig(hass, a)
+    a.ereignis("visit", {"player": "Wadim", "score": 0})
+    a.ereignis("bust", {"player": "Wadim", "score": 0})
+    await _fertig(hass, a)
+    urls = [c.data["media_content_id"].rsplit("/", 1)[1] for c in lautsprecher["play"]]
+    assert urls == ["GameOn.wav", "bust.mp3"] and not lautsprecher["tts"]
+    # a test text is always spoken
+    await a.testen("Hallo")
+    assert lautsprecher["tts"]

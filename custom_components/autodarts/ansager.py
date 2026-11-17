@@ -144,6 +144,7 @@ EINSTELLUNGEN = vol.Schema({
     vol.Optional("lautsprecher", default=[]): [_player],
     vol.Optional("stimme", default=""): str,
     vol.Optional("pack", default=""): str,
+    vol.Optional("nur_pack", default=False): bool,  # with a pack: never the voice, what the pack lacks stays silent
     vol.Optional("punkte", default=True): bool,
     vol.Optional("rest", default=True): bool,
     vol.Optional("ende", default=True): bool,
@@ -217,11 +218,45 @@ def _mischen(ordner: Path, dateien: list[str]) -> str | None:
     return name
 
 
+# other spellings of the file names that packs from elsewhere use
+ANDERE_NAMEN = {"gameon": "game_on", "ninedarter": "nine", "nine_darter": "nine", "you_require": "require",
+                "requires": "require", "noscore": "bust", "no_score": "bust", "busted": "bust", "walkon": "walk"}
+
+
+def _schluessel(stamm: str) -> str:
+    """Key of a sound file: its name without ending, lower case, "-" and spaces as "_" (Game-On → game_on)."""
+    k = re.sub(r"[\s\-]+", "_", stamm.strip().lower())
+    return ANDERE_NAMEN.get(k, k)
+
+
 def _dateien(ordner: Path) -> dict[str, str]:
-    """Sound files of a folder by their name without ending (180, bust …)."""
+    """Sound files of a folder by their key (180, bust, game_on …)."""
     if not ordner.is_dir():
         return {}
-    return {d.stem.lower(): d.name for d in sorted(ordner.iterdir()) if d.is_file() and d.suffix.lower() in ENDUNGEN}
+    aus: dict[str, str] = {}
+    for d in sorted(ordner.iterdir()):
+        if d.is_file() and d.suffix.lower() in ENDUNGEN:
+            aus.setdefault(_schluessel(d.stem), d.name)
+    return aus
+
+
+def _abspielbar(keys: list[str], pack: dict[str, str]) -> list[str]:
+    """Pack keys of an announcement that can be played; empty when the pack cannot say it.
+
+    A missing player name is left out ("Bust" … "you require 92" without the name); without "require"
+    or the rest number the rest is left out, so the pack's own score or bust sound still plays. Only
+    the walk-on needs the name.
+    """
+    k = [x.lower() for x in keys]
+    if "require" in k:
+        i = k.index("require")
+        if any(x not in pack for x in k[i:]):
+            k = k[:i]
+    namen = [x for x in k if x.startswith("name_") and x not in pack]
+    if namen and k and k[0] == "walk":
+        return []
+    k = [x for x in k if x not in namen]
+    return k if k and all(x in pack for x in k) else []
 
 
 def _uebersicht(basis: Path) -> dict[str, Any]:
@@ -436,6 +471,7 @@ class Ansager:
         await self._pack_lesen()
 
     async def uebersicht(self) -> dict[str, Any]:
+        await self._pack_lesen()  # sounds uploaded after the pack was chosen count at once
         daten = await self.hass.async_add_executor_job(_uebersicht, self._basis)
         stimmen = sorted(self.hass.states.async_entity_ids("tts"))
         soll = set(self.pack_texte(self._namen()))
@@ -529,6 +565,7 @@ class Ansager:
     async def _spielbeginn(self, daten: dict[str, Any]) -> None:
         """Walk-on songs of the players (each for some seconds), then "Game on"."""
         try:
+            await self._pack_lesen()  # sounds uploaded since the last game
             if self.einst["walkon"]:
                 for sid, name in zip(daten.get("player_ids") or [], daten.get("players") or [], strict=False):
                     song = self.einst["songs"].get(str(sid)) if sid else None
@@ -573,8 +610,9 @@ class Ansager:
             await self._sagen("", text or self._t()["180"], sprecher=sprecher)
             return
         if text:
-            await self._sagen("", text)
+            await self._sagen("", text, stimme_immer=True)
             return
+        await self._pack_lesen()
         tx = self._t()
         name = next((k for k in self._pack if k.startswith("name_")), "")
         wer = name[5:].replace("_", " ").title() if name else "Alex"
@@ -618,21 +656,27 @@ class Ansager:
                 return {"voice": m.group(1).lower()}
         return None
 
-    async def _sagen(self, schluessel: str, text: str, keys: list[str] | None = None, sprecher: str | None = None) -> None:
-        """Play the pack files (joined), the pack file of the key, or speak the text."""
+    async def _sagen(self, schluessel: str, text: str, keys: list[str] | None = None, sprecher: str | None = None,
+                     stimme_immer: bool = False) -> None:
+        """Play the pack files (joined), the pack file of the key, or speak the text (not with "pack only")."""
         try:
             if sprecher:
                 keys, schluessel = None, ""
-            if keys and len(keys) > 1 and all(k.lower() in self._pack for k in keys):
+            if keys:
+                keys = _abspielbar(keys, self._pack)
+            if keys and len(keys) > 1:
                 ordner = self._basis.joinpath(*ORDNER, self.einst["pack"])
-                datei = await self.hass.async_add_executor_job(_mischen, ordner, [self._pack[k.lower()] for k in keys])
+                datei = await self.hass.async_add_executor_job(_mischen, ordner, [self._pack[k] for k in keys])
                 if datei:
                     await self._spielen(self._url((*ORDNER, self.einst["pack"], MIX), datei))
                     return
-            if keys and len(keys) == 1:
+            if keys:
                 schluessel = keys[0]
             if schluessel and schluessel.lower() in self._pack:
                 await self._spielen(self._url((*ORDNER, self.einst["pack"]), self._pack[schluessel.lower()]))
+                return
+            if self.einst["nur_pack"] and self.einst["pack"] and not sprecher and not stimme_immer:
+                _LOGGER.debug("Caller: pack %s has no sound for %s", self.einst["pack"], keys or schluessel or text)
                 return
             stimme = self._stimme()
             if not stimme:
