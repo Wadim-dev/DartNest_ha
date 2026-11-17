@@ -6,6 +6,7 @@ import asyncio
 import io
 import math
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -277,6 +278,7 @@ def test_knall_vorbereitet(tmp_path: Path) -> None:
     bilder = _bilder(9, n=10)
     video = tmp_path / "c.mp4"
     assert clips_modul._kodieren("ffmpeg", bilder, 5.0, clips_modul.ecken(GERADE), video, tmp_path / "c.jpg", 9, (1.8, 360.0, 195.0), knall)
-    dauer = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(video)],
-                                 capture_output=True, check=True).stdout)
+    info = subprocess.run(["ffmpeg", "-i", str(video)], capture_output=True, check=False).stderr.decode()
+    h, m, sek = re.search(r"Duration: (\d+):(\d+):([\d.]+)", info).groups()
+    dauer = int(h) * 3600 + int(m) * 60 + float(sek)
     assert dauer >= 1.8 + clips_modul.FX_DAUER
