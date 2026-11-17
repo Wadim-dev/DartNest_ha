@@ -47,7 +47,7 @@ STANDARD_ANLAESSE = ["one_eighty", "high_finish", "match_won"]
 KAMERAS = ("camera_1", "camera_2", "camera_3")
 _STROEME: tuple[Stream, ...] = ("cam0", "cam1", "cam2")
 VORHER = 8.0  # seconds before the event
-NACHHER = 1.5  # seconds after it (the dart sits, the caller speaks)
+NACHHER = 0.8  # seconds after it (the dart sits; a running explosion is finished on the last frame)
 FREI_MIN = 1_000_000_000  # no new clip when less than 1 GB is free on the disk
 TAKT = 1 / 5  # time between images while recording (5 per second, light on the board PC)
 GROESSE = 720  # straightened clip: square, px
@@ -204,9 +204,8 @@ def einschlag_bild(bilder: list[bytes], kandidaten: list[int], punkt: tuple[floa
     return best[1] if best is not None and best[0] >= FX_MIN else None
 
 
-def _fx_graph(vf: str, fx: tuple[float, float, float]) -> str:
-    """ffmpeg filter graph: straightened clip at 25 fps, explosion at the dart, shake and flash from t0."""
-    t0, px, py = fx
+def _knall_quelle() -> str:
+    """ffmpeg source of the explosion: RGBA frames, FX_LEINWAND px drawn, scaled ×2, 25 per second."""
     G, C, D = FX_LEINWAND, FX_LEINWAND // 2, FX_DAUER
     p = f"(T/{D})"
     a = f"atan2(Y-{C},X-{C})"
@@ -217,13 +216,38 @@ def _fx_graph(vf: str, fx: tuple[float, float, float]) -> str:
     welle = f"exp(-pow(({d}-(10+135*(1-pow(1-{p},3))))/(2.5+6*{p}),2))*pow(1-{p},1.5)"
     funken = f"pow(abs(sin(11*{a}+1.3)*sin(7*{a})),30)*exp(-pow(({d}-(15+140*{p}))/(7+10*{p}),2))*pow(1-{p},0.8)"
     i = f"min(1,1.3*{kern}+0.8*{welle}+1.2*{funken})"
-    knall = (f"color=c=black@0:s={G}x{G}:r=25:d={D},format=rgba,"
-             f"geq=r='255*min(1,1.6*{i}+{weiss})':g='255*min(1,1.2*pow({i},1.6)+{weiss})':b='255*min(1,pow({kern},3)+{weiss})':a='255*min(1,{i}+{weiss})',"
-             f"scale={2 * G}:{2 * G},setpts=PTS+{t0:.3f}/TB[fx]")
+    return (f"color=c=black@0:s={G}x{G}:r=25:d={D},format=rgba,"
+            f"geq=r='255*min(1,1.6*{i}+{weiss})':g='255*min(1,1.2*pow({i},1.6)+{weiss})':b='255*min(1,pow({kern},3)+{weiss})':a='255*min(1,{i}+{weiss})',"
+            f"scale={2 * G}:{2 * G}")
+
+
+def knall_rendern(ffmpeg: str, ordner: Path) -> bool:
+    """Draw the explosion once as PNG frames (the slow part, ~5 s); every clip then only lays them on (runs in the executor)."""
+    try:
+        ordner.mkdir(parents=True, exist_ok=True)
+        r = subprocess.run([ffmpeg, "-y", "-v", "error", "-filter_complex", _knall_quelle(), str(ordner / "%03d.png")],
+                           capture_output=True, timeout=180, check=False)
+    except (OSError, subprocess.SubprocessError) as err:
+        _LOGGER.warning("Impact effect could not be prepared: %s", err)
+        return False
+    if r.returncode != 0:
+        _LOGGER.warning("Impact effect could not be prepared: %s", r.stderr.decode(errors="replace")[-300:])
+        return False
+    return (ordner / "001.png").exists()
+
+
+def _fx_graph(vf: str, fx: tuple[float, float, float], dauer: float, fertig: bool) -> str:
+    """ffmpeg filter graph: straightened clip at 25 fps, explosion at the dart, shake and flash from t0.
+    fertig: the explosion comes as prepared frames (input 1), otherwise it is drawn here (slow)."""
+    t0, px, py = fx
+    G = FX_LEINWAND
+    knall = f"[1:v]setpts=PTS+{t0:.3f}/TB[fx]" if fertig else f"{_knall_quelle()},setpts=PTS+{t0:.3f}/TB[fx]"
     s = f"between(t,{t0:.3f},{t0 + 0.8:.3f})*exp(-(t-{t0:.3f})*5)"
     b, k = FX_BEBEN, GROESSE - 2 * FX_BEBEN
     basis = vf.replace(",format=yuv420p", "")
-    return (f"[0:v]{basis},fps=25[b];{knall};"
+    rest = t0 + FX_DAUER + 0.15 - dauer  # the clip ends early: hold the last frame until the explosion is over
+    halten = f",tpad=stop_mode=clone:stop_duration={rest:.2f}" if rest > 0 else ""
+    return (f"[0:v]{basis},fps=25{halten}[b];{knall};"
             f"[b][fx]overlay=x={px - G:.0f}:y={py - G:.0f}:eof_action=pass:format=auto,"
             f"crop={k}:{k}:x='{b}+{b - 1}*{s}*sin((t-{t0:.3f})*90)':y='{b}+{b - 1}*{s}*cos((t-{t0:.3f})*71)',scale={GROESSE}:{GROESSE},setsar=1,"
             f"eq=brightness='0.3*exp(-(t-{t0:.3f})*10)*gte(t,{t0:.3f})':saturation='1+0.5*exp(-(t-{t0:.3f})*4)*gte(t,{t0:.3f})':eval=frame,"
@@ -238,14 +262,20 @@ def _filter(eck: list[tuple[float, float]] | None) -> str:
 
 
 def _kodieren(ffmpeg: str, bilder: list[bytes], fps: float, eck: list[tuple[float, float]] | None, video: Path, vorschau: Path, mitte: int,
-              fx: tuple[float, float, float] | None = None) -> bool:
-    """Write the images as MP4 and a still image (runs in the executor). fx = (seconds, x, y) of the impact effect."""
+              fx: tuple[float, float, float] | None = None, knall: Path | None = None) -> bool:
+    """Write the images as MP4 and a still image (runs in the executor). fx = (seconds, x, y) of the impact effect,
+    knall = folder with the prepared explosion frames."""
     with tempfile.TemporaryDirectory() as tmp:
         for i, b in enumerate(bilder):
             (Path(tmp) / f"{i:04d}.jpg").write_bytes(b)
         vf = _filter(eck)
         try:
-            filt = ["-filter_complex", _fx_graph(vf, fx), "-map", "[v]"] if fx and eck else ["-vf", vf]
+            fertig = knall is not None and (knall / "001.png").exists()
+            if fx and eck:
+                filt = (["-framerate", "25", "-i", str(knall / "%03d.png")] if fertig and knall else []) + \
+                    ["-filter_complex", _fx_graph(vf, fx, len(bilder) / fps, fertig), "-map", "[v]"]
+            else:
+                filt = ["-vf", vf]
             r = subprocess.run([ffmpeg, "-y", "-v", "error", "-framerate", f"{fps:.3f}", "-i", str(Path(tmp) / "%04d.jpg"),
                                 *filt, "-c:v", "libx264", "-preset", "veryfast", "-crf", "25", "-r", "25",
                                 "-movflags", "+faststart", str(video)], capture_output=True, timeout=180, check=False)
@@ -273,6 +303,8 @@ class Clips:
         self._darts: deque[dict[str, Any]] = deque(maxlen=6)  # last darts: when counted, where
         self._abmelden: list[Callable[[], None]] = []
         self.arbeitet = False
+        self._knall: Path | None = None  # prepared explosion frames (temporary folder, made once per start)
+        self._knall_auftrag: asyncio.Task[None] | None = None
 
     # ---------- settings ----------
 
@@ -303,6 +335,8 @@ class Clips:
         await self._aufraeumen()
         self.daten.spiel.einstellung_gespeichert()
         self.pruefen()
+        if self._laeuft():
+            self._knall_vorbereiten()
 
     @property
     def ordner(self) -> Path:
@@ -335,6 +369,25 @@ class Clips:
             ab()
         self._abmelden = []
         await self._stopp()
+        if self._knall_auftrag is not None and not self._knall_auftrag.done():
+            self._knall_auftrag.cancel()
+        if self._knall is not None:
+            ordner, self._knall = self._knall, None
+            await self.hass.async_add_executor_job(shutil.rmtree, str(ordner.parent), True)
+
+    def _knall_vorbereiten(self) -> None:
+        """Draw the explosion once in the background as soon as clips with the effect are recorded."""
+        if self._knall is not None or (self._knall_auftrag is not None and not self._knall_auftrag.done()) or not self.einst["effekt"]:
+            return
+
+        async def los() -> None:
+            ordner = Path(await self.hass.async_add_executor_job(tempfile.mkdtemp, "", "dartnest_knall_")) / "bilder"
+            if await self.hass.async_add_executor_job(knall_rendern, self._ffmpeg(), ordner):
+                self._knall = ordner
+            else:
+                await self.hass.async_add_executor_job(shutil.rmtree, str(ordner.parent), True)
+
+        self._knall_auftrag = self.hass.async_create_background_task(los(), "dartnest impact effect")
 
     def _soll(self) -> bool:
         sp = self.daten.spiel.spiel
@@ -348,6 +401,7 @@ class Clips:
         """Start or stop keeping the last seconds, following game and board."""
         if self._soll() and not self._laeuft():
             self._aufnahme = self.hass.async_create_background_task(self._aufnehmen(), "dartnest clips")
+            self._knall_vorbereiten()
         elif not self._soll() and self._laeuft() and self._offen is None:
             self.hass.async_create_task(self._stopp())
 
@@ -437,7 +491,7 @@ class Clips:
         try:
             fx = await self._einschlag(offen, bilder, fps, kal)
             ok = await self.hass.async_add_executor_job(_kodieren, self._ffmpeg(), [b for _, b in bilder], fps, ecken(kal),
-                                                        ordner / f"{cid}.mp4", ordner / f"{cid}.jpg", mitte, fx)
+                                                        ordner / f"{cid}.mp4", ordner / f"{cid}.jpg", mitte, fx, self._knall)
         finally:
             self.arbeitet = False
         if not ok:

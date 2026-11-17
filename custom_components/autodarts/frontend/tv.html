@@ -105,6 +105,12 @@ main.mb .wurf{gap:1.2vw;padding:2vh 1.4vw}main.mb .wurf .wer{min-width:8vw}main.
 .fx .g180{background:linear-gradient(90deg,#ffd23d,var(--or),var(--rot));-webkit-background-clip:text;background-clip:text;color:transparent}
 .fx .bust{color:var(--rot)}.fx .leg{color:var(--gr);font-size:13vh}
 .blitz{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle,rgba(255,170,70,.28),rgba(8,8,12,.78) 65%);animation:blitz 2.4s ease-out both}
+/* next to the dartboard the banner stays over the players, so the board and its effects remain visible */
+.fx.li{right:47%}.fx.li .t{font-size:17vh}.fx.li .leg{font-size:10vh}.fx.li .t small.hy{font-size:3.6vh}
+.fx.li .blitz{background:radial-gradient(circle,rgba(255,170,70,.22),rgba(8,8,12,.72) 70%);-webkit-mask:linear-gradient(90deg,#000 80%,transparent);mask:linear-gradient(90deg,#000 80%,transparent)}
+/* bust: no dark curtain, the melting board stays visible */
+.blitz.hell{background:radial-gradient(circle,rgba(255,60,70,.16),rgba(8,8,12,.25) 70%)}
+.fx .bust{font-size:15vh;text-shadow:0 .6vh 4vh rgba(0,0,0,.85)}
 /* instant replay of a highlight clip */
 #rp{position:absolute;left:50%;top:50%;width:min(72vh,60vw);transform:translate(-50%,-50%) scale(.9);opacity:0;transition:opacity .4s,transform .4s;z-index:6;pointer-events:none;
   border-radius:3vh;overflow:hidden;background:#000;box-shadow:0 0 0 .4vh rgba(255,138,61,.7),0 0 0 100vmax rgba(8,8,12,.6)}
@@ -143,17 +149,111 @@ body.ov{background:transparent!important;cursor:none}
 @keyframes fx{0%{opacity:0;transform:scale(.4)}15%{opacity:1;transform:scale(1.08)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
 @keyframes blitz{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
 @keyframes rein{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
+/* live impact on the board: what happens depends on the dart and the game (kn = burst, brett classes = shake/glow) */
+#brett .kl{position:absolute;inset:0;pointer-events:none;z-index:3}
+.kn{position:absolute;width:0;height:0;--g:10vh;--r:0deg;--h:0deg;filter:hue-rotate(var(--h))}
+.kn i{position:absolute;left:0;top:0;width:var(--g);height:var(--g);margin:calc(var(--g)/-2) 0 0 calc(var(--g)/-2);border-radius:50%;opacity:0;will-change:transform,opacity}
+.kn .k{background:radial-gradient(circle,#fff 0,#fff4c2 14%,#ffb43a 32%,rgba(255,86,24,.55) 52%,rgba(255,60,20,0) 70%);animation:kn-k .7s cubic-bezier(.15,.9,.3,1) forwards}
+.kn .w{border:calc(var(--g)*.035) solid #ffc46b;box-shadow:0 0 calc(var(--g)*.08) #ff9a3c;animation:kn-w .8s cubic-bezier(.1,.8,.3,1) forwards}
+.kn .f{background:repeating-conic-gradient(from var(--r),#ffe2a0 0 3deg,transparent 3deg 24deg);-webkit-mask:radial-gradient(circle,transparent 22%,#000 34%,transparent 66%);mask:radial-gradient(circle,transparent 22%,#000 34%,transparent 66%);animation:kn-f .75s cubic-bezier(.1,.8,.3,1) forwards}
+.kn.f2 .f{background:repeating-conic-gradient(from var(--r),#fff 0 1.5deg,transparent 1.5deg 13deg,#ffc46b 13deg 15deg,transparent 15deg 31deg)}
+.kn.f3 .f{background:repeating-conic-gradient(from var(--r),#ffd27a 0 5deg,transparent 5deg 40deg)}
+/* miss: grey dust, no fire */
+.kn.staub .k{background:radial-gradient(circle,rgba(220,220,225,.75) 0,rgba(160,160,170,.4) 35%,transparent 68%);animation-duration:.9s}.kn.staub .w,.kn.staub .f{display:none}
+/* double / bull: shock ring in the colour of the bed */
+.kn.ring .w{border-color:#7dffb0;box-shadow:0 0 calc(var(--g)*.1) #2ee87a}.kn.ring .k{animation-duration:.5s}
+.kn.rot .w{border-color:#ff8a80;box-shadow:0 0 calc(var(--g)*.1) #ff3d3d}
+/* bust: the fire turns red and collapses */
+.kn.bust .k{background:radial-gradient(circle,#fff 0,#ff8a80 20%,rgba(200,20,20,.6) 48%,transparent 70%);animation:kn-zu .8s ease-in forwards}.kn.bust .f{display:none}.kn.bust .w{border-color:#ff5252;animation-duration:.5s}
+/* checkout: gold, longer, a second wave */
+.kn.gold .k{background:radial-gradient(circle,#fff 0,#fff6d0 16%,#ffd54f 36%,rgba(255,170,0,.55) 54%,transparent 72%);animation-duration:1.1s}
+.kn.gold .w{border-color:#ffe082;box-shadow:0 0 calc(var(--g)*.12) #ffc107;animation-duration:1.2s}.kn.gold .f{animation-duration:1.3s}
+.kn .w2{animation-delay:.18s}
+@keyframes kn-k{0%{opacity:1;transform:scale(.15)}25%{opacity:1}100%{opacity:0;transform:scale(1.25)}}
+@keyframes kn-w{0%{opacity:.95;transform:scale(.2)}100%{opacity:0;transform:scale(2.4)}}
+@keyframes kn-f{0%{opacity:1;transform:scale(.3) rotate(0)}100%{opacity:0;transform:scale(2) rotate(14deg)}}
+@keyframes kn-zu{0%{opacity:1;transform:scale(.2)}30%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:scale(.3)}}
+/* the board reacts: small knock, big shake, "no" shake, zoom towards the dart before the big one */
+#brett.b1{animation:b1 .28s ease-out}#brett.b2{animation:b2 .6s ease-out}#brett.b3{animation:b3 .9s ease-out}#brett.nein{animation:nein .5s ease-out}
+@keyframes b1{30%{transform:translate(calc(var(--bx)*.4vh),calc(var(--by)*.4vh))}}
+@keyframes b2{12%{transform:translate(calc(var(--bx)*1.2vh),calc(var(--by)*1.2vh)) scale(1.02)}30%{transform:translate(calc(var(--bx)*-.9vh),calc(var(--by)*-.7vh))}50%{transform:translate(calc(var(--bx)*.5vh),calc(var(--by)*.4vh))}70%{transform:translate(calc(var(--bx)*-.2vh),0)}}
+@keyframes b3{0%{transform:scale(1)}22%{transform:scale(1.07)}28%{transform:translate(calc(var(--bx)*2vh),calc(var(--by)*2vh)) scale(1.05)}40%{transform:translate(calc(var(--bx)*-1.6vh),calc(var(--by)*-1.2vh)) scale(1.03)}55%{transform:translate(calc(var(--bx)*1vh),calc(var(--by)*.8vh))}70%{transform:translate(calc(var(--bx)*-.5vh),0)}85%{transform:translate(.2vh,0)}}
+@keyframes nein{15%{transform:translateX(-1.4vh)}35%{transform:translateX(1.2vh)}55%{transform:translateX(-.8vh)}75%{transform:translateX(.4vh)}}
+/* the visit runs hot (two trebles, on 180), the board glows; on a finish the target double pulses */
+#brett{transition:box-shadow .6s}
+#brett.heiss{box-shadow:0 0 0 .4vh #ff8a3d,0 0 5vh rgba(255,120,40,.55),0 2vh 6vh rgba(0,0,0,.4)}
+#brett.goldrand{box-shadow:0 0 0 .5vh #ffd54f,0 0 7vh rgba(255,200,60,.7),0 2vh 6vh rgba(0,0,0,.4)}
+#brett .zl{position:absolute;width:5.5vh;height:5.5vh;margin:-2.75vh 0 0 -2.75vh;border-radius:50%;border:.35vh solid #ffd54f;box-shadow:0 0 2vh #ffc107,inset 0 0 1.2vh rgba(255,213,79,.6);animation:zl 1.4s ease-in-out infinite;pointer-events:none;z-index:2}
+#brett .zl.letzter{border-color:#fff;animation-duration:.9s}
+@keyframes zl{0%,100%{transform:scale(.85);opacity:.55}50%{transform:scale(1.15);opacity:1}}
+.blz{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(circle at var(--x) var(--y),rgba(255,236,200,.75),rgba(255,160,60,.25) 35%,transparent 70%);animation:blz .6s ease-out forwards}
+.blz.gold{background:radial-gradient(circle at var(--x) var(--y),rgba(255,248,210,.85),rgba(255,200,60,.3) 40%,transparent 75%);animation-duration:1s}
+@keyframes blz{0%{opacity:1}100%{opacity:0}}
+/* the board picture itself reacts: melts on a bust, cracks at a 180, spins on a checkout, drums on the bullseye, freezes after a weak visit */
+#brett .ri{position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none;z-index:2}
+#brett .ri svg{position:absolute;inset:0;width:100%;height:100%;transition:opacity .8s}
+#brett .ri svg.weg{opacity:0}
+#brett .ri path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:riss .38s cubic-bezier(.2,.8,.3,1) forwards;animation-delay:var(--v,0s)}
+#brett .ri path.gl{stroke:#ff9a3c;stroke-width:9;opacity:.5}#brett .ri path.li{stroke:#fff6dc;stroke-width:2.6}
+#brett .ri svg.gold path.gl{stroke:#ffc107}
+@keyframes riss{100%{stroke-dashoffset:0}}
+#brett.schmelz{animation:schmelz 1.7s cubic-bezier(.45,0,.3,1)}
+@keyframes schmelz{0%{transform:none;filter:none}12%{transform:translateX(-1vh)}22%{transform:translateX(.8vh)}
+  55%,70%{transform:translateY(3.2vh) scaleY(1.17) scaleX(.93) skewX(-1.5deg);filter:saturate(1.7) hue-rotate(-20deg) brightness(.8)}100%{transform:none;filter:none}}
+#brett .tr{position:absolute;width:1.5vh;height:1.5vh;margin-left:-.75vh;border-radius:50% 50% 50% 50%/35% 35% 65% 65%;background:linear-gradient(#ff7a6a,#c81e2e);opacity:0;transform-origin:50% 0;animation:tropf 1.5s cubic-bezier(.5,0,.8,.6) var(--v) forwards;z-index:3}
+@keyframes tropf{0%{opacity:0;transform:scale(.4,.4)}20%{opacity:.95;transform:scale(1,1.6)}60%{opacity:.95;transform:translateY(calc(var(--l)*.5)) scale(.9,2.6)}100%{opacity:0;transform:translateY(var(--l)) scale(.6,1.2)}}
+#brett.dreh{animation:dreh 1.15s cubic-bezier(.3,1.25,.4,1)}
+@keyframes dreh{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.1) rotate(140deg)}100%{transform:scale(1) rotate(360deg)}}
+#brett.trommel{animation:trommel .55s cubic-bezier(.2,1.8,.4,1)}
+@keyframes trommel{0%{transform:scale(1)}18%{transform:scale(.94)}45%{transform:scale(1.045)}70%{transform:scale(.99)}100%{transform:scale(1)}}
+#brett.frost .lv,#brett.frost .gz{animation:frost 2.2s ease-in-out}
+@keyframes frost{0%,100%{filter:none}25%,70%{filter:saturate(.25) brightness(.85) hue-rotate(160deg)}}
+#brett .eis{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,transparent 42%,rgba(190,230,255,.35) 70%,rgba(225,245,255,.8) 100%);box-shadow:inset 0 0 4vh rgba(210,240,255,.9);opacity:0;animation:eis 2.2s ease-in-out forwards}
+@keyframes eis{25%,70%{opacity:1}100%{opacity:0}}
+.kn .w3{animation-delay:.34s}
+/* stage: what happens around the board */
+.d.tt{border-color:var(--or);background:linear-gradient(160deg,rgba(255,138,61,.35),rgba(255,77,94,.15));box-shadow:0 0 2.4vh rgba(255,138,61,.45)}
+.d.dd{border-color:var(--gr);background:rgba(61,220,132,.16);box-shadow:0 0 2vh rgba(61,220,132,.35)}
+.d.bb{border-color:var(--rot);background:radial-gradient(circle,rgba(255,77,94,.45),rgba(61,220,132,.15));box-shadow:0 0 2.6vh rgba(255,77,94,.5)}
+.d.mm{color:var(--sub)}.d.mm.neu{animation:nein .45s ease-out}
+.summe{transition:color .3s,text-shadow .3s}
+.summe.h1{color:#ffd9a8}.summe.h2{color:var(--or);text-shadow:0 0 2vh rgba(255,138,61,.5)}.summe.h3{color:#ff6a3d;text-shadow:0 0 3vh rgba(255,90,40,.7)}
+.summe.h4{background:linear-gradient(90deg,#ffd23d,var(--or),var(--rot));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 2vh rgba(255,150,40,.8))}
+.summe.pop{animation:rein .4s cubic-bezier(.2,1.6,.4,1)}
+/* new player: a light sweeps over the card */
+.p.kommt::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.18) 48%,rgba(255,200,150,.12) 52%,transparent 70%);transform:translateX(-110%);animation:sweep .9s ease-out forwards;pointer-events:none}
+@keyframes sweep{100%{transform:translateX(110%)}}
+/* on a finish: gold border; one dart from the leg: heartbeat, the screen closes in */
+.p.fin{border-color:var(--gelb);box-shadow:0 0 0 .5vh rgba(255,200,61,.25),0 0 4vh rgba(255,200,61,.25)}
+.p.fin.herz{animation:herz 1.1s ease-in-out infinite}
+@keyframes herz{0%,40%,100%{box-shadow:0 0 0 .5vh rgba(255,200,61,.25),0 0 4vh rgba(255,200,61,.2)}12%{box-shadow:0 0 0 .9vh rgba(255,200,61,.55),0 0 7vh rgba(255,200,61,.5)}24%{box-shadow:0 0 0 .6vh rgba(255,200,61,.35),0 0 5vh rgba(255,200,61,.3)}}
+.fl{position:absolute;right:2vw;top:2.2vh;border-radius:99vh;padding:.5vh 1.2vw;font-size:2.2vh;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:var(--gelb);color:#1d1403;animation:rein .5s cubic-bezier(.2,1.6,.4,1)}
+.fl.match{background:linear-gradient(90deg,#ffd23d,var(--or),var(--rot));color:#fff;box-shadow:0 0 3vh rgba(255,120,40,.6)}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);opacity:0;transition:opacity 1.2s}
+body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient(ellipse at center,transparent 50%,rgba(60,8,0,.6) 100%)}
+/* on fire: two visits of 100+ in a row */
+.feuer{display:inline-block;margin-left:.6vw;font-size:.85em;animation:flack 1.6s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes flack{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
+/* bust: the card shakes, the screen flashes red */
+.p.wackel{animation:nein .5s ease-out}
+.rotb{position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 18vh rgba(255,40,60,.65);animation:blz .9s ease-out forwards}
+/* confetti for leg and match */
+.konf{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}
+.konf i{position:absolute;top:-4vh;left:var(--x);width:var(--w);height:calc(var(--w)*.45);background:var(--c);border-radius:.2vh;opacity:.95;animation:konf var(--d) cubic-bezier(.25,.6,.4,1) var(--v) forwards}
+@keyframes konf{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),112vh) rotate(var(--r));opacity:.85}}
+.fx .t small.hy{font-size:5vh;letter-spacing:.04em;margin-top:1.4vh;color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
   <div class="top"><div class="logo"><i></i>DartNest</div><div class="mitte" id="mitte"></div><div class="punkt" id="punkt"></div><div class="uhr" id="uhr"></div></div>
-  <main id="main"><div id="inhalt"></div><div id="brett"><svg class="gz" viewBox="-225 -225 450 450"></svg><div class="lv"><img alt=""></div><svg class="pf" viewBox="-225 -225 450 450"></svg><div class="bk"></div></div></main>
+  <main id="main"><div id="inhalt"></div><div id="brett"><svg class="gz" viewBox="-225 -225 450 450"></svg><div class="lv"><img alt=""></div><svg class="pf" viewBox="-225 -225 450 450"></svg><div class="ri"></div><div class="kl"></div><div class="bk"></div></div></main>
 </div>
 <div id="ov"></div>
 <div id="rp"><div class="rl"><i></i><span class="rt"></span><b class="rw"></b></div><video muted playsinline preload="auto"></video></div>
 <div class="fx" id="fx"></div>
+<div class="vig"></div>
 <script>
 (function () {
   'use strict';
@@ -168,6 +268,13 @@ body.ov{background:transparent!important;cursor:none}
       days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], first_leg: 'First to {n} leg', first_legs: 'First to {n} legs', sets_legs: 'First to {s} sets of {l} legs', lost: 'Connecting …', out: 'out', aims: 'throws at bull …', tour: 'Tournament running', cam: 'Camera {n}', cam_off: 'Camera off', replay: 'Replay', manual: 'Clip', one_eighty: '180', high_finish: 'Finish', match_won: 'Match dart', leg_won: 'Leg', nine_darter: 'Nine-darter', ton_forty: 'Visit', checkout: 'Finish', bullseye: 'Bullseye', three_in_a_bed: 'Three in a bed' }
   };
   let S = T.de;
+  Object.assign(T.de, { on_finish: 'auf Finish', matchdart: 'Matchdart', setdart: 'Satzdart', legdart: 'für das Leg', fire: 'heiß',
+    hype180: ['MAXIMUM!', 'EINHUNDERTACHTZIG!', 'PERFEKTE AUFNAHME!'], hype140: ['Ganz stark!', 'Was für eine Aufnahme!', 'Druck aufs Board!'], hype100: ['TON!', 'Stark!', 'Dreistellig!'],
+    hf: 'HIGH FINISH', bigfish: 'BIG FISH!' });
+  Object.assign(T.en, { on_finish: 'on a finish', matchdart: 'Match dart', setdart: 'Set dart', legdart: 'for the leg', fire: 'on fire',
+    hype180: ['MAXIMUM!', 'ONE HUNDRED AND EIGHTY!', 'PERFECT VISIT!'], hype140: ['Huge!', 'What a visit!', 'Big scoring!'], hype100: ['TON!', 'Strong!', 'Three figures!'],
+    hf: 'HIGH FINISH', bigfish: 'BIG FISH!' });
+  const eins = l => Array.isArray(l) ? l[Math.floor(Math.random() * l.length)] : l;
   const t = (k, v) => String(S[k] == null ? k : S[k]).replace(/\{(\w+)\}/g, (_, x) => v && v[x] != null ? v[x] : '');
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ft = f => !f ? '' : f === 'D25' ? 'Bull' : f === 'S25' ? '25' : f === 'M' ? 'Miss' : f[0] === 'S' ? f.slice(1) : f;
@@ -298,15 +405,71 @@ body.ov{background:transparent!important;cursor:none}
     return p.rest != null ? p.rest : '';
   }
 
+  /* ---------- stage: tension, heat, fire, counting scores, confetti ---------- */
+  const dartArt = f => !f || f === 'M' || f === 'S0' ? ' mm' : f === 'D25' || f === 'S25' ? ' bb' : f[0] === 'T' ? ' tt' : f[0] === 'D' ? ' dd' : '';
+  const hitze = au => { const x = au.summe || 0, z = (au.darts || []).length; return au.bust ? '' : x === 180 && z === 3 ? ' h4' : x >= 140 ? ' h3' : x >= 100 ? ' h2' : x >= 60 ? ' h1' : ''; };
+  function spannung(a, p, i) {
+    // the player to throw is on a finish: gold card; one dart away from the leg: heartbeat and "match dart" / "set dart"
+    const au = a.aufnahme || { darts: [] }, e = a.einstellungen || {}, x01 = !a.art || a.art === 'x01';
+    if (!x01 || a.phase !== 'laeuft' || i !== a.am_zug || !p.weg || au.bust || a.leg_gewinner != null || (au.darts || []).length >= 3) return { k: '', l: '' };
+    const rest = 3 - (au.darts || []).length, eng = p.weg.length <= 1;
+    const legSieg = e.legs && (p.legs || 0) + 1 >= e.legs, match = legSieg && (!e.sets || (p.sets || 0) + 1 >= e.sets), satz = legSieg && e.sets && !match;
+    const l = eng ? (match ? t('matchdart') : satz ? t('setdart') : t('legdart')) : t('on_finish');
+    return { k: ' fin' + (p.weg.length <= rest && eng ? ' herz' : ''), l: '<div class="fl' + (eng && match ? ' match' : '') + '">' + esc(l) + '</div>', match: eng && match, eng };
+  }
+  function feuer(a, i) {
+    // two visits of 100+ in a row: the player is on fire (three or more: two flames)
+    const v = (a.verlauf || []).filter(z => z.s === i);
+    let n = 0;
+    for (let k = v.length - 1; k >= 0 && (v[k].p || 0) >= 100 && !v[k].b; k--) n++;
+    return n >= 2 ? '<span class="feuer" title="' + t('fire') + '">' + (n >= 3 ? '🔥🔥' : '🔥') + '</span>' : '';
+  }
+  let bAlt = null, bZug = null, bAuf = null, bSpiel = null;
+  function konfetti(gold) {
+    const k = document.createElement('div'), farben = gold ? ['#ffd23d', '#ffe082', '#fff3c4', '#ffb300', '#ff8a3d'] : ['#ff8a3d', '#ff4d5e', '#ffc83d', '#3ddc84', '#40c4ff', '#ea80fc'];
+    k.className = 'konf';
+    let h = '';
+    for (let i = 0; i < (gold ? 90 : 50); i++) {
+      h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--w:' + (0.8 + Math.random() * 1.2).toFixed(2) + 'vh;--c:' + farben[i % farben.length] + ';--d:' + (2.2 + Math.random() * 1.8).toFixed(2) + 's;--v:' + (Math.random() * (gold ? 1.2 : .6)).toFixed(2) + 's;--dx:' + Math.round(Math.random() * 30 - 15) + 'vw;--r:' + Math.round(Math.random() * 1440 - 720) + 'deg"></i>';
+    }
+    k.innerHTML = h; document.body.appendChild(k); setTimeout(() => k.remove(), gold ? 5600 : 4400);
+  }
+  function zaehlen(el, von, bis) {
+    // the rest counts down instead of jumping
+    const t0 = performance.now(), d = 650;
+    const schritt = jetzt => { const p = Math.min(1, (jetzt - t0) / d), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(von + (bis - von) * e); if (p < 1 && el.isConnected) requestAnimationFrame(schritt); };
+    requestAnimationFrame(schritt);
+  }
+  function buehne(a) {
+    const sp = a.spieler || [], au = a.aufnahme || { darts: [] }, x01 = !a.art || a.art === 'x01';
+    const neuesSpiel = bSpiel !== a.id; bSpiel = a.id;
+    const reste = sp.map(p => p.rest);
+    if (!erst && !neuesSpiel && bAlt) {
+      document.querySelectorAll('#inhalt .gr[data-i]').forEach(el => { const i = +el.dataset.i, alt = bAlt[i], neu = reste[i];
+        if (x01 && typeof alt === 'number' && typeof neu === 'number' && neu < alt && neu > 0) zaehlen(el, alt, neu); });
+      if (bZug !== a.am_zug && a.phase === 'laeuft') { const c = document.querySelector('#inhalt .p[data-i="' + a.am_zug + '"]'); if (c) c.classList.add('kommt'); }
+    }
+    const auf = a.id + ':' + a.leg + ':' + a.am_zug + ':' + (au.darts || []).length + ':' + !!au.bust + ':' + a.leg_gewinner + ':' + a.phase;
+    if (!erst && !neuesSpiel && bAuf !== null && auf !== bAuf) {
+      if (au.bust) { const c = document.querySelector('#inhalt .p[data-i="' + a.am_zug + '"]'); if (c) c.classList.add('wackel'); const r = document.createElement('div'); r.className = 'rotb'; document.body.appendChild(r); setTimeout(() => r.remove(), 1000); }
+      if (a.phase === 'beendet') konfetti(true); else if (a.leg_gewinner != null) konfetti(false);
+      const sum = document.querySelector('#inhalt .summe'); if (sum && (au.darts || []).length) { sum.classList.remove('pop'); void sum.offsetWidth; sum.classList.add('pop'); }
+    }
+    bAlt = reste; bZug = a.am_zug; bAuf = auf;
+    const sg = sp[a.am_zug] ? spannung(a, sp[a.am_zug], a.am_zug) : {};
+    document.body.classList.toggle('spannung', !OV && a.phase === 'laeuft' && !!sg.eng);
+    document.body.classList.toggle('match', !!sg.match);
+  }
+
   function spieler(a) {
     const sp = a.spieler || [], e = a.einstellungen || {}, am = a.am_zug, [c, r] = spalten(sp.length);
     const groesse = mitBrett() ? (sp.length === 1 ? 26 : sp.length === 2 ? 17 : sp.length <= 4 ? 11 : 7) : sp.length <= 2 ? 30 : sp.length <= 4 ? 19 : 13;
     const zahlen = a.zahlen || [];
     return '<div class="sp" style="grid-template-columns:repeat(' + c + ',1fr);grid-template-rows:repeat(' + r + ',1fr)">' + sp.map((p, i) =>
-      '<div class="p' + (i === am && a.gewinner == null ? ' an' : '') + (p.raus ? ' raus' : '') + '">' +
-      '<div class="n"><span>' + esc(p.name) + '</span><small>' + (e.sets ? t('sets') + ' <b>' + p.sets + '</b> · ' : '') + t('legs') + ' <b>' + p.legs + '</b></small></div>' +
+      '<div class="p' + (i === am && a.gewinner == null ? ' an' : '') + (p.raus ? ' raus' : '') + spannung(a, p, i).k + '" data-i="' + i + '">' + spannung(a, p, i).l +
+      '<div class="n"><span>' + esc(p.name) + feuer(a, i) + '</span><small>' + (e.sets ? t('sets') + ' <b>' + p.sets + '</b> · ' : '') + t('legs') + ' <b>' + p.legs + '</b></small></div>' +
       (p.werfer ? '<div class="wf">▸ ' + esc(p.werfer) + '</div>' : '') +
-      '<div class="gr" style="font-size:' + groesse + 'vh">' + esc(gross(a, p)) + '</div>' +
+      '<div class="gr" style="font-size:' + groesse + 'vh" data-i="' + i + '">' + esc(gross(a, p)) + '</div>' +
       (p.marks && zahlen.length ? '<div class="marks">' + p.marks.map((m, k) => '<span class="m' + Math.min(3, m) + '">' + (zahlen[k] == null ? '?' : zahlen[k] === 25 ? 'B' : zahlen[k]) + '<i>' + ['', '/', '✕', '✓'][Math.min(3, m)] + '</i></span>').join('') + '</div>' : '') +
       '<div class="info"><span>' + t('avg') + ' <b>' + (p.avg || 0) + '</b></span>' + (p.letzte != null ? '<span>▸ <b>' + esc(p.letzte) + '</b></span>' : '') +
       (sp.length <= 4 ? '<span>' + t('darts') + ' <b>' + (p.leg_darts || 0) + '</b></span>' : '') + '</div>' +
@@ -320,12 +483,12 @@ body.ov{background:transparent!important;cursor:none}
     if (a.leg_gewinner != null) hinw = '<span class="hinw ok">' + t('leg') + ' ' + esc(sp[a.leg_gewinner].name) + '</span>';
     else if (au.bust) hinw = '<span class="hinw bust">' + t('bust') + '</span>';
     else if (au.fertig) hinw = '<span class="hinw">' + t('remove') + '</span>';
-    const dz = [0, 1, 2].map(i => '<div class="d' + (au.darts[i] ? '' : ' leer') + (au.darts[i] && i >= altDarts ? ' neu' : '') + '">' + (au.darts[i] ? ft(au.darts[i].f) : '–') + '</div>').join('');
+    const dz = [0, 1, 2].map(i => '<div class="d' + (au.darts[i] ? dartArt(au.darts[i].f) : ' leer') + (au.darts[i] && i >= altDarts ? ' neu' : '') + '">' + (au.darts[i] ? ft(au.darts[i].f) : '–') + '</div>').join('');
     altDarts = n;
     const runde = a.runden && wer.runde != null ? t('round', { n: Math.min(a.runden, (wer.runde || 0) + 1), m: a.runden }) : '';
     // next to the dartboard the bar is narrower: the hint goes under the name
     const unten = mitBrett() && hinw ? hinw : runde ? '<small>' + runde + '</small>' : '';
-    return '<div class="wurf"><div class="wer">' + esc(wer.werfer || wer.name) + ' ' + t('to_throw') + unten + '</div>' + (mitBrett() ? '' : hinw) + dz + '<div class="summe">' + (au.summe || 0) + '</div></div>';
+    return '<div class="wurf"><div class="wer">' + esc(wer.werfer || wer.name) + ' ' + t('to_throw') + unten + '</div>' + (mitBrett() ? '' : hinw) + dz + '<div class="summe' + hitze(au) + '">' + (au.summe || 0) + '</div></div>';
   }
 
   function ende(a) {
@@ -365,21 +528,25 @@ body.ov{background:transparent!important;cursor:none}
   }
 
   function effekt(a) {
-    if (!a || a.ansage_id == null || a.ansage_id === '') return;
+    if (!a || a.ansage_id == null || a.ansage_id === '') { if (altAnsage === null && a) altAnsage = ''; return; }  // nothing announced yet: the first call of the game is new
     const id = a.id + ':' + a.ansage_id + ':' + a.ansage;
     if (altAnsage === null || erst) { altAnsage = id; return; }
     if (id === altAnsage) return;
     altAnsage = id;
     const x = String(a.ansage || ''), fx = $('fx');
     let html = '';
-    if (x === '180') html = '<div class="t g180">180</div>';
+    const au = a.aufnahme || {}, wer = ((a.spieler || [])[a.am_zug] || {}).name || '';
+    if (x === '180') html = '<div class="t g180">180<small class="hy">' + esc(eins(S.hype180)) + '</small></div>';
+    else if (au.checkout && (au.summe || 0) >= 100 && (!a.art || a.art === 'x01')) html = '<div class="t g180">' + au.summe + '<small class="hy">' + esc(au.summe === 170 ? S.bigfish : S.hf) + ' · ' + esc(wer) + '</small></div>';
     else if (x === 'Bust') html = '<div class="t bust">' + t('bust') + '</div>';
     else if (/^(Leg|Satz) /.test(x) && a.phase !== 'beendet') {
       const art = x.split(' ')[0], name = x.slice(art.length + 1), wort = art === 'Leg' ? t('leg') : art === 'Satz' ? t('set') : t('game');
       html = '<div class="t leg">' + esc(wort) + '<small>' + esc(name) + '</small></div>';
-    } else if (+x >= 100 && (!a.art || a.art === 'x01')) html = '<div class="t g180" style="font-size:18vh">' + esc(x) + '</div>';
+    } else if (+x >= 100 && (!a.art || a.art === 'x01')) html = '<div class="t g180" style="font-size:18vh">' + esc(x) + '<small class="hy">' + esc(eins(+x >= 140 ? S.hype140 : S.hype100)) + '</small></div>';
     if (!html) return;
-    fx.innerHTML = '<div class="blitz"></div>' + html;
+    fx.classList.toggle('li', mitBrett() && a.phase !== 'beendet');
+    fx.innerHTML = '<div class="blitz' + (x === 'Bust' ? ' hell' : '') + '"></div>' + html;
+    effekt.bis = Date.now() + 2400;
     clearTimeout(effekt.z); effekt.z = setTimeout(() => { fx.innerHTML = ''; }, 2500);
   }
 
@@ -404,6 +571,129 @@ body.ov{background:transparent!important;cursor:none}
     return s + '<div class="of">' + [0, 1, 2].map(i => '<span class="od' + (au.darts[i] ? '' : ' leer') + '">' + (au.darts[i] ? ft(au.darts[i].f) : '–') + '</span>').join('') + hw + '<span class="os2">' + (au.summe || 0) + '</span></div>';
   }
 
+  /* ---------- live impact on the board: the effect depends on the dart and the game ---------- */
+  // miss: dust and a "no" wobble · single: small spark · double/bull: shock ring · treble: fire + knock
+  // second treble: bigger, the board starts to glow · 180, bullseye: zoom in, explosion, strong shake, flash
+  // checkout: gold, two waves, flash · match dart: all of it, longer · bust: the fire turns red and collapses
+  // on a finish the target field pulses (white when the next dart can win the leg). Sizes, sparks and colours vary a little every time.
+  let rgAlt = null, rgSpiel = null;
+  const zufall = (a, b) => a + Math.random() * (b - a);
+  function knall(x, y, art, gross) {
+    const el = $('brett'), kl = el.querySelector('.kl'), S = el.clientWidth || 1;
+    const n = document.createElement('div');
+    n.className = 'kn ' + art + ' f' + (1 + Math.floor(Math.random() * 3));
+    n.style.left = ((x + 225) / 450 * 100) + '%'; n.style.top = ((y + 225) / 450 * 100) + '%';
+    n.style.setProperty('--g', Math.round(S * gross * zufall(.88, 1.12)) + 'px');
+    n.style.setProperty('--r', Math.round(zufall(0, 360)) + 'deg');
+    n.style.setProperty('--h', (art === 'gold' || art === 'bust' || art === 'ring' || art === 'rot' ? 0 : Math.round(zufall(-14, 10))) + 'deg');
+    n.innerHTML = '<i class="k"></i><i class="w"></i><i class="f"></i>' + (art === 'gold' || art === 'rot' ? '<i class="w w2"></i>' : '') + (art === 'rot' ? '<i class="w w3"></i>' : '');
+    kl.appendChild(n);
+    setTimeout(() => n.remove(), 1600);
+  }
+  function beben(art) {
+    const el = $('brett'), w = zufall(0, Math.PI * 2);
+    el.style.setProperty('--bx', Math.cos(w).toFixed(2)); el.style.setProperty('--by', Math.sin(w).toFixed(2));
+    el.classList.remove('b1', 'b2', 'b3', 'nein', 'schmelz', 'dreh', 'trommel'); void el.offsetWidth; el.classList.add(art);
+    clearTimeout(beben.z); beben.z = setTimeout(() => el.classList.remove(art), 1800);
+  }
+  function blitz(x, y, gold) {
+    const el = $('brett'), r = el.getBoundingClientRect(), b = document.createElement('div');
+    b.className = 'blz' + (gold ? ' gold' : '');
+    b.style.setProperty('--x', Math.round(r.left + (x + 225) / 450 * r.width) + 'px'); b.style.setProperty('--y', Math.round(r.top + (y + 225) / 450 * r.height) + 'px');
+    document.body.appendChild(b); setTimeout(() => b.remove(), 1100);
+  }
+  function risse(x, y, gold) {
+    // cracks run from the dart over the board and stay until the darts are pulled
+    const ri = $('brett').querySelector('.ri'), n = 6 + Math.floor(Math.random() * 3), start = zufall(0, 360);
+    let wege = '';
+    for (let k = 0; k < n; k++) {
+      let w = start + k * 360 / n + zufall(-18, 18), px = x, py = y, d = 'M' + f1(x) + ' ' + f1(y);
+      const teile = 4 + Math.floor(Math.random() * 3), lang = zufall(90, 230) / teile;
+      for (let j = 0; j < teile; j++) {
+        w += zufall(-32, 32); px += Math.sin(w * Math.PI / 180) * lang; py -= Math.cos(w * Math.PI / 180) * lang; d += 'L' + f1(px) + ' ' + f1(py);
+        if (j === 1 && Math.random() < .6) { const w2 = w + (Math.random() < .5 ? -1 : 1) * zufall(35, 60), l2 = lang * zufall(.8, 1.6);
+          const ast = 'M' + f1(px) + ' ' + f1(py) + 'L' + f1(px + Math.sin(w2 * Math.PI / 180) * l2) + ' ' + f1(py - Math.cos(w2 * Math.PI / 180) * l2);
+          wege += '<path class="gl" pathLength="1" style="--v:.2s" d="' + ast + '"/><path class="li" pathLength="1" style="--v:.2s" d="' + ast + '"/>'; }
+      }
+      const v = (k * .03).toFixed(2) + 's';
+      wege += '<path class="gl" pathLength="1" style="--v:' + v + '" d="' + d + '"/><path class="li" pathLength="1" style="--v:' + v + '" d="' + d + '"/>';
+    }
+    ri.innerHTML = '<svg viewBox="-225 -225 450 450"' + (gold ? ' class="gold"' : '') + '>' + wege + '</svg>';
+  }
+  function heilen() { const sv = $('brett').querySelector('.ri svg'); if (sv && !sv.classList.contains('weg')) { sv.classList.add('weg'); setTimeout(() => { if (sv.isConnected) sv.remove(); }, 900); } }
+  function schmelzen() {
+    // bust: the board sags and drips
+    const el = $('brett'), kl = el.querySelector('.kl');
+    beben('schmelz');
+    for (let k = 0; k < 6; k++) {
+      const u = zufall(-.75, .75), tr = document.createElement('i');
+      tr.className = 'tr'; tr.style.left = (50 + u * 50) + '%'; tr.style.top = (50 + Math.sqrt(1 - u * u) * 50 - 1) + '%';
+      tr.style.setProperty('--v', zufall(.25, .7).toFixed(2) + 's'); tr.style.setProperty('--l', zufall(5, 11).toFixed(1) + 'vh');
+      kl.appendChild(tr); setTimeout(() => tr.remove(), 2400);
+    }
+  }
+  function frieren() {
+    const el = $('brett'), ri = el.querySelector('.ri'), e = document.createElement('div');
+    e.className = 'eis'; ri.appendChild(e); el.classList.add('frost');
+    setTimeout(() => { e.remove(); el.classList.remove('frost'); }, 2300);
+  }
+  function einschlag(d, i, lage) {
+    const [x, y] = dartMM(d, i), f = d.f || 'M', typ = f[0];
+    if (lage.letzter && lage.bust) { knall(x, y, 'bust', .32); schmelzen(); return; }
+    if (lage.letzter && lage.checkout) { knall(x, y, 'gold', .5); blitz(x, y, true); risse(x, y, true); beben('dreh'); return; }
+    if (lage.letzter && lage.n180) { el180(x, y, '', .55); setTimeout(() => risse(x, y, false), 200); return; }
+    if (f === 'D25') { knall(x, y, 'rot', .42); beben('trommel'); return; }
+    if (f === 'M' || f === 'S0') { knall(x, y, 'staub', .2); beben('nein'); return; }
+    if (f === 'S25') { knall(x, y, 'ring', .3); beben('b1'); return; }
+    if (typ === 'T') { const zweiter = lage.trebles >= 2; knall(x, y, '', zweiter ? .4 : .3); beben(zweiter ? 'b2' : 'b1'); return; }
+    if (typ === 'D') { knall(x, y, 'ring', .26); beben('b1'); return; }
+    knall(x, y, '', .16);
+  }
+  function el180(x, y, art, gross) {
+    // the big one: the board leans in, then it blows
+    const el = $('brett');
+    el.style.transformOrigin = ((x + 225) / 450 * 100) + '% ' + ((y + 225) / 450 * 100) + '%';
+    beben('b3');
+    setTimeout(() => { knall(x, y, art, gross); blitz(x, y, art === 'gold'); }, 200);
+  }
+  function ziel(a) {
+    // pulsing target on the board while the player is on a finish
+    const el = $('brett'); let z = el.querySelector('.zl');
+    const sp = (a.spieler || [])[a.am_zug] || {}, au = a.aufnahme || { darts: [] }, weg = a.phase === 'laeuft' && !au.bust && a.leg_gewinner == null ? sp.weg : null;
+    const f = weg && weg.length ? weg[0] : null;
+    if (!f || (au.darts || []).length >= 3) { if (z) z.remove(); return; }
+    if (!z) { z = document.createElement('div'); z.className = 'zl'; el.appendChild(z); }
+    const [x, y] = dartMM({ f }, 2);
+    z.style.left = ((x + 225) / 450 * 100) + '%'; z.style.top = ((y + 225) / 450 * 100) + '%';
+    z.classList.toggle('letzter', weg.length === 1);
+  }
+  function regie(a, b) {
+    const el = $('brett');
+    if (!b || !(a.phase === 'laeuft' || a.phase === 'beendet')) { rgAlt = null; el.classList.remove('heiss', 'goldrand'); const z = el.querySelector('.zl'); if (z) z.remove(); return; }
+    const au = a.aufnahme || { darts: [] }, darts = au.darts || [], schl = darts.map(d => d.f);
+    const neu = rgAlt !== null && rgSpiel === a.id && !erst ? (schl.length > rgAlt.length && rgAlt.every((f, i) => f === schl[i]) ? darts.slice(rgAlt.length) :
+      (schl.length === 1 && (rgAlt.length !== 1 || rgAlt[0] !== schl[0]) ? darts : [])) : [];
+    const anfang = darts.length - neu.length;
+    const trebles = darts.filter(d => /^T/.test(d.f || '')).length;
+    const n180 = darts.length === 3 && darts.every(d => d.f === 'T20') && (!a.art || a.art === 'x01' || a.art === 'highscore');
+    const checkout = !!au.checkout || a.leg_gewinner != null || a.phase === 'beendet';
+    if (a.phase === 'beendet') {
+      // match dart: the board is gone, the whole screen celebrates (confetti comes from the stage)
+      if (neu.length) { const g = document.createElement('div'); g.className = 'blz gold'; g.style.setProperty('--x', '50%'); g.style.setProperty('--y', '35%'); document.body.appendChild(g); setTimeout(() => g.remove(), 1100); }
+      rgAlt = schl; rgSpiel = a.id; return;
+    }
+    neu.forEach((d, k) => {
+      const letzter = k === neu.length - 1;
+      setTimeout(() => einschlag(d, anfang + k, { letzter, bust: !!au.bust, match: a.phase === 'beendet', checkout, n180, trebles: darts.slice(0, anfang + k + 1).filter(x => /^T/.test(x.f || '')).length }), k * 180);
+    });
+    if (rgAlt !== null && schl.length < rgAlt.length) heilen();
+    if (neu.length && darts.length === 3 && !au.bust && !checkout && (!a.art || a.art === 'x01') && (au.summe || 0) <= 20) setTimeout(frieren, 350);
+    rgAlt = schl; rgSpiel = a.id;
+    el.classList.toggle('heiss', a.phase === 'laeuft' && !checkout && !au.bust && (trebles >= 2 || (darts.length === 2 && darts.every(d => d.f === 'T20'))));
+    el.classList.toggle('goldrand', checkout);
+    ziel(a);
+  }
+
   /* ---------- instant replay of the newest highlight clip ---------- */
   let clipAlt = null, clipZeit = null;
   function wiederholung(c) {
@@ -417,9 +707,10 @@ body.ov{background:transparent!important;cursor:none}
     rp.querySelector('.rw').textContent = [S[c.art] || '', c.art === 'one_eighty' ? '' : (c.wert || ''), c.spieler || ''].filter(Boolean).join(' · ');
     v.onended = zu; v.onerror = zu;
     v.src = BASE + '/clip/' + id + '.mp4';
-    // after the 180 / leg effect
-    setTimeout(() => { rp.classList.add('an'); const p = v.play(); if (p && p.catch) p.catch(zu); }, 2600);
-    clearTimeout(clipZeit); clipZeit = setTimeout(zu, 2600 + ((c.dauer || 10) + 4) * 1000);
+    // as soon as the 180 / leg banner is gone (no fixed wait: the clip usually comes after it)
+    const warten = Math.max(300, (effekt.bis || 0) - Date.now() + 150);
+    setTimeout(() => { rp.classList.add('an'); const p = v.play(); if (p && p.catch) p.catch(zu); }, warten);
+    clearTimeout(clipZeit); clipZeit = setTimeout(zu, warten + ((c.dauer || 10) + 4) * 1000);
   }
 
   function zeichnen() {
@@ -438,7 +729,9 @@ body.ov{background:transparent!important;cursor:none}
       if (html !== altHtml) { altHtml = html; $('ov').innerHTML = html; $('ov').classList.toggle('da', !!html); }
     } else {
       if (html !== altHtml) { altHtml = html; $('inhalt').innerHTML = html; }
+      buehne(a);
       brettZeichnen(a, D.brett);
+      regie(a, D.brett);
     }
     wiederholung(D.clip);
     if ($('mitte').innerHTML !== mitte) $('mitte').innerHTML = mitte;

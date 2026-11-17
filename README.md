@@ -97,6 +97,10 @@ Four formats: **knockout** (3–32), **double KO** with winners and losers brack
 
 Open **DartNest → TV**, tick your TV and tap **Show on TV** – the score appears big on **Fire TV or Google TV**, live with every dart. Between games the TV shows the clock, the ranking and the last games. Switch on **Show by itself when a game starts** and you never touch the remote. **Show the dartboard** puts your board next to the score – live from the camera, straightened, with the darts of the visit marked. Any other screen works too: open the link in its browser.
 
+<p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/live.gif" alt="Live effects on the TV: cracks at a 180, the board melts on a bust, gold and confetti on a checkout" width="900"></p>
+
+The TV **plays along with the match**: every dart sparks where it lands, and what happens depends on the dart and the game – a 180 cracks the board, a bust melts it, a checkout spins it in gold, a match dart makes the whole screen hold its breath.
+
 ## Stream and highlights
 
 <p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/stream.png" alt="Stream overlay with score and replay, highlights card on the phone" width="900"></p>
@@ -286,6 +290,26 @@ Open **DartNest → TV** (or the **Settings** card → TV). The card shows a liv
 
 The page shows the players with rest, legs and sets, average, last visit and checkout, the current visit dart by dart, 180, bust and leg effects, the bull-off and the result. All game modes work (Cricket with marks, teams with the member who throws). Between games: clock, date, ranking and the last games. Fire TV opens the page in the **Silk browser** (install it from the Amazon app store if it is missing; if it was switched off, the card says so – switch it on under *Settings → Applications → Manage installed applications → Silk Browser*).
 
+**Live effects** (they run by themselves, nothing to set up):
+
+| What happens | On the board | Around it |
+| --- | --- | --- |
+| Single | small spark at the dart | – |
+| Treble | fire and a knock; the second treble is bigger and the board starts to glow | the dart chip glows, the visit total heats up (60+, 100+, 140+) |
+| Double, single bull | shock ring in green | green dart chip |
+| Bullseye | red rings, the board bounces like a drum | red chip |
+| Miss | grey dust, the board shakes its head | – |
+| 180 | the board leans in, explosion, flash, **cracks** that stay until the darts are pulled | banner with a changing line |
+| 20 points or less with three darts | the board **freezes** for a moment | – |
+| Bust | the fire collapses, the board **melts** and drips | the player card shakes, red frame |
+| On a finish | the target field pulses on the board (white when the next dart can win) | gold card, label *on a finish*; one dart away: heartbeat, *for the leg* / *set dart* / *match dart*, the screen closes in |
+| Checkout | gold explosion, golden cracks, the board **spins** | confetti, banner *high finish* from 100 (*big fish* at 170) |
+| Match dart | – | golden flash and gold confetti over the result |
+| Two visits of 100+ in a row | – | 🔥 next to the name (🔥🔥 from three) |
+| Any score | – | the rest counts down, a light sweeps over the next player's card |
+
+Sizes, sparks, directions and banner lines vary a little every time. Everything is plain CSS on the TV page (transforms and opacity, short and only when something happens), so a Fire TV stick keeps up. Next to the dartboard the banners stay over the player cards, so the board remains visible. With *reduced motion* set on the device the effects are off.
+
 #### Stream overlay
 
 The TV card has a section **Stream overlay (OBS, Streamlabs)** with its own link (same secret key as the TV page). In OBS or Streamlabs add a source → **Browser**, paste the link, size **1920 × 1080**. The background is transparent: a compact scoreboard sits at the bottom left (players, rest, legs/sets, the current visit), and highlight replays appear at the top right. Bull-off and the result are shown too; between games the overlay is empty.
@@ -294,9 +318,9 @@ The TV card has a section **Stream overlay (OBS, Streamlabs)** with its own link
 
 Open **DartNest → Highlights** (or the **Settings** card → Highlights).
 
-- **Record highlights**: while a game runs and the board detects, DartNest keeps the last seconds of the chosen **camera** (1–3). At a highlight it saves about 8 s before and 1.5 s after the dart as an MP4, straightened with the calibration (720 × 720; without calibration the plain camera image).
+- **Record highlights**: while a game runs and the board detects, DartNest keeps the last seconds of the chosen **camera** (1–3). At a highlight it saves about 8 s before and just under a second after the dart as an MP4, straightened with the calibration (720 × 720; without calibration the plain camera image).
 - **When**: 180, finish 100+ and match dart are on by default; leg won, nine-darter, 140+, every finish, bullseye and three in a bed can be added. One clip per visit, named after the best highlight.
-- **Replay on the TV and the overlay**: the new clip plays once right after the effect.
+- **Replay on the TV and the overlay**: the new clip plays once right after the effect, usually two to three seconds after the dart (the explosion is prepared once when recording starts, so making the clip takes about a second).
 - **Impact effect** (on by default): where and when the last dart lands, the clip explodes and the picture shakes for a moment. The place comes from the dart's board coordinates, the moment from the camera images (the frame in which the spot around the dart changes). It is burnt into the MP4, so TV, overlay, card and downloads look the same. Needs the calibration; typed darts and bots get the plain clip.
 - Tap a clip to play it, **Download** saves the MP4, **Delete** (tap twice) removes it. **Delete all clips** clears the list. The newest 30 are kept (`anzahl` up to 200); files are in **Media → dartnest/clips**.
 - The game card has a button to save the last seconds by hand.
@@ -774,7 +798,7 @@ Private project, no outside contributions. The code meets all rules of the Home 
 - **Feiern:** Stadion-Effekte bei 180, Checkout und Matchgewinn; Ansager in allen Spielarten mit Einlaufmusik je Spieler über Lautsprecher, Handy oder beides, mit Meisterschafts-Pack (Bühnen-Ansager-Stimme per Knopfdruck, jeder Punkte-Ton per Spracherkennung geprüft) oder eigenen Tönen; 18 Lichteffekte plus WLED-Effekte und -Presets per Klick.
 - **Besser werden:** Average, First 9, Checkout-Quote, Wertung, Trend, Abzeichen, direkter Vergleich, Rangliste und die **Zielhilfe** – wo du mit deiner Streuung am meisten triffst.
 - **Turniere:** K.-o. (3–32 Spieler), Doppel-K.-o. mit Verliererrunde (3–16), Gruppen + K.-o. (6–32) oder Liga (3–10), auch als 2er-Teams oder mit Handicap.
-- **Fernseher:** Spielstand groß auf Fire TV oder Google TV, live mit jedem Dart, auf Wunsch mit deiner Dartscheibe live aus der Kamera daneben; zwischen den Spielen Uhr, Rangliste und letzte Spiele. *DartNest → Fernseher*, Fernseher wählen, **Auf dem Fernseher zeigen** – oder von selbst bei jedem Spielstart.
+- **Fernseher:** Spielstand groß auf Fire TV oder Google TV, live mit jedem Dart, auf Wunsch mit deiner Dartscheibe live aus der Kamera daneben. Die Anzeige spielt mit: jeder Dart funkt dort, wo er steckt, und je nach Wurf und Spielstand passiert etwas anderes – bei 180 reißt das Board, beim Überwerfen schmilzt es, beim Checkout dreht es sich in Gold, beim Matchdart hält der ganze Bildschirm die Luft an; zwischen den Spielen Uhr, Rangliste und letzte Spiele. *DartNest → Fernseher*, Fernseher wählen, **Auf dem Fernseher zeigen** – oder von selbst bei jedem Spielstart.
 - **Stream und Highlights:** Overlay-Link aus der Fernseher-Karte als Browser-Quelle in OBS oder Streamlabs – durchsichtiger Spielstand über deinem Kamerabild. **Highlights** speichert jede 180, jedes Finish ab 100 und den Match-Dart als kurzes, gerade gerücktes Video der Board-Kamera – mit Explosion und bebendem Bild genau dort und dann, wo der letzte Dart einschlägt; ansehen, herunterladen oder löschen in der Karte *DartNest → Highlights*, auf Wunsch sofort als Wiederholung am Fernseher und im Overlay.
 - **LED-Uhr:** AWTRIX 3 (Ulanzi TC001) oder PixelIt unter *DartNest → Pixel-Anzeige* mit der IP-Adresse hinzufügen – während des Spiels zeigt sie Name und Rest des Spielers am Oche, bei 180, Checkout, Bust und Sieg einen kurzen Effekt, danach wieder ihre eigenen Apps.
 - **Board Manager in HA:** Kameras mit Kalibriernetz, Start/Stopp, Kalibrieren, Updates. Board-PC darf per Steckdose aus sein: Steckdose einmal unter *Board Manager → Steckdose des Board-PCs* wählen, dann hat jede DartNest-Seite den Ein/Aus-Knopf. Schont kleine PCs: Livebilder teilen sich eine Bildquelle (höchstens 10 Bilder/s, nur wenn jemand zusieht), Kamera-Standby wird als „Standby“ gezeigt und beim Spielstart selbst geweckt.

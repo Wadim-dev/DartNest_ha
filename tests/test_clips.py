@@ -68,13 +68,20 @@ async def mit_http(hass: HomeAssistant, aioclient_mock, mock_entry, monkeypatch)
 async def test_clip_bei_180(hass: HomeAssistant, mit_http, hass_client, hass_client_no_auth, monkeypatch) -> None:
     kodiert: list[tuple] = []
 
-    def kodieren(ffmpeg, bilder, fps, eck, video: Path, vorschau: Path, mitte, fx=None) -> bool:
-        kodiert.append((len(bilder), fps, eck, mitte, fx))
+    def kodieren(ffmpeg, bilder, fps, eck, video: Path, vorschau: Path, mitte, fx=None, knall=None) -> bool:
+        kodiert.append((len(bilder), fps, eck, mitte, fx, knall))
         video.write_bytes(b"mp4")
         vorschau.write_bytes(b"jpg")
         return True
 
     monkeypatch.setattr(clips_modul, "_kodieren", kodieren)
+
+    def rendern(ffmpeg, ordner: Path) -> bool:
+        ordner.mkdir(parents=True)
+        (ordner / "001.png").write_bytes(b"png")
+        return True
+
+    monkeypatch.setattr(clips_modul, "knall_rendern", rendern)
     c = mit_http.runtime_data.clips
     attr = lambda: hass.states.get("sensor.autodarts_board_players").attributes["clips"]  # noqa: E731
     assert attr()["an"] is False and attr()["anlaesse"] == ["one_eighty", "high_finish", "match_won"] and attr()["liste"] == []
@@ -102,6 +109,8 @@ async def test_clip_bei_180(hass: HomeAssistant, mit_http, hass_client, hass_cli
     assert len(liste) == 1 and liste[0]["art"] == "one_eighty" and liste[0]["spieler"] == "Anna" and liste[0]["wert"] == 180
     assert kodiert[0][0] > 3
     assert kodiert[0][4] is None  # typed darts: no impact effect
+    knall = kodiert[0][5]
+    assert knall is not None and (knall / "001.png").exists()  # explosion prepared once when recording starts
     assert attr()["effekt"] is True
     cid = liste[0]["id"]
     assert (c.ordner / f"{cid}.mp4").exists() and (c.ordner / f"{cid}.jpg").exists()
@@ -156,6 +165,10 @@ async def test_clip_bei_180(hass: HomeAssistant, mit_http, hass_client, hass_cli
     await _dienst(hass, "spiel_abbrechen")
     await asyncio.sleep(0.1)
     assert not c._laeuft()
+
+    # unloading removes the prepared explosion
+    await c.beenden()
+    assert not knall.exists() and c._knall is None
 
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
@@ -252,3 +265,18 @@ def test_kodieren_mit_einschlag(tmp_path: Path) -> None:
     eck = clips_modul.ecken(GERADE)
     assert clips_modul._kodieren("ffmpeg", bilder, 5.0, eck, tmp_path / "c.mp4", tmp_path / "c.jpg", 6, (1.2, 360.0, 195.0))
     assert (tmp_path / "c.mp4").stat().st_size > 1000 and (tmp_path / "c.jpg").exists()
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
+def test_knall_vorbereitet(tmp_path: Path) -> None:
+    knall = tmp_path / "knall"
+    assert clips_modul.knall_rendern("ffmpeg", knall)
+    assert len(list(knall.glob("*.png"))) == round(clips_modul.FX_DAUER * 25)
+    assert not clips_modul.knall_rendern("gibtsnicht", tmp_path / "x")
+    # explosion near the end: the last frame is held until it is over
+    bilder = _bilder(9, n=10)
+    video = tmp_path / "c.mp4"
+    assert clips_modul._kodieren("ffmpeg", bilder, 5.0, clips_modul.ecken(GERADE), video, tmp_path / "c.jpg", 9, (1.8, 360.0, 195.0), knall)
+    dauer = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(video)],
+                                 capture_output=True, check=True).stdout)
+    assert dauer >= 1.8 + clips_modul.FX_DAUER
