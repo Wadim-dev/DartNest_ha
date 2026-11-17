@@ -3,6 +3,18 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.37.0
+
+- **TV: winning a match gets its own show.** The winner screen no longer just appears. The match dart explodes in gold, the screen goes dark, *GAME SHOT!* slams in, the board flies to the middle, spins faster and faster under a drum roll of shock waves and bursts in a white flash. Then the trophy drops in from above, the name slams in letter by letter in front of turning rays, the table slides up, and fireworks, embers and gold confetti keep going in several waves.
+- **TV: everything much bigger.** Explosions are up to twice the size and throw sparks, shock waves run over the whole screen, the whole picture shakes (not only the board), big moments flash white, the board gets a ring of fire and rays, embers rise. Cracks glow thicker, the melt sags further, banners slam in from large.
+- **TV: effects for many more moments.** The points of every dart fly from the board to the score. Stamps slam onto the board or the player card: *On for 180!* after two treble 20, *Bullseye!*, *Three in a bed!*, *Shanghai!*, *Hat-trick!*, *Breakfast!* (20, 5, 1), *No score!*, *Ice cold!*, *Takes the lead!*, *Finish 101?* and *Match darts!* when a player steps up, *20 closed!* in Cricket, *Leg 2* at the start of a leg, *Game on!* at the start of a game. Visits of 60, 100 and 140 or more shake the room in three steps, a light sweeps over the screen on every player change, fireworks for a leg.
+
+**Deutsch**
+
+- **Fernseher: Der Sieg bekommt seine eigene Show.** Das Gewinner-Bild erscheint nicht mehr einfach. Der Matchdart explodiert in Gold, der Bildschirm wird dunkel, *GAME SHOT!* knallt herein, das Board fliegt in die Mitte, dreht sich unter einem Trommelwirbel aus Druckwellen immer schneller und zerplatzt in einem weißen Blitz. Dann fällt der Pokal von oben herein, der Name knallt Buchstabe für Buchstabe vor drehenden Strahlen herein, die Tabelle schiebt sich hoch, und Feuerwerk, Glut und goldenes Konfetti laufen in mehreren Wellen weiter.
+- **Fernseher: alles deutlich größer.** Explosionen sind bis doppelt so groß und werfen Funken, Druckwellen laufen über den ganzen Bildschirm, das ganze Bild bebt (nicht nur das Board), große Momente blitzen weiß, das Board bekommt einen Feuerring und Strahlen, Glut steigt auf. Risse glühen dicker, das Schmelzen sackt weiter ab, Banner knallen aus groß herein.
+- **Fernseher: Effekte bei viel mehr Aktionen.** Die Punkte jedes Darts fliegen vom Board zum Punktestand. Stempel knallen aufs Board oder auf die Spielerkarte: *180 möglich!* nach zwei Triple 20, *Bullseye!*, *Drei im Bett!*, *Shanghai!*, *Hattrick!*, *Frühstück!* (20, 5, 1), *Nichts!*, *Eiskalt!*, *Führung!*, *Finish 101?* und *Matchdarts!*, wenn ein Spieler antritt, *20 zu!* bei Cricket, *Leg 2* zum Leg-Beginn, *Game on!* zum Spielbeginn. Aufnahmen ab 60, 100 und 140 lassen den Raum in drei Stufen beben, bei jedem Spielerwechsel läuft ein Licht über den Bildschirm, Feuerwerk beim Leg.
+
 ## 1.36.0
 
 - **Replays come much sooner.** With the impact effect a clip took about six seconds to make, and the TV then waited another 2.6 s. Now the explosion is drawn once when recording starts and only laid on each clip (about one second), recording stops 0.8 s after the dart instead of 1.5 s (a running explosion is finished on the last picture), and the TV shows the replay as soon as the 180 banner is gone. In practice: two to three seconds after the dart instead of ten.
