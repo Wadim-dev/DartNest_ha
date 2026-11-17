@@ -6,11 +6,17 @@ and in the Home Assistant update dialog are taken from this file automatically.
 ## 1.37.1
 
 - **Fixed: own caller packs were often not heard.** When a pack had no sound with the player's name, the whole visit including "you require …" was spoken by the voice, so the pack's own bust or score sound never played. Now a missing name is left out, without "you require" or the rest number only the pack's own sound plays, and the voice speaks only what the pack cannot say at all.
+- **New: "Pack sounds only".** Under the chosen pack in step 2 of the caller card. When it is on, only the sounds of the pack play and the voice never speaks in between; what the pack does not have stays silent.
+- **New: see what a pack has.** The pack menu (⋮) of every pack lists all sounds: green = there, red = missing, each with its exact file name and when it plays. Player names and every possible score are included.
+- **Fixed: newly uploaded sounds were not used.** Sounds added to a pack after it was chosen only counted after a restart. Now the pack is read again when the caller card opens and at the start of every game.
 - **Other spellings of file names.** `gameon`, `Game-On`, `no_score`, `nine_darter`, `you_require` and similar names of packs from elsewhere are recognised.
 
 **Deutsch**
 
 - **Behoben: eigene Ansager-Packs waren oft nicht zu hören.** Fehlte im Pack ein Ton mit dem Spielernamen, sprach die Stimme die ganze Aufnahme samt „du brauchst …“, der Bust- oder Punkte-Ton des Packs kam nie. Jetzt fällt ein fehlender Name weg, ohne „du brauchst“ oder Restzahl spielt nur der Ton des Packs, und die Stimme spricht nur noch, was das Pack gar nicht sagen kann.
+- **Neu: „Nur Töne aus dem Pack“.** Unter dem gewählten Pack in Schritt 2 der Ansager-Karte. Ist es an, laufen nur die Töne des Packs, die Stimme spricht nie dazwischen; was dem Pack fehlt, bleibt still.
+- **Neu: sehen, was ein Pack hat.** Das Pack-Menü (⋮) jedes Packs listet alle Töne: grün = da, rot = fehlt, jeweils mit genauem Dateinamen und wann der Ton kommt. Spielernamen und alle möglichen Punktzahlen sind dabei.
+- **Behoben: neu hochgeladene Töne wurden nicht genutzt.** Töne, die nach der Wahl des Packs dazukamen, zählten erst nach einem Neustart. Jetzt wird das Pack beim Öffnen der Ansager-Karte und zu jedem Spielbeginn neu gelesen.
 - **Andere Schreibweisen der Dateinamen.** `gameon`, `Game-On`, `no_score`, `nine_darter`, `you_require` und ähnliche Namen fremder Packs werden erkannt.
 
 ## 1.37.0
