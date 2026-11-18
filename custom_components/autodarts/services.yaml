@@ -2,6 +2,12 @@ spiel_starten:
   name: Spiel starten
   description: Startet ein lokales Spiel (X01, Cricket, Training oder Partyspiel). Ohne Angaben gelten die letzten Einstellungen.
   fields: &startfelder
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     spiel:
       name: Spielart
       description: "x01; Cricket: cricket, wild_mouse, mickey; Training: atc (Rund um die Uhr), bobs27, doppel, checkout121, checkout, catch40, jdc, singles; Party: highscore (Count-Up), shanghai, killer, halve_it, golf, baseball, bermuda, rtw (Round the World), gotcha, nine_lives, football, scram (genau 2 Spieler)"
@@ -103,22 +109,63 @@ turnier_starten:
 turnier_weiter:
   name: Turnier weiter
   description: Startet das nächste Match des laufenden Turniers.
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 turnier_abbrechen:
   name: Turnier abbrechen
   description: Beendet das Turnier (ein laufendes Match wird normal zu Ende gespielt).
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 spiel_abbrechen:
   name: Spiel abbrechen
   description: Beendet das Spiel ohne Wertung (nach Spielende zurück zur Auswahl).
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 weiter:
   name: Weiter
   description: Aufnahme beenden, nächster Spieler (fehlende Darts zählen als Fehlwurf).
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 rueckgaengig:
   name: Rückgängig
   description: Letzten Dart zurücknehmen.
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 wurf_aendern:
   name: Wurf ändern
   description: Dart korrigieren, nachtragen oder löschen.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     aufnahme:
       name: Aufnahme
       description: Nummer der Aufnahme (leer = aktuelle).
@@ -181,6 +228,12 @@ strom_setzen:
   name: Steckdose des Board-PCs
   description: Steckdose, an der der Board-PC hängt. Alle DartNest-Karten (auch die Seitenleiste) zeigen dann den Ein/Aus-Knopf. Leer lassen entfernt sie. Die Karte „Board Manager“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     schalter:
       name: Steckdose
       example: switch.darts_steckdose
@@ -216,6 +269,12 @@ fernseher_zeigen:
   name: Darts auf dem Fernseher zeigen
   description: Startet die DartNest-Fernseher-Seite (Spielstand, sonst Uhr und Rangliste) auf Fire TV oder Google TV. Ohne Angabe die Fernseher aus den DartNest-Einstellungen.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     geraete:
       name: Fernseher (optional)
       selector:
@@ -226,6 +285,12 @@ fernseher_beenden:
   name: Darts vom Fernseher nehmen
   description: Schließt die DartNest-Seite auf dem Fernseher (Fire/Google TV gehen zum Startbildschirm).
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     geraete:
       name: Fernseher (optional)
       selector:
@@ -236,6 +301,17 @@ fernseher_setzen:
   name: Fernseher für Darts einstellen
   description: Welche Fernseher DartNest nutzt und ob die Anzeige beim Spielstart von selbst startet. Die Karte „DartNest-Einstellungen“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
+    alle:
+      name: Alle Boards zeigen
+      description: Bei mehreren Boards teilen sich alle Boards, auf denen gespielt wird, das Bild.
+      selector:
+        boolean:
     geraete:
       name: Fernseher
       selector:
@@ -278,6 +354,12 @@ lichteffekte_setzen:
     effekt (farbe, blinken, blitz, pulsieren, herzschlag, stroboskop, ausblenden, wechsel, regenbogen, welle, konfetti, lauflicht, funkeln, polizei, feuer, gewitter, lampe, preset), farbe [r, g, b], farbe2 (bei wechsel), helligkeit 1–100,
     dauer 1–60 s, aktiv; bei lampe lampen_effekt, tempo/staerke 0–255 (WLED), bei preset preset. Die Karte „DartNest Lichteffekte“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     regeln:
       name: Regeln
       required: true
@@ -288,6 +370,12 @@ lichteffekt_testen:
   name: Lichteffekt testen
   description: Einen Lichteffekt sofort einmal abspielen, ohne ihn zu speichern.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     regel:
       name: Regel
       required: true
@@ -301,6 +389,12 @@ ansager_setzen:
     pack (Ordner unter Medien autodarts/caller), punkte, rest, ende, besondere, game_on, walkon,
     walkon_sekunden 5–60, songs (Spieler-ID → Datei in autodarts/walkon). Die Karte „DartNest Ansager“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     einstellungen:
       name: Einstellungen
       required: true
@@ -311,6 +405,12 @@ ansager_testen:
   name: Ansager testen
   description: Einmal etwas über die gewählten Lautsprecher ansagen.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     text:
       name: Text
       example: Einhundertachtzig!
@@ -393,6 +493,12 @@ clips_setzen:
   name: Highlight-Clips einstellen
   description: Bei Highlights (180, Finish ab 100, Matchdart …) die letzten Sekunden der Board-Kamera als kurzes Video speichern (Medien → dartnest/clips). Die Karte „DartNest Highlights“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     an:
       name: Clips aufnehmen
       selector:
@@ -451,9 +557,22 @@ clips_setzen:
 clip_speichern:
   name: Clip speichern
   description: Die letzten Sekunden der Kamera jetzt als Clip speichern (nur während eines Spiels mit eingeschalteten Clips).
+  fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
 clip_loeschen:
   name: Clip löschen
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     id:
       name: Clip
       selector:
@@ -468,6 +587,12 @@ aufnahme_eintragen:
     Eine ganze Aufnahme mit ihrer Punktzahl eintragen (nur X01), z. B. per Sprache „Alex hat 140“.
     Ist die Zahl genau der Rest, gilt sie als Checkout.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     spieler:
       name: Spieler
       description: Name des Spielers, der dran ist (leer = wer dran ist).
@@ -486,6 +611,12 @@ pixel_setzen:
   name: Pixel-Anzeigen einstellen
   description: Spielstand und Effekte auf AWTRIX-3- und PixelIt-Anzeigen. Die Karte „DartNest Pixel-Anzeige“ macht das per Klick.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     an:
       name: Spielstand zeigen
       selector:
@@ -498,6 +629,12 @@ pixel_hinzufuegen:
   name: Pixel-Anzeige hinzufügen
   description: AWTRIX 3 oder PixelIt über die IP-Adresse hinzufügen; die Art wird selbst erkannt.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     adresse:
       name: Adresse
       required: true
@@ -507,6 +644,12 @@ pixel_hinzufuegen:
 pixel_entfernen:
   name: Pixel-Anzeige entfernen
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     adresse:
       name: Adresse
       required: true
@@ -517,6 +660,12 @@ pixel_testen:
   name: Pixel-Anzeige testen
   description: Zeigt einen Gruß auf einer Anzeige (Adresse) oder allen.
   fields:
+    board:
+      name: Board
+      description: Nur bei mehreren Boards – welches Board. Ohne Angabe das erste.
+      selector:
+        device:
+          integration: autodarts
     adresse:
       name: Adresse
       example: 192.168.178.50

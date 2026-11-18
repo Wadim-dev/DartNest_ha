@@ -413,11 +413,15 @@ class Ansager:
     """Turns game events into announcements on the chosen speakers."""
 
     def __init__(self, hass: HomeAssistant, stand: Callable[[], dict[str, Any] | None],
-                 namen: Callable[[], list[str]] | None = None) -> None:
+                 namen: Callable[[], list[str]] | None = None, endung: str = "",
+                 werkstatt: Callable[[], Ansager] | None = None) -> None:
         self.hass = hass
         self._stand = stand
         self._namen = namen or list
-        self._store: Store[dict[str, Any]] = Store(hass, 1, "autodarts.ansager")
+        # settings (speakers, voice, pack …) per board; the sound packs in the media folder are shared
+        self._store: Store[dict[str, Any]] = Store(hass, 1, f"autodarts.ansager{endung}")
+        # several boards: one of them makes, checks and listens to the packs (see werkstatt())
+        self._werkstatt = werkstatt
         # a pack that is still being made (survives a restart; continues by itself after the daily limit)
         self._auftrag_store: Store[dict[str, Any]] = Store(hass, 1, "autodarts.ansager_auftrag")
         self._auftrag: dict[str, Any] = {}
@@ -460,10 +464,16 @@ class Ansager:
         await self._pack_lesen()
         self._auftrag = (await self._auftrag_store.async_load()) or {}
         self._gehoert = (await self._gehoert_store.async_load()) or {}
+        if self.werkstatt() is not self:
+            return  # another board already continues unfinished packs
         if self._auftrag.get("pack"):
             self._wecken(120)  # continue a pack that was not finished before the restart
         elif await self.hass.async_add_executor_job(self._ungehoert):
             self._wecken(180)  # packs made before 1.23: listen to their score sounds once
+
+    def werkstatt(self) -> Ansager:
+        """The caller that makes and checks the shared sound packs (the first board's)."""
+        return self._werkstatt() if self._werkstatt else self
 
     async def setzen(self, einst: dict[str, Any]) -> None:
         self.einst = EINSTELLUNGEN(dict(einst))
@@ -477,8 +487,9 @@ class Ansager:
         soll = set(self.pack_texte(self._namen()))
         info = {k: {"toene": len(v), "fehlen": len(soll - set(v)) if k.startswith("Meisterschaft") else None}
                 for k, v in daten["packs"].items()}
-        return {"einstellungen": self.einst, "stimmen": stimmen, "erzeugung": self.erzeugung, "pruefung": self.pruefung,
-                "info": info, "auftrag": self._auftrag, "hoeren": self._stt() is not None, "gehoert": self._gehoert, **daten}
+        w = self.werkstatt()
+        return {"einstellungen": self.einst, "stimmen": stimmen, "erzeugung": w.erzeugung, "pruefung": w.pruefung,
+                "info": info, "auftrag": w._auftrag, "hoeren": self._stt() is not None, "gehoert": w._gehoert, **daten}
 
     async def _pack_lesen(self) -> None:
         pack = self.einst["pack"]

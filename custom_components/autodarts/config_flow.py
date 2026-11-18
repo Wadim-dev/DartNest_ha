@@ -5,13 +5,13 @@ from __future__ import annotations
 from ipaddress import IPv4Address
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 import voluptuous as vol
 
 from .api import board_erstellen
 from .board import AutodartsError
-from .const import CONF_HOST, CONF_PORT, DOMAIN, GERAETENAME, STANDARD_PORT
+from .const import CONF_HOST, CONF_KENNUNG, CONF_PORT, DOMAIN, GERAETENAME, STANDARD_PORT
 
 SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): str,
@@ -31,6 +31,10 @@ def _adresse(info: ZeroconfServiceInfo) -> str | None:
     return str(nutzbar[0]) if nutzbar else None
 
 
+def _adresse_von(eintrag: ConfigEntry) -> tuple[str, int]:
+    return eintrag.data[CONF_HOST], int(eintrag.data.get(CONF_PORT, STANDARD_PORT))
+
+
 def _port(info: ZeroconfServiceInfo) -> int:
     """Plain HTTP port; newer Board Managers also announce an HTTPS port."""
     for wert in (info.properties.get("insecurePort"), info.port):
@@ -44,7 +48,7 @@ def _port(info: ZeroconfServiceInfo) -> int:
 
 
 class DartsConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Set up one Autodarts board."""
+    """Set up an Autodarts board; every further board is one more entry."""
 
     VERSION = 1
 
@@ -67,44 +71,71 @@ class DartsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=fehler,
         )
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        await self.async_set_unique_id(DOMAIN)
+    def _titel(self) -> str:
+        """The first board keeps its old name, every further board gets a number (rename the device as you like)."""
+        n = len(self._async_current_entries(include_ignore=False))
+        return GERAETENAME if not n else f"{GERAETENAME} {n + 1}"
+
+    async def _kennung_setzen(self, host: str, port: int, kennung: str | None) -> None:
+        """Unique id of a new board: the domain for the first one (as before several boards), else its address or name."""
+        erste = not any(e.unique_id == DOMAIN for e in self._async_current_entries(include_ignore=False))
+        await self.async_set_unique_id(DOMAIN if erste else (f"zc:{kennung}" if kennung else f"{host}:{port}"))
         self._abort_if_unique_id_configured()
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Add a board by hand (also a second, third … board)."""
+        if user_input is not None and any(_adresse_von(e) == (user_input[CONF_HOST], user_input[CONF_PORT])
+                                          for e in self._async_current_entries(include_ignore=False)):
+            return self.async_abort(reason="already_configured")
         if (form := await self._formular("user", user_input, None)) is not None:
             return form
         assert user_input is not None
-        return self.async_create_entry(title=GERAETENAME, data=user_input)
+        await self._kennung_setzen(user_input[CONF_HOST], user_input[CONF_PORT], None)
+        return self.async_create_entry(title=self._titel(), data=user_input)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
-        """The Board Manager announces itself as _autodarts-board._tcp."""
+        """The Board Manager announces itself as _autodarts-board._tcp (name = the board, address may change)."""
         host = _adresse(discovery_info)
         if host is None:
             return self.async_abort(reason="cannot_connect")
         port = _port(discovery_info)
-        await self.async_set_unique_id(DOMAIN)
-        # Board got a new address: take it over, but only if the old one no longer answers.
-        eintrag = self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
-        if eintrag is not None and (eintrag.data[CONF_HOST], eintrag.data.get(CONF_PORT, STANDARD_PORT)) != (host, port):
+        kennung = discovery_info.name.split("._autodarts-board")[0] or None
+        eintraege = self._async_current_entries(include_ignore=False)
+        # known address: only remember the name of the board
+        for e in eintraege:
+            if _adresse_von(e) == (host, port):
+                if kennung and e.data.get(CONF_KENNUNG) != kennung:
+                    self.hass.config_entries.async_update_entry(e, data={**e.data, CONF_KENNUNG: kennung})
+                return self.async_abort(reason="already_configured")
+        # a known board with a new address (or the only board from before 1.38, which has no name yet):
+        # take the new address over, but only if the old one no longer answers
+        gleich = [e for e in eintraege if kennung and e.data.get(CONF_KENNUNG) == kennung]
+        if not gleich and len(eintraege) == 1 and not eintraege[0].data.get(CONF_KENNUNG):
+            gleich = eintraege
+        for e in gleich:
             try:
-                await board_testen(self, eintrag.data[CONF_HOST], eintrag.data.get(CONF_PORT, STANDARD_PORT))
+                await board_testen(self, *_adresse_von(e))
             except AutodartsError:
                 try:
                     await board_testen(self, host, port)
                 except AutodartsError:
                     return self.async_abort(reason="already_configured")
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host, CONF_PORT: port})
-        self._abort_if_unique_id_configured()
+                self.hass.config_entries.async_update_entry(e, data={**e.data, CONF_HOST: host, CONF_PORT: port, **({CONF_KENNUNG: kennung} if kennung else {})})
+                self.hass.config_entries.async_schedule_reload(e.entry_id)
+            return self.async_abort(reason="already_configured")
+        # a new board
         try:
             await board_testen(self, host, port)
         except AutodartsError:
             return self.async_abort(reason="cannot_connect")
-        self._gefunden = {CONF_HOST: host, CONF_PORT: port}
+        await self._kennung_setzen(host, port, kennung)
+        self._gefunden = {CONF_HOST: host, CONF_PORT: port, **({CONF_KENNUNG: kennung} if kennung else {})}
         self.context["title_placeholders"] = {"host": host}
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
-            return self.async_create_entry(title=GERAETENAME, data=self._gefunden)
+            return self.async_create_entry(title=self._titel(), data=self._gefunden)
         self._set_confirm_only()
         return self.async_show_form(step_id="zeroconf_confirm", description_placeholders={"host": self._gefunden[CONF_HOST]})
 

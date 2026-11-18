@@ -101,6 +101,12 @@ Open **DartNest → TV**, tick your TV and tap **Show on TV** – the score appe
 
 The TV **plays along with the match**: every dart sparks where it lands, and what happens depends on the dart and the game – a 180 cracks the board, a bust melts it, a checkout spins it in gold, a match dart makes the whole screen hold its breath. The points of every dart fly to the score, stamps like *On for 180!*, *Bullseye!* or *Takes the lead!* slam in, and a **won match gets its own show**: the board flies to the middle, spins up and bursts into the winner screen with trophy, fireworks and gold confetti.
 
+## Several boards
+
+<p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/boards.png" alt="Two boards playing at once on one TV, tournament with the next match on the second board" width="900"></p>
+
+Got more than one board? Each one announces itself – confirm it like the first, or add it by hand with **Add entry** and its IP address, and give it a name like *Keller*. **Players, statistics, ranking, tournaments and caller packs are shared**; each board has its **own game, cameras, Board Manager, lights, speakers, LED clock and power plug**. Every DartNest screen gets a small board button in its head – tap it to switch to the next board. With one board you never see it. In a **tournament** the next match starts on the board you tap, and when the tournament starts the free boards get a match each; the bracket shows which match runs *on Keller*. On the TV pick **Show all boards**: every board that plays shares the screen, when only one is left it gets the whole screen again.
+
 ## Stream and highlights
 
 <p align="center"><img src="https://raw.githubusercontent.com/Wadim-dev/DartNest_ha/main/docs/images/stream.png" alt="Stream overlay with score and replay, highlights card on the phone" width="900"></p>
@@ -165,6 +171,8 @@ Boards with Board Manager 2.x announce themselves in the network: Home Assistant
 |-----------|-------------|
 | Host | IP address or host name of the board PC, e.g. `192.168.1.50` |
 | Port | Port of the Board Manager, default `3180` |
+
+**Another board:** it appears as **Autodarts board found** too; or open DartNest under *Devices & services* and tap **Add entry**. Rename the board device (e.g. *Keller*) – the name is shown on all screens, the TV and in tournaments. Actions take an optional `board` (device, entry or name); without it they go to the first board.
 
 There are no further options. To change the address later, use **three dots → Reconfigure** on the integration. If the board gets a new IP address and announces itself, the integration follows it automatically (only if the old address no longer answers).
 
@@ -799,6 +807,7 @@ Private project, no outside contributions. The code meets all rules of the Home 
 - **Besser werden:** Average, First 9, Checkout-Quote, Wertung, Trend, Abzeichen, direkter Vergleich, Rangliste und die **Zielhilfe** – wo du mit deiner Streuung am meisten triffst.
 - **Turniere:** K.-o. (3–32 Spieler), Doppel-K.-o. mit Verliererrunde (3–16), Gruppen + K.-o. (6–32) oder Liga (3–10), auch als 2er-Teams oder mit Handicap.
 - **Fernseher:** Spielstand groß auf Fire TV oder Google TV, live mit jedem Dart, auf Wunsch mit deiner Dartscheibe live aus der Kamera daneben. Die Anzeige spielt mit: jeder Dart funkt dort, wo er steckt, und je nach Wurf und Spielstand passiert etwas anderes – bei 180 reißt das Board, beim Überwerfen schmilzt es, beim Checkout dreht es sich in Gold, beim Matchdart hält der ganze Bildschirm die Luft an; zwischen den Spielen Uhr, Rangliste und letzte Spiele. *DartNest → Fernseher*, Fernseher wählen, **Auf dem Fernseher zeigen** – oder von selbst bei jedem Spielstart.
+- **Mehrere Boards:** Jedes weitere Board meldet sich genauso (oder unter *Geräte & Dienste → DartNest → Eintrag hinzufügen*). Spieler, Statistik, Rangliste, Turniere und Ansager-Packs sind gemeinsam; Spiel, Kameras, Board Manager, Licht, Lautsprecher, LED-Uhr und Steckdose hat jedes Board für sich. Oben in jeder Seite wechselt ein kleiner Board-Knopf zum nächsten Board – mit nur einem Board ist er nicht zu sehen. Turniere verteilen die Partien auf die freien Boards, der Turnierbaum zeigt „auf Keller“. Am Fernseher **Alle Boards zeigen**: alle Boards, auf denen gespielt wird, teilen sich das Bild.
 - **Stream und Highlights:** Overlay-Link aus der Fernseher-Karte als Browser-Quelle in OBS oder Streamlabs – durchsichtiger Spielstand über deinem Kamerabild. **Highlights** speichert jede 180, jedes Finish ab 100 und den Match-Dart als kurzes, gerade gerücktes Video der Board-Kamera – mit Explosion und bebendem Bild genau dort und dann, wo der letzte Dart einschlägt; ansehen, herunterladen oder löschen in der Karte *DartNest → Highlights*, auf Wunsch sofort als Wiederholung am Fernseher und im Overlay.
 - **LED-Uhr:** AWTRIX 3 (Ulanzi TC001) oder PixelIt unter *DartNest → Pixel-Anzeige* mit der IP-Adresse hinzufügen – während des Spiels zeigt sie Name und Rest des Spielers am Oche, bei 180, Checkout, Bust und Sieg einen kurzen Effekt, danach wieder ihre eigenen Apps.
 - **Board Manager in HA:** Kameras mit Kalibriernetz, Start/Stopp, Kalibrieren, Updates. Board-PC darf per Steckdose aus sein: Steckdose einmal unter *Board Manager → Steckdose des Board-PCs* wählen, dann hat jede DartNest-Seite den Ein/Aus-Knopf. Schont kleine PCs: Livebilder teilen sich eine Bildquelle (höchstens 10 Bilder/s, nur wenn jemand zusieht), Kamera-Standby wird als „Standby“ gezeigt und beim Spielstart selbst geweckt.

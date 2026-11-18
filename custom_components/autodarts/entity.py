@@ -22,7 +22,7 @@ class DartsEntitaet(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
         self.daten = daten
         self.schluessel = schluessel
         self._attr_translation_key = uebersetzung
-        self._attr_unique_id = f"{DOMAIN}_{schluessel}"
+        self._attr_unique_id = f"{DOMAIN}_{daten.vorsilbe}{schluessel}"
         self._attr_device_info = daten.geraet
 
     async def async_added_to_hass(self) -> None:

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>DartNest</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0d0f14;cursor:none}
+body{font-family:Outfit,Roboto,"Segoe UI",system-ui,sans-serif;color:#f4f4f6}
+.raster{position:absolute;inset:0;display:grid;gap:.5vh;padding:0;background:#07080b;transition:grid-template-columns .6s,grid-template-rows .6s}
+.feld{position:relative;width:100%;min-width:0;min-height:0;overflow:hidden;border-radius:0;animation:rein .6s cubic-bezier(.2,1,.3,1)}
+.feld iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0d0f14}
+@keyframes rein{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="raster n1"></div>
+<script>
+(() => {
+  // Page of all boards: one board page per board that plays now (side by side), else the own board.
+  const BASE = location.pathname.replace(/\/$/, '');
+  const WURZEL = BASE.replace(/\/[^/]+$/, '');  // …/autodarts/tv
+  const NACHLAUF = 180000;  // a finished game stays on screen for 3 minutes (winner show)
+  const raster = document.querySelector('.raster');
+  const felder = {};
+  let daten = { boards: [] };
+
+  const spielt = b => b.phase === 'bulloff' || b.phase === 'laeuft' || (b.phase === 'beendet' && b.ende && Date.now() - Date.parse(b.ende) < NACHLAUF);
+
+  function zeigen() {
+    const alle = daten.boards || [];
+    let sicht = alle.filter(spielt);
+    if (!sicht.length) sicht = alle.filter(b => b.eigen).slice(0, 1);
+    if (!sicht.length) sicht = alle.slice(0, 1);
+    sicht = sicht.slice(0, 4);
+    const n = sicht.length;
+    raster.className = 'raster n' + n;
+    // every board keeps the 16:9 picture: two boards one above the other, three or four in a 2 × 2 grid
+    raster.style.gridTemplateColumns = n > 2 ? '1fr 1fr' : '1fr';
+    raster.style.gridTemplateRows = n > 1 ? '1fr 1fr' : '1fr';
+    const bleiben = new Set(sicht.map(b => b.token));
+    Object.keys(felder).forEach(k => { if (!bleiben.has(k)) { felder[k].remove(); delete felder[k]; } });
+    sicht.forEach((b, i) => {
+      let f = felder[b.token];
+      if (!f) {
+        f = document.createElement('div');
+        f.className = 'feld';
+        f.innerHTML = '<iframe allow="autoplay"></iframe>';
+        felder[b.token] = f;
+      }
+      // the board page shows the name of the board in place of the logo text (only with several on screen)
+      const src = WURZEL + '/' + b.token + '/einzeln' + (n > 1 && b.name ? '#' + encodeURIComponent(b.name) : '');
+      const fr = f.querySelector('iframe');
+      if (fr.getAttribute('src') !== src) fr.setAttribute('src', src);
+      // three boards: the third one sits in the middle of the lower row
+      const mitte = n === 3 && i === 2;
+      f.style.gridColumn = mitte ? '1 / span 2' : '';
+      f.style.justifySelf = mitte ? 'center' : '';
+      f.style.width = mitte ? '50%' : '';
+      if (raster.children[i] !== f) raster.insertBefore(f, raster.children[i] || null);
+    });
+  }
+
+  function verbinden() {
+    const q = new EventSource(BASE + '/boards');
+    q.onmessage = e => { try { daten = JSON.parse(e.data); } catch (err) { return; } document.documentElement.lang = String(daten.sprache || 'de').slice(0, 2); zeigen(); };
+    q.onerror = () => { q.close(); setTimeout(verbinden, 5000); };
+  }
+  verbinden();
+  setInterval(zeigen, 15000);  // a finished game leaves the screen after a while
+})();
+</script>
+</body>
+</html>

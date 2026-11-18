@@ -322,13 +322,85 @@ button:disabled{opacity:.38;cursor:default;transform:none}
     'sensor.throw_1': 'sensor.autodarts_board_wurf_1', 'sensor.throw_2': 'sensor.autodarts_board_wurf_2', 'sensor.throw_3': 'sensor.autodarts_board_wurf_3',
     'sensor.game': 'sensor.autodarts_board_spiel', 'sensor.players': 'sensor.autodarts_board_spieler'
   };
-  let entCache = null, entQuelle = null;
+  // Several boards (1.38): every board is a device of the integration with the same entities. A card shows
+  // one board: the one set in the card (board: <name>), else the one picked last in any card (all cards
+  // follow, remembered in this browser), else the first. With one board nothing of this is visible.
+  let entCache = null, entQuelle = null, bListe = [];
+  let boardWahl = null;
+  try { boardWahl = localStorage.getItem('dartnest_board'); } catch (e) {}
+  const entLesen = h => {
+    if (!h || h.entities === entQuelle) return;
+    entQuelle = h.entities; entCache = {};
+    const geraete = {};
+    Object.values(h.entities || {}).forEach(e => {
+      if (!e || e.platform !== 'autodarts' || !e.translation_key) return;
+      const k = e.entity_id.split('.')[0] + '.' + e.translation_key, g = e.device_id || '_';
+      (entCache[g] = entCache[g] || {})[k] = e.entity_id;
+      if (k === 'sensor.game' && e.device_id) geraete[e.device_id] = 1;
+    });
+    bListe = Object.keys(geraete).map(id => { const d = (h.devices || {})[id] || {}; return { id, name: d.name_by_user || d.name || 'Board' }; })
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  };
+  const boards = h => { entLesen(h && (h.__dnRoh || h)); return bListe; };
+  // the board a card shows: set in the card (name or device id), else the one picked last, else the first
+  const boardId = (h, fest) => {
+    const l = boards(h);
+    if (!l.length) return null;
+    const passt = x => x && l.find(b => b.id === x || b.name.toLowerCase() === String(x).toLowerCase());
+    return (passt(fest) || passt(h && h.__dnBoard) || passt(boardWahl) || l[0]).id;
+  };
+  const boardName = h => { const id = boardId(h); const b = boards(h).find(x => x.id === id); return b ? b.name : ''; };
   const E = (h, key) => {
-    if (h && h.entities !== entQuelle) {
-      entQuelle = h.entities; entCache = {};
-      Object.values(h.entities || {}).forEach(e => { if (e && e.platform === 'autodarts' && e.translation_key) entCache[e.entity_id.split('.')[0] + '.' + e.translation_key] = e.entity_id; });
-    }
-    return (entCache && entCache[key]) || ALT[key] || null;
+    entLesen(h && (h.__dnRoh || h));
+    if (!entCache) return ALT[key] || null;
+    const g = boardId(h);
+    return (g && entCache[g] && entCache[g][key]) || (entCache._ && entCache._[key]) || ALT[key] || null;
+  };
+  // hass for one board: actions and messages of the integration carry the board (only with several boards)
+  const mitBoard = (h, fest) => {
+    if (!h) return h;
+    const roh = h.__dnRoh || h;
+    if (boards(roh).length < 2) return roh;
+    // a card inside a card set to one board (tile window, settings) shows that board too
+    if (!fest && h.__dnFest) fest = h.__dnBoard;
+    const id = boardId(roh, fest);
+    const w = Object.create(roh);
+    w.__dnRoh = roh; w.__dnBoard = id; w.__dnFest = !!fest;
+    const dazu = d => (d && typeof d === 'object' && !('board' in d) ? Object.assign({}, d, { board: id }) : d);
+    w.callService = (dom, srv, data, ...rest) => roh.callService(dom, srv, dom === 'autodarts' ? dazu(data || {}) : data, ...rest);
+    w.callWS = m => {
+      if (m && /^autodarts\//.test(m.type)) return roh.callWS(dazu(m));
+      if (m && m.type === 'call_service' && m.domain === 'autodarts') return roh.callWS(Object.assign({}, m, { service_data: dazu(m.service_data || {}) }));
+      return roh.callWS(m);
+    };
+    return w;
+  };
+  const naechstesBoard = h => { const l = boards(h), i = l.findIndex(b => b.id === boardId(h)); return l[(i + 1) % l.length]; };
+  // the button in the head of a card: name of the board, tap = next board (several boards only)
+  Object.assign(TEXTE.en, { board_next: 'Show {b}', tv_all: 'Show all boards', tv_all_s: 'Boards that play now share the screen, the others step aside', t_on_board: 'on {b}', t_next_here: 'Next match on this board' });
+  Object.assign(TEXTE.de, { board_next: '{b} zeigen', tv_all: 'Alle Boards zeigen', tv_all_s: 'Boards, auf denen gerade gespielt wird, teilen sich das Bild', t_on_board: 'auf {b}', t_next_here: 'Nächste Partie auf diesem Board' });
+  const BRD_CSS = '.bwahl{display:inline-flex;align-items:center;gap:6px;max-width:46%;flex:none;border:1px solid color-mix(in srgb,var(--primary-color) 45%,transparent);' +
+    'background:color-mix(in srgb,var(--primary-color) 14%,transparent);color:var(--primary-text-color);border-radius:999px;padding:6px 12px 6px 9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,background .2s}' +
+    '.bwahl:active{transform:scale(.95)}.bwahl[hidden]{display:none}.bwahl ha-icon{--mdc-icon-size:18px;color:var(--primary-color);flex:none}.bwahl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.bwahl.fest{cursor:default;background:none;border-color:transparent;padding-left:0}.bwahl.wechsel{animation:brdw .45s cubic-bezier(.2,1.4,.4,1)}@keyframes brdw{from{transform:scale(.85);opacity:.4}}';
+  const brdHtml = () => '<button class="bwahl" data-act="brd" hidden><ha-icon icon="mdi:bullseye"></ha-icon><span></span><ha-icon class="pf" icon="mdi:swap-horizontal"></ha-icon></button>';
+  const brdZeigen = (el, h) => {
+    if (!el) return;
+    const l = boards(h), fest = !!(h && h.__dnFest);
+    el.hidden = l.length < 2;
+    if (el.hidden) return;
+    const name = boardName(h);
+    const sp = el.querySelector('span');
+    if (sp.textContent !== name) { if (sp.textContent) { el.classList.remove('wechsel'); void el.offsetWidth; el.classList.add('wechsel'); } sp.textContent = name; }
+    el.classList.toggle('fest', fest);
+    el.querySelector('.pf').style.display = fest ? 'none' : '';
+    el.title = fest ? name : t('board_next', { b: (naechstesBoard(h) || {}).name || '' });
+  };
+  // pick another board in a card: all cards (and the TV, caller … settings) follow
+  const boardWaehlen = id => {
+    boardWahl = id;
+    try { localStorage.setItem('dartnest_board', id); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('dartnest-board', { detail: id }));
   };
   const boardOnline = h => { const v = zst(h, E(h, 'sensor.connection')); return v !== undefined && v !== 'Offline' && v !== 'unavailable'; };
   const boardUrl = h => {
@@ -503,7 +575,11 @@ button:disabled{opacity:.38;cursor:default;transform:none}
     getCardSize() { return 5; }
     getGridOptions() { return { columns: 12, min_columns: 6 }; }
     set hass(h) {
-      this._h = h; sprachePruefen(h);
+      this._roh = h;
+      h = this._h = mitBoard(h, this._orig.board); sprachePruefen(h);
+      const b = h && h.__dnBoard;
+      if (this._board !== undefined && this._board !== b) this._r = null;
+      this._board = b;
       const sc = this._orig.power_on ? {} : stromCfg(h), key = JSON.stringify(sc);
       if (key !== this._stromKey) { this._stromKey = key; this._c = Object.assign({}, sc, this._orig); this._r = null; }
       if (!this._r || this._spr !== SPR) this._bauen();
@@ -519,7 +595,7 @@ button:disabled{opacity:.38;cursor:default;transform:none}
       if (c.game_path) kn.push(k('feld', 'spielen', t('play'), 'mdi:bullseye-arrow', R));
       if (c.manager_path) kn.push(k('feld', 'mgr', c.manager_label || t('manager'), c.manager_icon || 'mdi:camera-iris', 'var(--purple-color,#9c27b0)'));
       if (c.players_path) kn.push(k('feld', 'spieler', t('players'), 'mdi:account-group', B));
-      this._r.innerHTML = '<style>' + BASIS + B_CSS + '</style><ha-card><div class="szene">' + SZENE +
+      this._r.innerHTML = '<style>' + BASIS + B_CSS + BRD_CSS + '.szene .bwahl{position:absolute;left:10px;top:10px;z-index:3;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:color-mix(in srgb,var(--card-background-color,#1c1c1c) 62%,transparent)}</style><ha-card><div class="szene">' + brdHtml() + SZENE +
         '<div class="ueber"><div class="zt"><ha-icon></ha-icon><span class="zn"></span></div><div class="art"></div></div></div>' +
         '<div class="live">' + [0, 1, 2].map(i => '<div class="w feld" data-i="' + i + '"><small>' + t('dart') + ' ' + (i + 1) + '</small><b>–</b></div>').join('') +
         '<div class="w feld sum"><small>' + t('visit') + '</small><b>0</b></div></div>' +
@@ -529,7 +605,12 @@ button:disabled{opacity:.38;cursor:default;transform:none}
       const still = () => this.toggleAttribute('still', !this._sicht || document.hidden);
       if (!this._io && 'IntersectionObserver' in window) { this._io = new IntersectionObserver(e => { this._sicht = e[0].isIntersecting; still(); }); this._io.observe(this); }
       if (!this._vis) { this._vis = still; document.addEventListener('visibilitychange', still); }
-      this._r.querySelector('.szene').addEventListener('click', () => mehrInfo(this, E(this._h, 'sensor.status')));
+      this._r.querySelector('.szene').addEventListener('click', e => {
+        const b = e.target.closest('.bwahl');
+        if (b) { e.stopPropagation(); if (!b.classList.contains('fest')) { const n = naechstesBoard(this._h); if (n) boardWaehlen(n.id); } return; }
+        mehrInfo(this, E(this._h, 'sensor.status'));
+      });
+      if (!this._brdAbo) { this._brdAbo = true; window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; }); }
       this._r.querySelectorAll('.w').forEach(w => w.addEventListener('click', () => mehrInfo(this, E(this._h, w.classList.contains('sum') ? 'sensor.visit_score' : 'sensor.throw_' + (+w.dataset.i + 1)))));
       this._r.querySelector('.knoepfe').addEventListener('click', e => {
         const b = e.target.closest('button'); if (!b || b.disabled) return; const h = this._h, id = b.dataset.id;
@@ -574,6 +655,7 @@ button:disabled{opacity:.38;cursor:default;transform:none}
     }
     _zeichnen() {
       const h = this._h, r = this._r, c = this._c;
+      brdZeigen(r.querySelector('.szene > .bwahl'), h);
       const sz = this._szene(), [name, icon] = SZ[sz];
       if (this.getAttribute('sz') !== sz) this.setAttribute('sz', sz);
       const online = ['bereit', 'ziehen', 'kalib', 'gestoppt', 'standby', 'weg'].includes(sz) || (sz === 'startet' && zst(h, E(h, 'sensor.status')) === 'starting');
@@ -848,7 +930,9 @@ dialog.seite .blatt{width:min(720px,100%)}
     static getStubConfig() { return {}; }
     getCardSize() { return 1; }
     set hass(h) {
-      this._h = h; sprachePruefen(h);
+      this._roh = h;
+      h = this._h = mitBoard(h, this._c.board); sprachePruefen(h);
+      if (!this._brdAbo) { this._brdAbo = true; window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; }); }
       if (!this._r || this._spr !== SPR) this._bauen();
       this._zeichnen();
       if (this._d && this._d.open) this._innenHass();
@@ -977,7 +1061,7 @@ dialog.seite .blatt{width:min(720px,100%)}
       else if (sz === 'ziehen') unter = t('visit_pts', { s: summe });
       else if (sz === 'startet') unter = an(h, c.pc_online) ? t('pc_running') : t('about_minute');
       else if (sz === 'aus' && !unter) unter = t('tile_tap');
-      r.querySelector('.tx b').textContent = (c.name || 'Darts') + ' · ' + t(name);
+      r.querySelector('.tx b').textContent = (c.name || 'Darts') + (boards(h).length > 1 ? ' · ' + boardName(h) : '') + ' · ' + t(name);
       r.querySelector('.tx span').textContent = unter;
       const ak = punkte.filter(Boolean).map(f => '<i style="--c:' + f + '"></i>').join('');
       const akEl = r.querySelector('.ak'); if (akEl.innerHTML !== ak) akEl.innerHTML = ak;
@@ -993,6 +1077,7 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
 .start ha-icon{--mdc-icon-size:26px}
 .kopf{display:flex;align-items:center;gap:6px;margin:-2px -4px 12px}
 .kopf .ti{flex:1;min-width:0;font-size:20px;font-weight:700;line-height:1.2}
+.kopf .ti .bwahl{margin-top:7px;max-width:100%}
 .kopf .ti small{display:block;font-size:12.5px;font-weight:500;color:var(--secondary-text-color);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kx{display:flex;gap:2px}
 .ik{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:transparent;flex:none}
@@ -1049,15 +1134,29 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
     getCardSize() { return 12; }
     getGridOptions() { return { columns: 'full' }; }
     set hass(h) {
-      this._h = h; sprachePruefen(h);
+      this._roh = h;
+      this._h = this.constructor.GEMEINSAM ? (h && (h.__dnRoh || h)) : mitBoard(h, this._c && this._c.board);
+      sprachePruefen(h);
       if (!this._r) this._grund();
       if (this._spr !== SPR) { this._spr = SPR; this._alt = null; this._kxAlt = null; this._werteAlt = null; this._r.querySelector('[data-act=zurueck]').title = t('back'); }
+      if (!this.constructor.GEMEINSAM) brdZeigen(this._r.querySelector('.bwahl'), this._h);
+      const b = this._h && this._h.__dnBoard;
+      if (this._board !== undefined && this._board !== b) this._neuesBoard();
+      this._board = b;
       this._zeichnen();
+    }
+    // another board: forget what was loaded for the old one (caller, lights, TV link …)
+    _neuesBoard() {
+      this._daten = null; this._lade = false; this._url = undefined; this._alt = null; this._kxAlt = null; this._werteAlt = null;
+      this._gew = this._auto = this._brett = this._tvAns = this._alle = this._neu = null;
+      if (this._m) this._modal(null);
+      if (this._abo) this._abo();
+      if (this._wechsel) this._wechsel();
     }
     _grund() {
       this._r = this.attachShadow({ mode: 'open' });
-      this._r.innerHTML = '<style>' + BASIS + SEITEN_CSS + (this.constructor.CSS || '') + '</style><ha-card><div class="kopf">' +
-        '<button class="ik" data-act="zurueck" title="' + t('back') + '"><ha-icon icon="mdi:arrow-left"></ha-icon></button><div class="ti"><span class="tt"></span><small class="ts"></small></div><span class="kx"></span></div>' +
+      this._r.innerHTML = '<style>' + BASIS + SEITEN_CSS + BRD_CSS + (this.constructor.CSS || '') + '</style><ha-card><div class="kopf">' +
+        '<button class="ik" data-act="zurueck" title="' + t('back') + '"><ha-icon icon="mdi:arrow-left"></ha-icon></button><div class="ti"><span class="tt"></span><small class="ts"></small>' + brdHtml() + '</div><span class="kx"></span></div>' +
         '<div class="inhalt"></div></ha-card><div class="modal" hidden><div class="mbox"></div></div>';
       this._in = this._r.querySelector('.inhalt');
       this._sicht = true;
@@ -1068,11 +1167,13 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
         const a = b.dataset.act;
         if (a === 'zurueck') { if (document.fullscreenElement) document.exitFullscreen(); if (this._zurueck) this._zurueck(); else if (this._c.back_path) gehe(this._c.back_path); else history.back(); return; }
         if (a === 'tgl') { this._auf[b.dataset.x] = !this._auf[b.dataset.x]; this._alt = null; this._zeichnen(); return; }
+        if (a === 'brd') { if (!b.classList.contains('fest')) { const n = naechstesBoard(this._h); if (n) boardWaehlen(n.id); } return; }
         if (a === 'mzu') { this._modal(null); return; }
         if (e.target.closest('.modal') && !e.target.closest('.mbox')) { this._modal(null); return; }
         this._klick(a, b, e);
       });
       this._r.querySelector('.modal').addEventListener('click', e => { if (e.target.classList.contains('modal')) this._modal(null); });
+      window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; });
     }
     _setze(html) { if (this._alt !== html) { this._alt = html; this._in.innerHTML = html; } }
     _kopf(x, s, extra) {
@@ -1643,9 +1744,13 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       }));
     }).catch(() => {});
   };
+  let hoerBoard = null;
   const hoerPruefen = h => {
+    const brd = (h && h.__dnBoard) || null;
+    if (hoerAbo && brd !== hoerBoard) { const p = hoerAbo; hoerAbo = null; hoerOk = false; p.then(ab => ab && ab()); }  // other board chosen
     if (hoerKarten.size && !hoerAbo && h && h.connection) {
-      hoerAbo = h.connection.subscribeMessage(m => hoerSpielen(h, m), { type: 'autodarts/ansager/hoeren' })
+      hoerBoard = brd;
+      hoerAbo = h.connection.subscribeMessage(m => hoerSpielen(h, m), Object.assign({ type: 'autodarts/ansager/hoeren' }, brd ? { board: brd } : {}))
         .then(ab => { hoerOk = true; return ab; }, () => null);  // older integration: the phone voice speaks instead
     } else if (!hoerKarten.size && hoerAbo) { const p = hoerAbo; hoerAbo = null; hoerOk = false; p.then(ab => ab && ab()); hoerStop(); }
   };
@@ -2021,7 +2126,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         zeilen.map((z, i) => '<tr' + (sieger && sieger(i) ? ' class="w"' : '') + '><td>' + (i + 1) + '</td><td>' + esc(z.name) + '</td><td>' + z.spiele + '</td><td>' + z.siege + '</td><td>' + z.legs + ':' + z.gegen + '</td><td><b>' + z.punkte + '</b></td></tr>').join('') + '</table>';
     }
     _lspiele(spiele) {
-      return '<div class="lsl">' + spiele.map(m => '<div class="lsp feld' + (m.aktiv ? ' akt' : '') + '"><span class="' + (m.sieger === 0 ? 'w' : m.sieger === 1 ? 'l' : '') + '">' + esc(m.a) + '</span><b>' + (m.legs ? m.legs[0] + ':' + m.legs[1] : m.sieger == null ? '–' : '✓') + '</b><span class="' + (m.sieger === 1 ? 'w' : m.sieger === 0 ? 'l' : '') + '">' + esc(m.b) + '</span></div>').join('') + '</div>';
+      return '<div class="lsl">' + spiele.map(m => '<div class="lsp feld' + (m.aktiv ? ' akt' : '') + '"><span class="' + (m.sieger === 0 ? 'w' : m.sieger === 1 ? 'l' : '') + '">' + esc(m.a) + '</span><b>' + (m.legs ? m.legs[0] + ':' + m.legs[1] : m.sieger == null ? (m.board ? '<small style="color:var(--primary-color);font-size:11px" title="' + esc(t('t_on_board', { b: m.board })) + '">' + esc(m.board) + '</small>' : '–') : '✓') + '</b><span class="' + (m.sieger === 1 ? 'w' : m.sieger === 0 ? 'l' : '') + '">' + esc(m.b) + '</span></div>').join('') + '</div>';
     }
     _baum(tu) {
       if (tu.modus === 'liga') return this._liga(tu);
@@ -2051,7 +2156,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         const c = m.sieger == null || m.freilos ? (m.freilos ? ' class="w"' : '') : m.sieger === k ? ' class="w"' : ' class="l"';
         return '<div' + c + '>' + (m.sieger === k && !m.freilos ? '✓ ' : '') + esc(nm) + '</div>';
       };
-      return '<div class="bm feld' + (m.aktiv ? ' akt' : '') + '">' + zeile(0) + zeile(1) + '</div>';
+      return '<div class="bm feld' + (m.aktiv ? ' akt' : '') + '">' + zeile(0) + zeile(1) +
+        (m.board ? '<div class="o" style="font-size:11px;color:var(--primary-color);font-weight:700"><ha-icon icon="mdi:bullseye" style="--mdc-icon-size:12px"></ha-icon> ' + esc(t('t_on_board', { b: m.board })) + '</div>' : '') + '</div>';
     }
     _klammer(runden, titel, ende) {
       return '<div class="baum">' + runden.map((runde, r) => '<div class="brd"><small>' + titel(r) + '</small><div>' + runde.map(m => this._bm(m)).join('') + '</div></div>').join('') + ende + '</div>';
@@ -2059,7 +2165,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
     _turKnoepfe(tu) {
       if (tu.sieger) return '<button class="start" data-act="turende"><ha-icon icon="mdi:flag-checkered"></ha-icon>' + t('end_tour') + '</button>';
       const n = tu.naechstes;
-      return (n ? '<button class="start" data-act="turweiter"><ha-icon icon="mdi:sword-cross"></ha-icon>' + t('next_match', { a: esc(n.a), b: esc(n.b) }) + '</button>' : '') +
+      return (n ? '<button class="start" data-act="turweiter"><ha-icon icon="mdi:sword-cross"></ha-icon>' + (boards(this._h).length > 1 ? '<span style="display:flex;flex-direction:column;align-items:center">' + t('next_match', { a: esc(n.a), b: esc(n.b) }) + '<small style="font-size:12px;opacity:.85;font-weight:600;margin-top:2px">' + t('t_next_here') + '</small></span>' : t('next_match', { a: esc(n.a), b: esc(n.b) })) + '</button>' : '') +
         '<button class="auf feld" data-act="turabbr" data-lbl="' + t('cancel_tour') + '" style="--sr-f:var(--red-color,#e53935)"><ha-icon icon="mdi:close-circle-outline"></ha-icon><span class="lbl">' + t('cancel_tour') + '</span></button>';
     }
     _turEnde(a) {
@@ -2747,6 +2853,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
 @container (max-width:420px){.hm{grid-template-columns:1fr}}`;
   const datum = x => { try { const d = new Date(x); return d.toLocaleDateString(LOC, { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
   class AutodartsPlayersCard extends DartsSeite {
+    static get GEMEINSAM() { return true; }  // players and statistics belong to all boards
     static get CSS() { return SPL_CSS; }
     // hit map, most hit fields, trend, badges and head to head of one player
     _profil(p, alle) {
@@ -3265,10 +3372,13 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       const br = this._brett != null ? this._brett : !!tv.brett, an = this._tvAns || tv.ansicht || 'camera_1';
       if (this._brett != null && this._brett === !!tv.brett) this._brett = null;
       if (this._tvAns && this._tvAns === tv.ansicht) this._tvAns = null;
+      const al = this._alle != null ? this._alle : !!tv.alle;
+      if (this._alle != null && this._alle === !!tv.alle) this._alle = null;
       s += '<button class="schalter feld' + (auto ? ' an' : '') + '" data-act="auto"' + (gew.length ? '' : ' disabled') + '><ha-icon icon="' + (auto ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_auto') + '</b><small>' + t('tv_auto_s') + '</small></span></button>' +
         '<button class="schalter feld' + (br ? ' an' : '') + '" data-act="brett"><ha-icon icon="' + (br ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_board') + '</b><small>' + t('tv_board_s') + '</small></span></button>' +
         (br ? '<div class="ansicht">' + [['graphic', 'mdi:bullseye', t('tv_v_g')], ['camera_1', 'mdi:cctv', t('tv_v_c', { n: 1 })], ['camera_2', 'mdi:cctv', t('tv_v_c', { n: 2 })], ['camera_3', 'mdi:cctv', t('tv_v_c', { n: 3 })]]
           .map(([v, ic, x]) => '<button class="feld' + (v === an ? ' an' : '') + '" data-act="ansicht" data-v="' + v + '"><ha-icon icon="' + ic + '"></ha-icon>' + x + '</button>').join('') + '</div><div class="klein">' + t('tv_v_hint') + '</div>' : '') +
+        (boards(h).length > 1 ? '<button class="schalter feld' + (al ? ' an' : '') + '" data-act="alle"><ha-icon icon="' + (al ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_all') + '</b><small>' + t('tv_all_s') + '</small></span></button>' : '') +
         '<div class="titel"><ha-icon icon="mdi:link-variant"></ha-icon>' + t('tv_link') + '</div>' +
         '<div class="link feld"><code>' + esc(tv.url) + '</code><button class="feld" data-act="kopie"><ha-icon icon="mdi:content-copy"></ha-icon>' + t('tv_copy') + '</button></div>' +
         '<button class="neuer feld" data-act="neu" data-lbl="' + t('tv_new') + '"><ha-icon icon="mdi:link-variant-off" style="--mdc-icon-size:16px"></ha-icon><span class="lbl">' + t('tv_new') + '</span></button>' +
@@ -3288,6 +3398,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (act === 'geraet') { const id = b.dataset.id; this._gew = gew.includes(id) ? gew.filter(x => x !== id) : gew.concat(id); this._alt = null; this._zeichnen(); this._setzen({ geraete: this._gew }); return; }
       if (act === 'auto') { this._auto = !(this._auto != null ? this._auto : tv.auto); this._alt = null; this._zeichnen(); this._setzen({ auto: this._auto }); return; }
       if (act === 'brett') { this._brett = !(this._brett != null ? this._brett : !!tv.brett); this._alt = null; this._zeichnen(); this._setzen({ brett: this._brett }); return; }
+      if (act === 'alle') { this._alle = !(this._alle != null ? this._alle : !!tv.alle); this._alt = null; this._zeichnen(); this._setzen({ alle: this._alle }); return; }
       if (act === 'ansicht') { this._tvAns = b.dataset.v; this._alt = null; this._zeichnen(); this._setzen({ ansicht: this._tvAns }); return; }
       if (act === 'oeffnen') { if (tv.url) window.open(new URL(tv.url).pathname, '_blank', 'noopener'); return; }
       if (act === 'kopie') {

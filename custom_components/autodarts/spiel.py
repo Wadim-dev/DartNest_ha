@@ -3,6 +3,11 @@
 Der Spielleiter hört auf die Würfe des Boards (Zustand-Koordinator), legt sie als
 Aufnahmen ab und lässt `x01.auswerten` alles Weitere ausrechnen. Spieler, Statistik,
 Verlauf und ein laufendes Spiel liegen in .storage/autodarts.spiel (übersteht Neustarts).
+
+Several boards: every board has its own Spielleiter (game, power plug, TV, clips, pixel
+displays); players, statistics, history and the tournament are shared (Ablage). The first
+board keeps its part at the top of the store (as before 1.38), every other board under
+"boards" → its config entry id.
 """
 
 from __future__ import annotations
@@ -49,13 +54,71 @@ def _fehler(schluessel: str, **platzhalter: str) -> ServiceValidationError:
 WACH_MINUTEN = 45  # keep the detection awake this long after the last change in a running game
 
 
+class Ablage:
+    """What all boards share: players, statistics, history, last settings, the tournament (one store)."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self.store: Store[dict[str, Any]] = Store(hass, SPEICHER_VERSION, "autodarts.spiel")
+        self.daten: dict[str, Any] = {"spieler": [], "statistik": {}, "verlauf": [], "letzte": dict(STANDARD), "spiel": None}
+        self.leiter: dict[str, Spielleiter] = {}  # board id (config entry id) -> its game master, first board first
+        self.geladen = False
+        self._sperre = asyncio.Lock()
+
+    async def laden(self) -> None:
+        async with self._sperre:
+            if self.geladen:
+                return
+            gespeichert = await self.store.async_load()
+            if isinstance(gespeichert, dict):
+                self.daten.update(gespeichert)
+            self.daten["letzte"] = {**STANDARD, **(self.daten.get("letzte") or {})}
+            self.geladen = True
+
+    def speichern(self) -> None:
+        self.store.async_delay_save(lambda: self.daten, 2)
+
+    def alle(self) -> list[Spielleiter]:
+        return list(self.leiter.values())
+
+    def belegt(self, turnier_id: str) -> dict[str, str]:
+        """Tournament matches that are being played now: match key -> name of the board."""
+        aus: dict[str, str] = {}
+        for le in self.alle():
+            sp = le.spiel
+            ref = (sp or {}).get("turnier")
+            if sp and ref and ref.get("id") == turnier_id and sp.get("phase") != "beendet":
+                aus[_ref_schluessel(ref)] = le.name()
+        return aus
+
+    def aktuellster(self) -> Spielleiter | None:
+        """The board somebody plays on now (last change), else the first board (voice commands)."""
+        alle = self.alle()
+        laufend = [le for le in alle if le.spiel and le.spiel.get("phase") in ("bulloff", "laeuft")]
+        if laufend:
+            return max(laufend, key=lambda le: le.aktiv)
+        return alle[0] if alle else None
+
+
+def ablage_holen(hass: HomeAssistant) -> Ablage:
+    """The shared part of all boards (made once)."""
+    daten: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
+    if "ablage" not in daten:
+        daten["ablage"] = Ablage(hass)
+    ablage: Ablage = daten["ablage"]
+    return ablage
+
+
 class Spielleiter:
-    def __init__(self, hass: HomeAssistant, board: AutodartsBoard, zustand: ZustandKoordinator) -> None:
+    def __init__(self, hass: HomeAssistant, board: AutodartsBoard, zustand: ZustandKoordinator,
+                 ablage: Ablage | None = None, kennung: str = "", haupt: bool = True, name: Callable[[], str] | None = None) -> None:
         self.hass = hass
         self.board = board
         self.zustand = zustand
-        self._store: Store[dict[str, Any]] = Store(hass, SPEICHER_VERSION, "autodarts.spiel")
-        self.daten: dict[str, Any] = {"spieler": [], "statistik": {}, "verlauf": [], "letzte": dict(STANDARD), "spiel": None}
+        self.ablage = ablage or Ablage(hass)
+        self.kennung = kennung  # config entry id of the board
+        self.haupt = haupt  # the first board: its game and settings stay at the top of the store
+        self._name = name
+        self.daten: dict[str, Any] = self.ablage.daten
         self.stand: dict[str, Any] | None = None
         self._hoerer: list[Callable[[], None]] = []
         self._aktiv = 0.0  # last change in the game (dart, undo, new game …)
@@ -75,12 +138,28 @@ class Spielleiter:
     # ---------- Grundlagen ----------
 
     async def laden(self) -> None:
-        gespeichert = await self._store.async_load()
-        if isinstance(gespeichert, dict):
-            self.daten.update(gespeichert)
-        self.daten["letzte"] = {**STANDARD, **(self.daten.get("letzte") or {})}
+        await self.ablage.laden()
+        if self.haupt:
+            self.ablage.leiter = {self.kennung: self, **{k: v for k, v in self.ablage.leiter.items() if k != self.kennung}}
+        else:
+            self.ablage.leiter[self.kennung] = self
         self._gesehen = len((self.zustand.data or {}).get("wuerfe") or [])
         self._neu_rechnen(speichern=False)
+
+    @property
+    def eigen(self) -> dict[str, Any]:
+        """The part of the store that belongs to this board only (game, power plug, TV, clips, pixel)."""
+        if self.haupt:
+            return self.daten
+        eigen: dict[str, Any] = self.daten.setdefault("boards", {}).setdefault(self.kennung, {})
+        return eigen
+
+    def name(self) -> str:
+        return self._name() if self._name else ""
+
+    @property
+    def aktiv(self) -> float:
+        return self._aktiv
 
     def hoerer(self, f: Callable[[], None]) -> Callable[[], None]:
         self._hoerer.append(f)
@@ -88,7 +167,7 @@ class Spielleiter:
 
     @property
     def spiel(self) -> dict[str, Any] | None:
-        spiel: dict[str, Any] | None = self.daten.get("spiel")
+        spiel: dict[str, Any] | None = self.eigen.get("spiel")
         return spiel
 
     @property
@@ -105,11 +184,19 @@ class Spielleiter:
         return self.stand
 
     def _speichern(self) -> None:
-        self._store.async_delay_save(lambda: self.daten, 2)
+        self.ablage.speichern()
 
     def _melden(self) -> None:
         self._aktiv = time.monotonic()
         self._ereignisse_pruefen()
+        for f in list(self._hoerer):
+            f()
+        for andere in self.ablage.alle():
+            if andere is not self:
+                andere.nur_melden()
+
+    def nur_melden(self) -> None:
+        """Something the boards share changed on another board (players, statistics, tournament)."""
         for f in list(self._hoerer):
             f()
 
@@ -225,7 +312,8 @@ class Spielleiter:
 
     async def beenden(self) -> None:
         self._bot_stoppen()
-        await self._store.async_save(self.daten)
+        self.ablage.leiter.pop(self.kennung, None)
+        await self.ablage.store.async_save(self.daten)
 
     # ---------- Würfe vom Board ----------
 
@@ -410,6 +498,7 @@ class Spielleiter:
         sp["ende"] = dt_util.now().isoformat()
         st = self._stand
         eintrag = {
+            "id": sp["id"],
             "zeit": sp["ende"],
             "modus": modus_text(sp["einstellungen"]),
             "gewinner": sp["spieler"][st["gewinner"]]["name"],
@@ -421,6 +510,8 @@ class Spielleiter:
         }
         if st["art"] != "x01":
             eintrag["art"] = st["art"]
+        if len(self.ablage.leiter) > 1:
+            eintrag["board"] = self.name()
         self.daten["verlauf"] = [eintrag, *self.daten.get("verlauf", [])][:MAX_VERLAUF]
         auswertung.nachtragen(self.daten, sp, st, +1, dt_util.now().date())
         self._turnier_ergebnis(sp, st["gewinner"])
@@ -566,7 +657,7 @@ class Spielleiter:
         if e["spiel"] != "x01":
             einst["sets"] = 0
         bulloff = e["bull_off"] and len(spieler) > 1
-        self.daten["spiel"] = {
+        self.eigen["spiel"] = {
             "id": uuid.uuid4().hex[:8],
             "beginn": dt_util.now().isoformat(),
             "einstellungen": einst,
@@ -577,7 +668,7 @@ class Spielleiter:
             "aufnahmen": [],
         }
         if turnier_ref is not None:
-            self.daten["spiel"]["turnier"] = turnier_ref
+            self.eigen["spiel"]["turnier"] = turnier_ref
         await self._board_leeren()
         await self._erkennung_an()
         self._neu_rechnen()
@@ -641,23 +732,40 @@ class Spielleiter:
             "modus": modus,
             "legs": {},
         }
+        for le in self.ablage.alle():
+            if le is not self and le.spiel and le.spiel.get("turnier") and le.spiel["phase"] != "beendet":
+                le.spiel.pop("turnier")  # a match of an old tournament on another board: it is a normal game now
         await self.turnier_weiter()
+        # several boards: the next matches start at once on the other free boards that are on
+        for le in self.ablage.alle():
+            if le is not self and le.frei() and le.zustand.online:
+                try:
+                    await le.turnier_weiter()
+                except ServiceValidationError:
+                    break
 
     async def turnier_weiter(self) -> None:
         """Nächstes offenes Match des Turniers starten."""
         t = self.daten.get("turnier")
         if not t:
             raise _fehler("no_tournament")
-        n = turnier.naechstes_match(t)
+        if self.spiel and self.spiel.get("turnier") and self.spiel["phase"] != "beendet":
+            return  # this board still plays its match
+        n = turnier.naechstes_match(t, set(self.ablage.belegt(t["id"])))
         if n is None:
             raise _fehler("tournament_over")
         k, a, b = n
         await self.starten([t["teilnehmer"][a], t["teilnehmer"][b]], t["einstellungen"], {"id": t["id"], "k": k, "t": [a, b]})
 
+    def frei(self) -> bool:
+        """No game on this board, or the last one is over."""
+        return not self.spiel or self.spiel["phase"] == "beendet"
+
     async def turnier_abbrechen(self) -> None:
         self.daten["turnier"] = None
-        if self.spiel and self.spiel.get("turnier") and self.spiel["phase"] != "beendet":
-            self.spiel.pop("turnier")
+        for le in self.ablage.alle() or [self]:
+            if le.spiel and le.spiel.get("turnier") and le.spiel["phase"] != "beendet":
+                le.spiel.pop("turnier")
         self._speichern()
         self._melden()
 
@@ -684,7 +792,7 @@ class Spielleiter:
 
     async def abbrechen(self) -> None:
         self._bot_stoppen()
-        self.daten["spiel"] = None
+        self.eigen["spiel"] = None
         self._neu_rechnen()
 
     async def weiter(self) -> None:
@@ -719,7 +827,10 @@ class Spielleiter:
         if sp["phase"] == "beendet":
             sp["phase"] = "laeuft"
             sp.pop("ende", None)
-            self.daten["verlauf"] = self.daten.get("verlauf", [])[1:]
+            verlauf = self.daten.get("verlauf", [])
+            weg = next((i for i, v in enumerate(verlauf) if v.get("id") == sp["id"]), 0 if verlauf and "id" not in verlauf[0] else None)
+            if weg is not None:
+                self.daten["verlauf"] = verlauf[:weg] + verlauf[weg + 1:]
             self._statistik_abziehen()
             self._turnier_ergebnis(sp, None)
         auf = sp["aufnahmen"]
@@ -862,7 +973,8 @@ class Spielleiter:
         sp = self.spiel
         t = self.daten.get("turnier")
         ref = (sp or {}).get("turnier")
-        tur = turnier.ansicht(t, _ref_schluessel(ref) if ref and ref["id"] == t["id"] else None) if t else None
+        tur = turnier.ansicht(t, _ref_schluessel(ref) if ref and ref["id"] == t["id"] else None,
+                              self.ablage.belegt(t["id"]) if len(self.ablage.leiter) > 1 else None) if t else None
         if not sp:
             return {"quelle": "HA", "turnier": tur} if tur else {"quelle": "HA"}
         a: dict[str, Any] = {
@@ -932,11 +1044,12 @@ class Spielleiter:
                 "gegen": pr.get("gegen", {}),
                 "abzeichen": auswertung.abzeichen(g, pr, beste),
             })
-        tv = self.daten.get("tv") or {}
+        tv = self.eigen.get("tv") or {}
         return {"spieler": liste, "verlauf": self.daten.get("verlauf", [])[:20], "letzte": self.daten.get("letzte"),
-                "strom": self.daten.get("strom") or {},
+                "strom": self.eigen.get("strom") or {},
                 "tv": {"geraete": tv.get("geraete") or [], "auto": bool(tv.get("auto")),
-                       "brett": bool(tv.get("brett")), "ansicht": tv.get("ansicht") or "camera_1"},
+                       "brett": bool(tv.get("brett")), "ansicht": tv.get("ansicht") or "camera_1", "alle": bool(tv.get("alle"))},
+                "board": self.name(), "boards": len(self.ablage.leiter),
                 "clips": self.clips_info() if self.clips_info else {},
                 "pixel": self.pixel_info() if self.pixel_info else {}}
 
@@ -948,7 +1061,7 @@ class Spielleiter:
     async def strom_setzen(self, werte: dict[str, str]) -> None:
         """Steckdose des Board-PCs für alle DartNest-Karten, optional mit Leistungsmesser,
         eigenem Ein-/Ausschalten (z. B. Skript, das den PC erst herunterfährt) und PC-online-Sensor."""
-        self.daten["strom"] = {k: v for k, v in werte.items() if v}
+        self.eigen["strom"] = {k: v for k, v in werte.items() if v}
         self._speichern()
         self._melden()
 

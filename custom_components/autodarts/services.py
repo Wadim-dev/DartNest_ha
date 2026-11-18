@@ -10,13 +10,13 @@ from homeassistant.components.websocket_api.decorators import async_response, re
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import async_register_admin_service
 import voluptuous as vol
 
 from .clips import ANLAESSE, KAMERAS as CLIP_KAMERAS
 from .const import DOMAIN, EREIGNISSE
-from .coordinator import DartsEntry
+from .coordinator import DartsEntry, board_name, ist_haupt
 from .fernseher import ANSICHTEN
 from .lichter import EFFEKTE, REGEL, wled_uebersicht
 from .spiel import EINSTELLUNGEN, Spielleiter
@@ -78,6 +78,7 @@ DIENSTE = {
         vol.Optional("neuer_link", default=False): cv.boolean,
         vol.Optional("brett"): cv.boolean,
         vol.Optional("ansicht"): vol.In(ANSICHTEN),
+        vol.Optional("alle"): cv.boolean,
     }),
     "clips_setzen": vol.Schema({
         vol.Optional("an"): cv.boolean,
@@ -127,21 +128,37 @@ NUR_ADMIN = frozenset({
 MIT_ANTWORT = frozenset({"spieler_anlegen", "ansager_pack_pruefen", "pixel_hinzufuegen"})
 
 
-def _leiter(hass: HomeAssistant) -> Spielleiter:
-    eintrag: DartsEntry
-    for eintrag in hass.config_entries.async_loaded_entries(DOMAIN):
-        return eintrag.runtime_data.spiel
-    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_set_up")
+BOARD = vol.Optional("board")  # several boards: device id, config entry id or name of the board; without it the first board
 
 
-def _eintrag(hass: HomeAssistant) -> DartsEntry:
-    for eintrag in hass.config_entries.async_loaded_entries(DOMAIN):
-        return eintrag
-    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_set_up")
+def _eintraege(hass: HomeAssistant) -> list[DartsEntry]:
+    """Loaded boards, the first board first."""
+    return sorted(hass.config_entries.async_loaded_entries(DOMAIN), key=lambda e: not ist_haupt(e))
+
+
+def _eintrag(hass: HomeAssistant, board: Any = None) -> DartsEntry:
+    eintraege = _eintraege(hass)
+    if not eintraege:
+        raise ServiceValidationError(translation_domain=DOMAIN, translation_key="not_set_up")
+    if not board:
+        return eintraege[0]
+    board = str(board)
+    geraet = dr.async_get(hass).async_get(board)
+    for e in eintraege:
+        if board == e.entry_id or (geraet is not None and e.entry_id in geraet.config_entries):
+            return e
+    for e in eintraege:
+        if board.casefold() in (board_name(hass, e).casefold(), e.title.casefold()):
+            return e
+    raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_board", translation_placeholders={"board": board})
+
+
+def _leiter(hass: HomeAssistant, board: Any = None) -> Spielleiter:
+    return _eintrag(hass, board).runtime_data.spiel
 
 
 async def _lichter(hass: HomeAssistant, name: str, d: dict[str, Any]) -> None:
-    show = _eintrag(hass).runtime_data.lichter
+    show = _eintrag(hass, d.get("board")).runtime_data.lichter
     try:
         if name == "lichteffekte_setzen":
             await show.setzen(d["regeln"])
@@ -153,32 +170,39 @@ async def _lichter(hass: HomeAssistant, name: str, d: dict[str, Any]) -> None:
         ) from err
 
 
-@websocket_command({vol.Required("type"): "autodarts/lichteffekte"})
+def _ws_eintrag(hass: HomeAssistant, msg: dict[str, Any]) -> DartsEntry | None:
+    try:
+        return _eintrag(hass, msg.get("board"))
+    except ServiceValidationError:
+        return None
+
+
+@websocket_command({vol.Required("type"): "autodarts/lichteffekte", BOARD: str})
 @callback
 def ws_lichteffekte(hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]) -> None:
     """Rules of the light effects for the lights card."""
-    eintraege = hass.config_entries.async_loaded_entries(DOMAIN)
-    regeln = eintraege[0].runtime_data.lichter.regeln if eintraege else []
+    eintrag = _ws_eintrag(hass, msg)
+    regeln = eintrag.runtime_data.lichter.regeln if eintrag else []
     connection.send_result(msg["id"], {"regeln": regeln, "ereignisse": EREIGNISSE, "effekte": EFFEKTE, "wled": wled_uebersicht(hass)})
 
 
-@websocket_command({vol.Required("type"): "autodarts/ansager"})
+@websocket_command({vol.Required("type"): "autodarts/ansager", BOARD: str})
 @async_response
 async def ws_ansager(hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]) -> None:
     """Caller settings, voices, sound packs and walk-on songs for the caller card."""
-    eintraege = hass.config_entries.async_loaded_entries(DOMAIN)
-    if not eintraege:
+    eintrag = _ws_eintrag(hass, msg)
+    if not eintrag:
         connection.send_result(msg["id"], {"einstellungen": {}, "stimmen": [], "packs": {}, "songs": []})
         return
-    connection.send_result(msg["id"], await eintraege[0].runtime_data.ansager.uebersicht())
+    connection.send_result(msg["id"], await eintrag.runtime_data.ansager.uebersicht())
 
 
-@websocket_command({vol.Required("type"): "autodarts/ansager/hoeren"})
+@websocket_command({vol.Required("type"): "autodarts/ansager/hoeren", BOARD: str})
 @callback
 def ws_ansager_hoeren(hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]) -> None:
     """The game card plays the caller on this phone or tablet: sends {"url"} or {"stop"} per announcement."""
-    eintraege = hass.config_entries.async_loaded_entries(DOMAIN)
-    if not eintraege:
+    eintrag = _ws_eintrag(hass, msg)
+    if not eintrag:
         connection.send_error(msg["id"], "not_loaded", "Autodarts is not set up")
         return
 
@@ -186,21 +210,23 @@ def ws_ansager_hoeren(hass: HomeAssistant, connection: ActiveConnection, msg: di
     def senden(daten: dict[str, Any]) -> None:
         connection.send_message(event_message(msg["id"], daten))
 
-    connection.subscriptions[msg["id"]] = eintraege[0].runtime_data.ansager.hoeren(senden)
+    connection.subscriptions[msg["id"]] = eintrag.runtime_data.ansager.hoeren(senden)
     connection.send_result(msg["id"])
 
 
-@websocket_command({vol.Required("type"): "autodarts/tv/link"})
+@websocket_command({vol.Required("type"): "autodarts/tv/link", BOARD: str})
 @require_admin
 @callback
 def ws_tv_link(hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]) -> None:
     """Link of the TV page for the TV card. The link holds the secret key, so it is never in a state."""
-    eintraege = hass.config_entries.async_loaded_entries(DOMAIN)
-    connection.send_result(msg["id"], {"url": eintraege[0].runtime_data.fernseher.url() if eintraege else ""})
+    eintrag = _ws_eintrag(hass, msg)
+    connection.send_result(msg["id"], {"url": eintrag.runtime_data.fernseher.url() if eintrag else ""})
 
 
 async def _ansager(hass: HomeAssistant, name: str, d: dict[str, Any]) -> dict[str, Any] | None:
-    ansager = _eintrag(hass).runtime_data.ansager
+    ansager = _eintrag(hass, d.get("board")).runtime_data.ansager
+    if name.startswith("ansager_pack_"):
+        ansager = ansager.werkstatt()  # the shared packs are made by one board
     if name == "ansager_testen":
         await ansager.testen(d.get("text"), d.get("sprecher"))
         return None
@@ -208,7 +234,7 @@ async def _ansager(hass: HomeAssistant, name: str, d: dict[str, Any]) -> dict[st
         await ansager.pack_anhalten()
         return None
     if name == "ansager_pack_erzeugen":
-        namen = [str(p.get("name") or "") for p in _eintrag(hass).runtime_data.spiel.daten["spieler"]]
+        namen = [str(p.get("name") or "") for p in _eintrag(hass, d.get("board")).runtime_data.spiel.daten["spieler"]]
         ansager.pack_erzeugen(d["name"], namen, d.get("sprecher"), d.get("nur"), d["neu"])
         return None
     if name == "ansager_pack_pruefen":
@@ -235,8 +261,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_command(hass, ws_tv_link)
 
     async def ausfuehren(call: ServiceCall) -> ServiceResponse:
-        s = _leiter(hass)
         d = call.data
+        s = _leiter(hass, d.get("board"))
         name = call.service
         if name == "spiel_starten":
             await s.starten(d.get("spieler"), {k: d.get(k) for k in EINSTELLUNGEN})
@@ -266,7 +292,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         elif name == "strom_setzen":
             await s.strom_setzen({k: d[k] for k in ("schalter", "leistung", "einschalten", "ausschalten", "pc_online")})
         elif name in ("clips_setzen", "clip_loeschen", "clip_speichern"):
-            clips = _eintrag(hass).runtime_data.clips
+            clips = _eintrag(hass, d.get("board")).runtime_data.clips
             if name == "clips_setzen":
                 await clips.setzen(d)
             elif name == "clip_speichern":
@@ -274,7 +300,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             elif d.get("id") or d["alle"]:
                 await clips.loeschen(None if d["alle"] else d["id"])
         elif name.startswith("pixel_"):
-            px = _eintrag(hass).runtime_data.pixel
+            px = _eintrag(hass, d.get("board")).runtime_data.pixel
             if name == "pixel_setzen":
                 await px.setzen(d.get("an"), d.get("effekte"))
             elif name == "pixel_hinzufuegen":
@@ -285,13 +311,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             else:
                 await px.testen(d.get("adresse"))
         elif name.startswith("fernseher_"):
-            tv = _eintrag(hass).runtime_data.fernseher
+            tv = _eintrag(hass, d.get("board")).runtime_data.fernseher
             if name == "fernseher_zeigen":
                 await tv.zeigen(d.get("geraete"))
             elif name == "fernseher_beenden":
                 await tv.beenden(d.get("geraete"))
             else:
-                await tv.setzen(d.get("geraete"), d.get("auto"), d["neuer_link"], d.get("brett"), d.get("ansicht"))
+                await tv.setzen(d.get("geraete"), d.get("auto"), d["neuer_link"], d.get("brett"), d.get("ansicht"), d.get("alle"))
         elif name in ("lichteffekte_setzen", "lichteffekt_testen"):
             await _lichter(hass, name, d)
         elif name in ("ansager_setzen", "ansager_testen", "ansager_pack_erzeugen", "ansager_pack_loeschen", "ansager_pack_pruefen", "ansager_pack_anhalten"):
@@ -300,6 +326,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         return None
 
     for name, schema in DIENSTE.items():
+        schema = schema.extend({BOARD: cv.string})
         antwort = SupportsResponse.OPTIONAL if name in MIT_ANTWORT else SupportsResponse.NONE
         if name in NUR_ADMIN:
             async_register_admin_service(hass, DOMAIN, name, ausfuehren, schema=schema, supports_response=antwort)

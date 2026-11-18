@@ -2,6 +2,8 @@
 
 The page (frontend/tv.html) gets the game live over server-sent events. It shows the
 scoreboard while a game runs and a rest screen (clock, ranking, last games) otherwise.
+Several boards: every board has its own page; with "all boards" the page of a board shows
+the games of all boards on one screen (frontend/tv-alle.html, one board page each).
 """
 
 from __future__ import annotations
@@ -65,12 +67,13 @@ class Fernseher:
 
     @property
     def einst(self) -> dict[str, Any]:
-        e: dict[str, Any] = self.spiel.daten.setdefault("tv", {})
+        e: dict[str, Any] = self.spiel.eigen.setdefault("tv", {})
         if not e.get("token"):
             e["token"] = secrets.token_hex(16)
         e.setdefault("geraete", [])
         e.setdefault("auto", False)
         e.setdefault("brett", False)
+        e.setdefault("alle", False)
         if e.get("ansicht") not in ANSICHTEN:
             e["ansicht"] = "camera_1"
         return e
@@ -89,9 +92,28 @@ class Fernseher:
                 return ""  # no network address set in Home Assistant yet
         return f"{basis}{TV_URL}/{self.einst['token']}"
 
+    def alle_zeigen(self) -> bool:
+        """The page shows the games of all boards (several boards and switched on)."""
+        return bool(self.einst["alle"]) and len(self.spiel.ablage.leiter) > 1
+
+    def boards(self) -> dict[str, Any]:
+        """For the page of all boards: name, own page and game state of each board."""
+        liste = []
+        for le in self.spiel.ablage.alle():
+            eintrag = self.hass.config_entries.async_get_entry(le.kennung)
+            f: Fernseher | None = getattr(getattr(eintrag, "runtime_data", None), "fernseher", None)
+            if f is None:
+                continue
+            sp = le.spiel or {}
+            liste.append({"name": le.name(), "token": f.einst["token"], "phase": sp.get("phase"), "id": sp.get("id"),
+                          "ende": sp.get("ende"), "eigen": f is self})
+        return {"boards": liste, "sprache": self.hass.config.language}
+
     async def setzen(self, geraete: list[str] | None, auto: bool | None, neuer_link: bool,
-                     brett: bool | None = None, ansicht: str | None = None) -> None:
+                     brett: bool | None = None, ansicht: str | None = None, alle: bool | None = None) -> None:
         e = self.einst
+        if alle is not None:
+            e["alle"] = bool(alle)
         if geraete is not None:
             e["geraete"] = [g for g in dict.fromkeys(geraete) if g]
         if auto is not None:
@@ -250,13 +272,16 @@ class TvSeite(HomeAssistantView):
     name = "autodarts:tv"
     requires_auth = False
 
-    def __init__(self, html: str) -> None:
+    def __init__(self, html: str, alle_html: str = "") -> None:
         self._html = html
+        self._alle = alle_html
 
     async def get(self, request: web.Request, token: str) -> web.Response:
-        if _fernseher_fuer(request.app["hass"], token) is None:
+        f = _fernseher_fuer(request.app["hass"], token)
+        if f is None:
             return web.Response(status=404)
-        return web.Response(text=self._html, content_type="text/html", headers={"Cache-Control": "no-store"})
+        html = self._alle if self._alle and f.alle_zeigen() else self._html
+        return web.Response(text=html, content_type="text/html", headers={"Cache-Control": "no-store"})
 
 
 class TvOverlay(TvSeite):
@@ -264,6 +289,51 @@ class TvOverlay(TvSeite):
 
     url = TV_URL + "/{token}/overlay"
     name = "autodarts:tv:overlay"
+
+
+class TvEinzeln(TvSeite):
+    """The page of one board, also when it is set to show all boards (inside the page of all boards)."""
+
+    url = TV_URL + "/{token}/einzeln"
+    name = "autodarts:tv:einzeln"
+
+
+class TvBoards(HomeAssistantView):
+    """Page of all boards: which boards there are and which of them play (server-sent events)."""
+
+    url = TV_URL + "/{token}/boards"
+    name = "autodarts:tv:boards"
+    requires_auth = False
+
+    async def get(self, request: web.Request, token: str) -> web.StreamResponse:
+        hass: HomeAssistant = request.app["hass"]
+        f = _fernseher_fuer(hass, token)
+        if f is None:
+            return web.Response(status=404)
+        antwort = web.StreamResponse(headers={"Content-Type": "text/event-stream", "Cache-Control": "no-store", "X-Accel-Buffering": "no"})
+        await antwort.prepare(request)
+        neu = asyncio.Event()
+        abmelden = [f.spiel.hoerer(neu.set)]  # every board tells all others about its changes (Spielleiter.nur_melden)
+        alt = ""
+        try:
+            while True:
+                text = json.dumps(f.boards(), ensure_ascii=False, default=str)
+                if text != alt:
+                    alt = text
+                    await antwort.write(f"data: {text}\n\n".encode())
+                neu.clear()
+                try:
+                    await asyncio.wait_for(neu.wait(), PING)
+                except TimeoutError:
+                    await antwort.write(b": ping\n\n")
+                    continue
+                await asyncio.sleep(0.5)
+        except (ConnectionResetError, ConnectionError):
+            pass
+        finally:
+            for ab in abmelden:
+                ab()
+        return antwort
 
 
 class TvClip(HomeAssistantView):
@@ -341,10 +411,13 @@ async def async_setup_tv(hass: HomeAssistant) -> None:
     """Register the page once for the whole integration."""
     if hass.http is None:
         return
-    datei = Path(__file__).parent / "frontend" / "tv.html"
-    html = await hass.async_add_executor_job(datei.read_text, "utf-8")
-    hass.http.register_view(TvSeite(html))
+    ordner = Path(__file__).parent / "frontend"
+    html = await hass.async_add_executor_job((ordner / "tv.html").read_text, "utf-8")
+    alle = await hass.async_add_executor_job((ordner / "tv-alle.html").read_text, "utf-8")
+    hass.http.register_view(TvSeite(html, alle))
     hass.http.register_view(TvOverlay(html))
+    hass.http.register_view(TvEinzeln(html))
+    hass.http.register_view(TvBoards())
     hass.http.register_view(TvClip())
     hass.http.register_view(TvLive())
     hass.http.register_view(TvKamera())

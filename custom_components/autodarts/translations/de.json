@@ -151,6 +151,9 @@
     },
     "pixel_offline": {
       "message": "Anzeige nicht erreichbar: {host}."
+    },
+    "unknown_board": {
+      "message": "Es gibt kein Board „{board}“. Nimm den Namen des Boards, sein Gerät oder seinen Eintrag."
     }
   },
   "entity": {

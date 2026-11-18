@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -200,8 +201,20 @@ class DartsDaten:
     clips: Clips
     pixel: PixelAnzeigen
     bilder: Bildverteiler
+    vorsilbe: str = ""  # unique ids of the entities: "" for the first board, "<entry id>_" for the others
 
 
 type DartsEntry = ConfigEntry[DartsDaten]
+
+
+def ist_haupt(entry: ConfigEntry) -> bool:
+    """The first board (set up before several boards existed, or the first one): unique id = domain."""
+    return entry.unique_id == DOMAIN
+
+
+def board_name(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """Name of the board as the user sees it (device name, changeable in Home Assistant)."""
+    geraet = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    return str((geraet and (geraet.name_by_user or geraet.name)) or entry.title)
 
 
