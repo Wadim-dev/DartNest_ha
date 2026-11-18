@@ -26,6 +26,7 @@ from .clips import Clips, async_setup_clips
 from .const import CONF_HOST, CONF_PORT, DOMAIN, GERAETENAME, STANDARD_PORT
 from .coordinator import DartsDaten, DartsEntry, SystemKoordinator, ZustandKoordinator, board_name, ist_haupt
 from .fernseher import Fernseher, async_setup_tv
+from .kamerawache import KameraWache
 from .lichter import Lichtshow
 from .pixel import PixelAnzeigen
 from .services import async_setup_services
@@ -130,6 +131,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:
     waechter = ZiehWaechter(hass, board, zustand)
     entry.async_on_unload(zustand.async_add_listener(waechter.aenderung))
     entry.async_on_unload(waechter.abbrechen)
+    wache = KameraWache(hass, board, zustand, system, spiel)
+    entry.async_on_unload(system.async_add_listener(wache.aenderung))
     _assist(hass)
     entry.async_on_unload(lambda: _assist(hass, ohne=entry.entry_id))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
