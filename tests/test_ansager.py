@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components import media_source, tts  # noqa: F401  (loaded for patching)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 import pytest
-from pytest_homeassistant_custom_component.common import async_mock_service
+from pytest_homeassistant_custom_component.common import async_fire_time_changed, async_mock_service
 
 from custom_components.autodarts import ansager as ansager_modul
 from custom_components.autodarts.const import DOMAIN
@@ -38,6 +40,14 @@ async def _fertig(hass: HomeAssistant, a: ansager_modul.Ansager) -> None:
     await asyncio.sleep(0)
     await asyncio.gather(*a._aufgaben, *([a._einlauf] if a._einlauf else []), return_exceptions=True)
     await hass.async_block_till_done()
+
+
+async def _frei(hass: HomeAssistant, a: ansager_modul.Ansager) -> None:
+    """Let the time pass until the speakers are free again (and what waited has played)."""
+    sek = max(0.0, a._frei_ab - hass.loop.time()) + 1
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=sek))
+    await _fertig(hass, a)
+    a._frei_ab = min(a._frei_ab, hass.loop.time())  # the clock of the loop does not move in tests
 
 
 async def test_einstellungen_und_uebersicht(hass: HomeAssistant, geladen, lautsprecher, hass_ws_client, hass_storage) -> None:
@@ -83,6 +93,7 @@ async def test_punkte_rest_und_pack(hass: HomeAssistant, geladen, lautsprecher) 
         await _fertig(hass, a)
         assert lautsprecher["tts"][-1].data == {"entity_id": "tts.piper", "media_player_entity_id": ["media_player.kueche"],
                                                 "message": "One hundred and forty. Ben, you require 100", "cache": True}
+        await _frei(hass, a)
         # a pack file is used when the key exists and nothing else must be said
         pack = lautsprecher["pfad"] / "autodarts" / "caller" / "Classic"
         pack.mkdir(parents=True)
@@ -95,6 +106,29 @@ async def test_punkte_rest_und_pack(hass: HomeAssistant, geladen, lautsprecher) 
     url = "media-source://media_source/local/autodarts/caller/Classic/180.MP3"
     assert {"entity_id": ["media_player.kueche"], "media_content_id": url, "media_content_type": "music", "announce": True} in aufrufe
     assert {"entity_id": ["media_player.bad"], "media_content_id": url, "media_content_type": "music"} in aufrufe
+
+
+async def test_kein_rattenschwanz(hass: HomeAssistant, geladen, lautsprecher) -> None:
+    """A fast game: while one announcement plays only the newest waits, the ones between are dropped."""
+    a = geladen.runtime_data.ansager
+    await _setzen(hass, rest=False)
+    with patch.object(geladen.runtime_data.spiel, "stand", {"art": "x01", "gewinner": None}):
+        for punkte in (60, 45, 81, 100):
+            a.ereignis("visit", {"player": "Anna", "score": punkte})
+            await _fertig(hass, a)
+        assert [c.data["message"] for c in lautsprecher["tts"]] == ["Sixty"]
+        await _frei(hass, a)
+        assert [c.data["message"] for c in lautsprecher["tts"]] == ["Sixty", "One hundred"]
+        await _frei(hass, a)
+        # a new game forgets what still waited
+        a.ereignis("visit", {"player": "Anna", "score": 26})
+        await _fertig(hass, a)
+        a.ereignis("visit", {"player": "Anna", "score": 41})
+        await _fertig(hass, a)
+        with patch.object(a, "_spielbeginn", side_effect=_null):
+            a.ereignis("game_started", {"players": ["Anna"], "player_ids": ["a1"]})
+        await _frei(hass, a)
+    assert [c.data["message"] for c in lautsprecher["tts"]] == ["Sixty", "One hundred", "Twenty-six"]
 
 
 @pytest.mark.parametrize(("ereignisse", "text"), [
@@ -259,6 +293,7 @@ async def test_pack_erzeugen_und_zusammensetzen(hass: HomeAssistant, geladen, la
         import wave
         with wave.open(str(ordner / "_mix" / url.rsplit("/", 1)[1]), "rb") as w:
             assert w.getnframes() == 4 * 800 + 3 * 960
+        await _frei(hass, a)
         # a missing file (no name for Anna) → spoken as it is
         stand["am_zug"] = 0
         stand["spieler"][0]["rest"] = 100

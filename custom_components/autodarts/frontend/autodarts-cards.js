@@ -1734,13 +1734,21 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   /* caller on this phone/tablet (1.18): while a game card has its speaker button on, Home Assistant sends the
      same announcements as to the speakers (voice, sound packs, walk-on songs) as addresses; played one after another */
   const hoerKarten = new Set();
-  let hoerAbo = null, hoerOk = false, hoerKette = Promise.resolve(), hoerQuelle = null, hoerNr = 0;
-  const hoerStop = () => { hoerNr++; if (hoerQuelle) try { hoerQuelle.stop(); } catch (e) {} hoerQuelle = null; };
+  let hoerAbo = null, hoerOk = false, hoerQuelle = null, hoerNr = 0, hoerBesetzt = false, hoerWarte = null;
+  const hoerStop = () => { hoerNr++; hoerWarte = null; hoerBesetzt = false; if (hoerQuelle) try { hoerQuelle.stop(); } catch (e) {} hoerQuelle = null; };
+  // one announcement at a time: while one plays only the newest waits (a fast game builds no tail)
   const hoerSpielen = (h, m) => {
     if (m.stop) { hoerStop(); return; }
     if (!m.url) return;
-    const nr = hoerNr, laden = fetch(h.hassUrl(m.url)).then(r => r.arrayBuffer());
-    hoerKette = hoerKette.then(() => laden).then(buf => {
+    if (hoerBesetzt) { hoerWarte = m; return; }
+    hoerBesetzt = true;
+    const nr = hoerNr, weiter = () => {
+      if (nr !== hoerNr) return;
+      hoerBesetzt = false;
+      const w = hoerWarte; hoerWarte = null;
+      if (w) hoerSpielen(h, w);
+    };
+    fetch(h.hassUrl(m.url)).then(r => r.arrayBuffer()).then(buf => {
       if (nr !== hoerNr) return;
       if (!fxAudio) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; fxAudio = new C(); }
       return fxAudio.decodeAudioData(buf).then(b => new Promise(fertig => {
@@ -1750,7 +1758,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         q.onended = () => { if (hoerQuelle === q) hoerQuelle = null; fertig(); };
         hoerQuelle = q; q.start();
       }));
-    }).catch(() => {});
+    }).catch(() => {}).then(weiter);
   };
   let hoerBoard = null;
   const hoerPruefen = h => {
