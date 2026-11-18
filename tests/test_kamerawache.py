@@ -24,12 +24,14 @@ async def test_kamera_steht(hass: HomeAssistant) -> None:
     w.aenderung()
     await hass.async_block_till_done()
     w.board.restart.assert_not_called()  # one look is not enough
-    w.aenderung()
-    await hass.async_block_till_done()
+    with patch.object(kamerawache.time, "monotonic", return_value=5.0):  # a machine that started a moment ago
+        w.aenderung()
+        await hass.async_block_till_done()
     w.board.restart.assert_called_once()
-    w.aenderung()
-    w.aenderung()
-    await hass.async_block_till_done()
+    with patch.object(kamerawache.time, "monotonic", return_value=60.0):
+        w.aenderung()
+        w.aenderung()
+        await hass.async_block_till_done()
     assert w.board.restart.call_count == 1  # not again right away
     with patch.object(kamerawache.time, "monotonic", return_value=10**9):
         w.aenderung()

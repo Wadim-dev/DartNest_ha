@@ -42,7 +42,7 @@ class KameraWache:
         self.system = system
         self.spiel = spiel
         self._treffer = 0
-        self._zuletzt = 0.0
+        self._zuletzt: float | None = None  # time of the last restart
         self._versuche = 0
         self._lief: set[int] = set()
 
@@ -68,7 +68,7 @@ class KameraWache:
                 persistent_notification.async_dismiss(self.hass, f"{DOMAIN}_kamera_steht")
             return
         self._treffer += 1
-        if self._treffer < LOOKS or time.monotonic() - self._zuletzt < PAUSE:
+        if self._treffer < LOOKS or (self._zuletzt is not None and time.monotonic() - self._zuletzt < PAUSE):
             return
         self._treffer = 0
         self._zuletzt = time.monotonic()
