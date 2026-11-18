@@ -17,7 +17,7 @@ import voluptuous as vol
 from .clips import ANLAESSE, KAMERAS as CLIP_KAMERAS
 from .const import DOMAIN, EREIGNISSE
 from .coordinator import DartsEntry, board_name, ist_haupt
-from .fernseher import ANSICHTEN
+from .fernseher import ANSICHTEN, EFFEKTE as TV_EFFEKTE
 from .lichter import EFFEKTE, REGEL, wled_uebersicht
 from .spiel import EINSTELLUNGEN, Spielleiter
 from .spielarten import GRUPPEN
@@ -79,6 +79,7 @@ DIENSTE = {
         vol.Optional("brett"): cv.boolean,
         vol.Optional("ansicht"): vol.In(ANSICHTEN),
         vol.Optional("alle"): cv.boolean,
+        vol.Optional("effekte"): vol.In(TV_EFFEKTE),
     }),
     "clips_setzen": vol.Schema({
         vol.Optional("an"): cv.boolean,
@@ -210,8 +211,15 @@ def ws_ansager_hoeren(hass: HomeAssistant, connection: ActiveConnection, msg: di
     def senden(daten: dict[str, Any]) -> None:
         connection.send_message(event_message(msg["id"], daten))
 
-    connection.subscriptions[msg["id"]] = eintrag.runtime_data.ansager.hoeren(senden)
+    ansager = eintrag.runtime_data.ansager
+    connection.subscriptions[msg["id"]] = ansager.hoeren(senden)
     connection.send_result(msg["id"])
+
+    async def vorladen() -> None:
+        if urls := await ansager.vorlade_urls():
+            senden({"vorladen": urls})
+
+    hass.async_create_task(vorladen())
 
 
 @websocket_command({vol.Required("type"): "autodarts/tv/link", BOARD: str})
@@ -317,7 +325,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             elif name == "fernseher_beenden":
                 await tv.beenden(d.get("geraete"))
             else:
-                await tv.setzen(d.get("geraete"), d.get("auto"), d["neuer_link"], d.get("brett"), d.get("ansicht"), d.get("alle"))
+                await tv.setzen(d.get("geraete"), d.get("auto"), d["neuer_link"], d.get("brett"), d.get("ansicht"), d.get("alle"), d.get("effekte"))
         elif name in ("lichteffekte_setzen", "lichteffekt_testen"):
             await _lichter(hass, name, d)
         elif name in ("ansager_setzen", "ansager_testen", "ansager_pack_erzeugen", "ansager_pack_loeschen", "ansager_pack_pruefen", "ansager_pack_anhalten"):

@@ -388,6 +388,8 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const ft = f => !f ? '' : f === 'D25' ? 'Bull' : f === 'S25' ? '25' : f === 'M' ? 'Miss' : f[0] === 'S' ? f.slice(1) : f;
   const $ = id => document.getElementById(id);
+  // effects as set in the TV card: voll, leicht (weak TVs: fewer particles, no shaking or flashes), aus
+  const FXS = () => (D && D.effekte) || 'voll';
   let D = null, altHtml = '', altAnsage = null, altDarts = 0, erst = true;
   // the same page is the overlay for OBS / Streamlabs at …/overlay
   const OV = /\/overlay\/?$/.test(location.pathname), BASE = location.pathname.replace(/\/$/, '').replace(/\/(overlay|einzeln)$/, '');
@@ -542,11 +544,11 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     return n >= 2 ? '<span class="feuer" title="' + t('fire') + '">' + (n >= 3 ? '🔥🔥' : '🔥') + '</span>' : '';
   }
   let bAlt = null, bZug = null, bAuf = null, bSpiel = null, bStart = null, bMarks = null, bLeg = null;
-  function konfetti(gold) {
+  function konfetti(gold) { if (FXS() === 'aus') return; 
     const k = document.createElement('div'), farben = gold ? ['#ffd23d', '#ffe082', '#fff3c4', '#ffb300', '#ff8a3d'] : ['#ff8a3d', '#ff4d5e', '#ffc83d', '#3ddc84', '#40c4ff', '#ea80fc'];
     k.className = 'konf';
     let h = '';
-    for (let i = 0; i < (gold ? 170 : 90); i++) {
+    for (let i = 0, n = Math.round((gold ? 170 : 90) * (FXS() === 'leicht' ? .35 : 1)); i < n; i++) {
       h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--w:' + (0.8 + Math.random() * 1.2).toFixed(2) + 'vh;--c:' + farben[i % farben.length] + ';--d:' + (2.2 + Math.random() * 1.8).toFixed(2) + 's;--v:' + (Math.random() * (gold ? 1.2 : .6)).toFixed(2) + 's;--dx:' + Math.round(Math.random() * 30 - 15) + 'vw;--r:' + Math.round(Math.random() * 1440 - 720) + 'deg"></i>';
     }
     k.innerHTML = h; document.body.appendChild(k); setTimeout(() => k.remove(), gold ? 5600 : 4400);
@@ -714,7 +716,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   // on a finish the target field pulses (white when the next dart can win the leg). Sizes, sparks and colours vary a little every time.
   let rgAlt = null, rgSpiel = null;
   const zufall = (a, b) => a + Math.random() * (b - a);
-  function knall(x, y, art, gross) {
+  function knall(x, y, art, gross) { if (FXS() === 'aus') return; 
     const el = $('brett'), kl = el.querySelector('.kl'), S = el.clientWidth || 1;
     const n = document.createElement('div');
     n.className = 'kn ' + art + ' f' + (1 + Math.floor(Math.random() * 3));
@@ -726,7 +728,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     kl.appendChild(n);
     setTimeout(() => n.remove(), 1600);
   }
-  function funken(x, y, n, weit, farben, streifen) {
+  function funken(x, y, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
     // sparks fly from the dart, fall a little and go out
     const el = $('brett'), kl = el.querySelector('.kl'), S = el.clientWidth || 1, h = document.createElement('div');
     h.className = 'kn'; h.style.left = ((x + 225) / 450 * 100) + '%'; h.style.top = ((y + 225) / 450 * 100) + '%';
@@ -739,20 +741,20 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     h.innerHTML = s; kl.appendChild(h); setTimeout(() => h.remove(), 1700);
   }
   const FEUER = ['#fff3b0', '#ffd27a', '#ff9a3c', '#ff5a1a'], GOLD = ['#fff8d6', '#ffe082', '#ffc107', '#ffb300'], ROT = ['#ffb0a8', '#ff5252', '#d81b2a'], GRUEN = ['#d6ffe4', '#7dffb0', '#2ee87a'], GRAU = ['#d8d8de', '#9a9aa4'];
-  function schirm(art) { const el = $('app'); el.classList.remove('r1', 'r2', 'r3'); void el.offsetWidth; el.classList.add(art); clearTimeout(schirm.z); schirm.z = setTimeout(() => el.classList.remove(art), 1200); }
+  function schirm(art) { if (FXS() !== 'voll') return;  const el = $('app'); el.classList.remove('r1', 'r2', 'r3'); void el.offsetWidth; el.classList.add(art); clearTimeout(schirm.z); schirm.z = setTimeout(() => el.classList.remove(art), 1200); }
   function ort(x, y) { const r = $('brett').getBoundingClientRect(); return [Math.round(r.left + (x + 225) / 450 * r.width), Math.round(r.top + (y + 225) / 450 * r.height)]; }
-  function druckwelle(x, y, art, doppelt) {
+  function druckwelle(x, y, art, doppelt) { if (FXS() === 'aus') return; 
     const [px, py] = ort(x, y); welle(px, py, art, doppelt);
   }
-  function weiss(art) { const d = document.createElement('div'); d.className = 'weiss ' + art; document.body.appendChild(d); setTimeout(() => d.remove(), 800); }
-  function glut(farben, n) {
+  function weiss(art) { if (FXS() !== 'voll') return;  const d = document.createElement('div'); d.className = 'weiss ' + art; document.body.appendChild(d); setTimeout(() => d.remove(), 800); }
+  function glut(farben, n) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
     const g = document.createElement('div'); g.className = 'glut'; let s = '';
     for (let i = 0; i < n; i++) s += '<i style="--x:' + zufall(0, 100).toFixed(1) + '%;--w:' + zufall(.4, 1.1).toFixed(2) + 'vh;--c:' + farben[i % farben.length] + ';--d:' + zufall(2.2, 4.6).toFixed(2) + 's;--v:' + zufall(0, 1.4).toFixed(2) + 's;--dx:' + zufall(-14, 14).toFixed(0) + 'vw"></i>';
     g.innerHTML = s; document.body.appendChild(g); setTimeout(() => g.remove(), 6200);
   }
-  function strahlen() { const el = $('brett'), s = document.createElement('div'); s.className = 'str'; el.appendChild(s); setTimeout(() => s.remove(), 3500); }
-  function brennen(ms) { const el = $('brett'); el.classList.add('brennt'); clearTimeout(brennen.z); brennen.z = setTimeout(() => el.classList.remove('brennt'), ms); }
-  function feuerwerk(anz) {
+  function strahlen() { if (FXS() === 'aus') return;  const el = $('brett'), s = document.createElement('div'); s.className = 'str'; el.appendChild(s); setTimeout(() => s.remove(), 3500); }
+  function brennen(ms) { if (FXS() === 'aus') return;  const el = $('brett'); el.classList.add('brennt'); clearTimeout(brennen.z); brennen.z = setTimeout(() => el.classList.remove('brennt'), ms); }
+  function feuerwerk(anz) { if (FXS() === 'aus') return; if (FXS() === 'leicht') anz = Math.max(1, Math.round(anz * .35)); 
     // match won: rockets burst all over the screen
     const farben = [GOLD, FEUER, ['#fff', '#80d8ff', '#40c4ff'], ['#fff', '#ea80fc', '#d500f9'], ['#fff', '#b9f6ca', '#00e676']];
     for (let k = 0; k < (anz || 9); k++) setTimeout(() => {
@@ -765,10 +767,10 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
       h.innerHTML = s; document.body.appendChild(h); setTimeout(() => h.remove(), 2000);
     }, k * 330 + zufall(0, 160));
   }
-  function welle(px, py, art, doppelt) {
+  function welle(px, py, art, doppelt) { if (FXS() === 'aus') return; 
     for (let k = 0; k < (doppelt ? 2 : 1); k++) { const d = document.createElement('div'); d.className = 'dw ' + art + (k ? ' z2' : ''); d.style.setProperty('--x', px + 'px'); d.style.setProperty('--y', py + 'px'); document.body.appendChild(d); setTimeout(() => d.remove(), 1300); }
   }
-  function sterne(px, py, n, weit, farben, streifen) {
+  function sterne(px, py, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
     // burst of sparks anywhere on the screen (weit: share of the screen height)
     const g = innerHeight, h = document.createElement('div');
     h.className = 'kn'; h.style.position = 'fixed'; h.style.zIndex = 7; h.style.left = px + 'px'; h.style.top = py + 'px';
@@ -780,7 +782,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   }
   function mittePunkt(el) { const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; }
   function karte(i) { return document.querySelector('#inhalt .p[data-i="' + i + '"]'); }
-  function stempel(text, art, el, gross) {
+  function stempel(text, art, el, gross) { if (FXS() === 'aus') return; 
     // a stamp slams onto the board (or a player card) for special moments
     const anker = el || ($('main').classList.contains('mb') ? $('brett') : $('inhalt')), r = anker.getBoundingClientRect(), s = document.createElement('div');
     s.className = 'stp ' + (art || ''); s.textContent = text;
@@ -789,8 +791,8 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     document.querySelectorAll('.stp').forEach(x => { if (x.dataset.a === (el ? 'k' : 'b')) x.remove(); });
     s.dataset.a = el ? 'k' : 'b'; document.body.appendChild(s); setTimeout(() => s.remove(), 2150);
   }
-  function wisch() { const w = document.createElement('div'); w.className = 'wisch'; document.body.appendChild(w); setTimeout(() => w.remove(), 800); }
-  function flug(x, y, text, farbe, i) {
+  function wisch() { if (FXS() === 'aus') return;  const w = document.createElement('div'); w.className = 'wisch'; document.body.appendChild(w); setTimeout(() => w.remove(), 800); }
+  function flug(x, y, text, farbe, i) { if (FXS() === 'aus') return; 
     // the points fly from the dart to the score of the player
     const ziel = document.querySelector('#inhalt .gr[data-i="' + i + '"]'); if (!ziel || !document.body.animate) return;
     const [sx, sy] = ort(x, y), [zx, zy] = mittePunkt(ziel), e = document.createElement('div');
@@ -869,19 +871,19 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     weiss(''); schirm('r2'); welle(innerWidth / 2, innerHeight / 2, '', true); sterne(innerWidth / 2, innerHeight / 2, 50, .7, FEUER, true); glut(FEUER, 40);
     setTimeout(() => { if ($('main').classList.contains('mb')) beben('dreh'); }, 60);
   }
-  function beben(art) {
+  function beben(art) { if (FXS() !== 'voll') return; 
     const el = $('brett'), w = zufall(0, Math.PI * 2);
     el.style.setProperty('--bx', Math.cos(w).toFixed(2)); el.style.setProperty('--by', Math.sin(w).toFixed(2));
     el.classList.remove('b1', 'b2', 'b3', 'nein', 'schmelz', 'dreh', 'trommel'); void el.offsetWidth; el.classList.add(art);
     clearTimeout(beben.z); beben.z = setTimeout(() => el.classList.remove(art), 2500);
   }
-  function blitz(x, y, gold) {
+  function blitz(x, y, gold) { if (FXS() === 'aus') return; 
     const el = $('brett'), r = el.getBoundingClientRect(), b = document.createElement('div');
     b.className = 'blz' + (gold ? ' gold' : '');
     b.style.setProperty('--x', Math.round(r.left + (x + 225) / 450 * r.width) + 'px'); b.style.setProperty('--y', Math.round(r.top + (y + 225) / 450 * r.height) + 'px');
     document.body.appendChild(b); setTimeout(() => b.remove(), 1100);
   }
-  function risse(x, y, gold) {
+  function risse(x, y, gold) { if (FXS() !== 'voll') return; 
     // cracks run from the dart over the board and stay until the darts are pulled
     const ri = $('brett').querySelector('.ri'), n = 9 + Math.floor(Math.random() * 4), start = zufall(0, 360);
     let wege = '';
@@ -900,7 +902,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     ri.innerHTML = '<svg viewBox="-225 -225 450 450"' + (gold ? ' class="gold"' : '') + '>' + wege + '</svg>';
   }
   function heilen() { const sv = $('brett').querySelector('.ri svg'); if (sv && !sv.classList.contains('weg')) { sv.classList.add('weg'); setTimeout(() => { if (sv.isConnected) sv.remove(); }, 900); } }
-  function schmelzen() {
+  function schmelzen() { if (FXS() !== 'voll') return; 
     // bust: the board sags and drips
     const el = $('brett'), kl = el.querySelector('.kl');
     beben('schmelz');
@@ -911,12 +913,12 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
       kl.appendChild(tr); setTimeout(() => tr.remove(), 2800);
     }
   }
-  function frieren() {
+  function frieren() { if (FXS() === 'aus') return; 
     const el = $('brett'), ri = el.querySelector('.ri'), e = document.createElement('div');
     e.className = 'eis'; ri.appendChild(e); el.classList.add('frost');
     setTimeout(() => { e.remove(); el.classList.remove('frost'); }, 2300);
   }
-  function einschlag(d, i, lage) {
+  function einschlag(d, i, lage) { if (FXS() === 'aus') return; 
     const [x, y] = dartMM(d, i), f = d.f || 'M', typ = f[0], pk = punkte(f);
     if (!(lage.letzter && (lage.bust || lage.match))) flug(x, y, lage.x01 ? (pk ? '+' + pk : '0') : ft(f), f === 'M' || f === 'S0' ? '#9a9aa4' : typ === 'T' ? '#ff7a2f' : typ === 'D' ? '#2ee87a' : /25$/.test(f) ? '#ff5263' : '#ffd27a', lage.am);
     if (lage.letzter && lage.bust) { glut(ROT, 34); knall(x, y, 'bust', .6); funken(x, y, 22, .5, ROT, true); druckwelle(x, y, 'rot'); weiss('rot'); schirm('r2'); schmelzen(); return; }

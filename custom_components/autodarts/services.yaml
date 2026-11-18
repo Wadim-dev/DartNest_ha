@@ -312,6 +312,15 @@ fernseher_setzen:
       description: Bei mehreren Boards teilen sich alle Boards, auf denen gespielt wird, das Bild.
       selector:
         boolean:
+    effekte:
+      name: Effekte
+      description: Voll, leicht (weniger Teilchen, kein Wackeln – für schwache Fernseher) oder aus.
+      selector:
+        select:
+          options:
+            - voll
+            - leicht
+            - aus
     geraete:
       name: Fernseher
       selector:
@@ -386,7 +395,7 @@ ansager_setzen:
   name: Ansager einstellen
   description: >-
     Einstellungen des Ansagers speichern: aktiv, lautsprecher (Liste media_player.*), stimme (tts.*),
-    pack (Ordner unter Medien autodarts/caller), punkte, rest, ende, besondere, toene, game_on, walkon,
+    pack (Ordner unter Medien autodarts/caller), punkte, rest, ende, besondere, ton_dart, ton_moment, ton_publikum, ton_spannung, game_on, walkon,
     walkon_sekunden 5–60, songs (Spieler-ID → Datei in autodarts/walkon). Die Karte „DartNest Ansager“ macht das per Klick.
   fields:
     board:
