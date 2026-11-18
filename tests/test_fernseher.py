@@ -98,8 +98,10 @@ async def test_seite_und_live(hass: HomeAssistant, mit_http, hass_client_no_auth
 
     # a started game arrives as the next message
     await _dienst(hass, "spiel_starten", spieler=[anna, ben], startwert=301)
-    zeile = (await r.content.readuntil(b"\n\n")).decode()
-    daten = json.loads(zeile[6:])
+    for _ in range(5):  # the start can come in more than one message; the last one has the players
+        daten = json.loads((await r.content.readuntil(b"\n\n")).decode()[6:])
+        if daten["spiel"].get("spieler"):
+            break
     assert daten["spiel"]["phase"] == "laeuft" and [p["rest"] for p in daten["spiel"]["spieler"]] == [301, 301]
     r.close()
 
