@@ -3,6 +3,16 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.41.0
+
+- **One board per card.** With several boards every DartNest card has a visual editor (*Edit dashboard → card → Board*): pick the board the card stays on – e.g. one Board Manager per board side by side. Without a choice the card follows the board button as before.
+- **No more slow-down after many windows.** Cards of closed windows and left pages stayed in memory with their listeners (the Board Manager also with its camera timer). Over a day on a wall tablet the app became sluggish and could hang when going back. They are freed now.
+
+**Deutsch**
+
+- **Ein Board je Karte.** Bei mehreren Boards hat jede DartNest-Karte einen Editor (*Dashboard bearbeiten → Karte → Board*): Board wählen, auf dem die Karte bleibt – z. B. je Board ein Board Manager nebeneinander. Ohne Wahl folgt die Karte wie bisher dem Board-Knopf.
+- **Kein Zähwerden mehr nach vielen Fenstern.** Karten aus geschlossenen Fenstern und verlassenen Seiten blieben mit ihren Horchern im Speicher (der Board Manager auch mit seinem Kamera-Takt). Über einen Tag am Wand-Tablet wurde die App zäh und konnte beim Zurückgehen hängen. Sie werden jetzt freigegeben.
+
 ## 1.40.0
 
 - **Smoother sounds.** Home Assistant prepares the caller's pack once (at start and when the pack changes), so a visit is joined with its sound effects in an instant during the game instead of being converted. Phones and tablets with the caller on load the sound effects before the game and keep them, instead of fetching each one at the dart. Music Assistant speakers no longer ring their chime before every announcement, which delayed and chopped the caller.
