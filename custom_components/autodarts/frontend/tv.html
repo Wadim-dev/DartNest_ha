@@ -507,6 +507,11 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     img.style.transform = 'matrix3d(' + [M[0][0], M[1][0], 0, M[2][0], M[0][1], M[1][1], 0, M[2][1], 0, 0, 1, 0, M[0][2], M[1][2], 0, M[2][2]].map(v => +v.toPrecision(9)).join(',') + ')';
   }
   $('brett').querySelector('img').addEventListener('load', form);
+  // the camera stream breaks off when Home Assistant restarts (update) or the board stream hiccups:
+  // fetch it anew instead of keeping a black or frozen image
+  function kamNeu() { if (!kamAlt) return; kamAlt = null; if (D && !OV) brettZeichnen(D.spiel || {}, D.brett); }
+  let kamWecker = 0;
+  $('brett').querySelector('img').addEventListener('error', () => { clearTimeout(kamWecker); kamWecker = setTimeout(kamNeu, 3000); });
   window.addEventListener('resize', () => { if ($('main').classList.contains('mb')) { brettGroesse(); form(); } });
 
 
@@ -1047,8 +1052,10 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
 
   function verbinden() {
     const q = new EventSource(BASE + '/live');
-    q.onmessage = e => { try { D = JSON.parse(e.data); } catch (x) { return; } document.body.classList.remove('weg'); zeichnen(); };
-    q.onerror = () => { document.body.classList.add('weg'); };
+    let getrennt = false;
+    q.onmessage = e => { try { D = JSON.parse(e.data); } catch (x) { return; } document.body.classList.remove('weg');
+      if (getrennt) { getrennt = false; kamAlt = null; } zeichnen(); };
+    q.onerror = () => { document.body.classList.add('weg'); getrennt = true; };
   }
   uhr();
   verbinden();

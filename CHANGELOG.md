@@ -3,6 +3,14 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.38.3
+
+- **Fixed: TV lost the camera image.** After Home Assistant restarted (for example for an update) the TV page connected again but kept a black or frozen board instead of the live camera. The page now fetches the camera anew when it reconnects, and tries again by itself a few seconds after the camera image fails.
+
+**Deutsch**
+
+- **Behoben: Fernseher verlor das Kamerabild.** Nach einem Neustart von Home Assistant (zum Beispiel für ein Update) verband sich die Fernsehseite zwar wieder, zeigte aber eine schwarze oder stehende Scheibe statt der Live-Kamera. Die Seite holt die Kamera jetzt beim Wiederverbinden neu und versucht es von selbst wieder, wenn das Kamerabild ausfällt.
+
 ## 1.38.2
 
 - **Fixed: announcements piled up.** When the game was faster than the caller, every visit was still announced one after the other, long after it was thrown. Now one announcement plays at a time; while it plays only the newest one waits and the ones in between are dropped. This holds for the speakers and for phones and tablets. A new game forgets what still waited.
