@@ -23,6 +23,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.loader import async_get_integration
 
 from . import auswertung
 from .board import Stream
@@ -40,6 +41,7 @@ TV_URL = f"/{DOMAIN}/tv"
 PLATTFORMEN = ("androidtv", "androidtv_remote")
 SILK = "com.amazon.cloud9"
 PING = 20.0
+TV_VERSION = f"{DOMAIN}_tv_version"
 # dartboard next to the scoreboard: drawn board or the straightened image of a board camera
 ANSICHTEN = ("graphic", "camera_1", "camera_2", "camera_3")
 EFFEKTE = ("voll", "leicht", "aus")  # effects on the page: all, light (weak TVs: fewer particles, no shaking), none
@@ -261,6 +263,8 @@ class Fernseher:
             "effekte": self.einst["effekte"],
             "brett": self._brett(),
             "clip": self.daten.clips.neuester() if self.daten is not None else None,
+            # the page reloads itself when another version answers (after an update)
+            "version": self.hass.data.get(TV_VERSION),
         }
 
 
@@ -387,7 +391,8 @@ class TvLive(HomeAssistantView):
                 try:
                     await asyncio.wait_for(neu.wait(), PING)
                 except TimeoutError:
-                    await antwort.write(b": ping\n\n")
+                    # a named event, so the page sees that the connection is alive (a comment line is invisible to it)
+                    await antwort.write(b"event: ping\ndata: 1\n\n")
                     continue
                 await asyncio.sleep(0.12)  # several changes of one dart in one message
         except (ConnectionResetError, ConnectionError):
@@ -416,6 +421,7 @@ class TvKamera(HomeAssistantView):
 
 async def async_setup_tv(hass: HomeAssistant) -> None:
     """Register the page once for the whole integration."""
+    hass.data[TV_VERSION] = str((await async_get_integration(hass, DOMAIN)).version or "")
     if hass.http is None:
         return
     ordner = Path(__file__).parent / "frontend"

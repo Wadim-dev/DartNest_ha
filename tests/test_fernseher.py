@@ -254,3 +254,11 @@ async def test_effekte_stufe(hass: HomeAssistant, geladen) -> None:
     await _dienst(hass, "fernseher_setzen", effekte="leicht")
     assert f.live()["effekte"] == "leicht"
     assert hass.states.get("sensor.autodarts_board_players").attributes["tv"]["effekte"] == "leicht"
+
+
+async def test_live_nennt_version(hass: HomeAssistant, geladen) -> None:
+    """The page reloads itself after an update: the live data carries the installed version."""
+    from homeassistant.loader import async_get_integration
+
+    version = (await async_get_integration(hass, "autodarts")).version
+    assert geladen.runtime_data.fernseher.live()["version"] == str(version)

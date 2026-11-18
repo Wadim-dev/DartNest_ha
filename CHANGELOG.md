@@ -3,6 +3,20 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.42.0
+
+- **TV page rebuilt to run smoothly.** Match dart, the winner screen and big visits stuttered on tablets, phones and TV sticks; the live image flickered and letters of the winner's name could be missing. The effects are built anew: sparks, embers, fireworks and confetti are drawn on one canvas instead of hundreds of single elements, shock waves and the heartbeat glow are only moved and faded instead of repainted every frame, and the oversized layers behind the winner are gone. While the board spins at the match dart it shows a still image. The look stays the same.
+- **Replay never comes up empty.** The replay frame appears only once the video really plays. A replay that followed right after another one could come up without a video.
+- **The page finds its way back.** After a restart of Home Assistant (e.g. an update) an open page stayed disconnected for good and kept showing the old game. It now reconnects by itself, also when the connection goes silent, and loads the new page after an update.
+- **Live view in full screen from every state of the game card.** The button (monitor with an eye) in the head of the game card is always there, not only while a game runs.
+
+**Deutsch**
+
+- **Fernseher-Seite neu aufgebaut, damit sie flüssig läuft.** Matchdart, Gewinner-Bild und hohe Aufnahmen ruckelten auf Tablets, Handys und TV-Sticks; das Livebild flackerte und im Namen des Gewinners konnten Buchstaben fehlen. Die Effekte sind neu gebaut: Funken, Glut, Feuerwerk und Konfetti werden auf einer Zeichenfläche gemalt statt als hunderte einzelne Elemente, Druckwellen und das Herzschlag-Leuchten werden nur noch bewegt und geblendet statt bei jedem Bild neu gemalt, und die übergroßen Ebenen hinter dem Gewinner sind weg. Während das Board beim Matchdart dreht, zeigt es ein Standbild. Das Aussehen bleibt gleich.
+- **Wiederholung kommt nie leer.** Der Rahmen der Wiederholung erscheint erst, wenn das Video wirklich läuft. Eine Wiederholung direkt nach einer anderen konnte ohne Video erscheinen.
+- **Die Seite findet zurück.** Nach einem Neustart von Home Assistant (z. B. Update) blieb eine offene Seite für immer getrennt und zeigte das alte Spiel. Sie verbindet sich jetzt selbst neu, auch wenn die Verbindung verstummt, und lädt nach einem Update die neue Seite.
+- **Live-Anzeige im Vollbild aus jedem Zustand der Spiel-Karte.** Der Knopf (Bildschirm mit Auge) im Kopf der Spiel-Karte ist immer da, nicht nur im laufenden Spiel.
+
 ## 1.41.1
 
 - **Page no longer freezes after going back.** If the DartNest tile sits inside another window of the dashboard and that window closed first (e.g. one back gesture on the phone), the DartNest window stayed open invisibly – and an open window blocks every tap on the page. DartNest windows now notice this and close themselves.
