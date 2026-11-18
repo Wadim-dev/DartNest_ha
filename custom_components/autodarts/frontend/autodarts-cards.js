@@ -2149,7 +2149,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
         (ph === 'running' || ph === 'bulloff' ? '<button class="ik" data-act="xabbr" title="' + t('cancel_game') + '"><ha-icon icon="mdi:close"></ha-icon></button>' : '') +
         (this._c.effects === false ? '' : '<button class="ik' + (this._fxAn() ? ' an' : '') + '" data-act="fx" title="' + t('effects') + '"><ha-icon icon="' + (this._fxAn() ? 'mdi:creation' : 'mdi:creation-outline') + '"></ha-icon></button>') +
         '<button class="ik' + (ansage ? ' an' : '') + '" data-act="ansage" title="' + t('caller') + '"><ha-icon icon="' + (ansage ? 'mdi:volume-high' : 'mdi:volume-off') + '"></ha-icon></button>' +
-        (ph === 'running' || ph === 'bulloff' ? '<button class="ik" data-act="live" title="' + t('live_full') + '"><ha-icon icon="mdi:monitor-eye"></ha-icon></button>' : '') +
+        '<button class="ik" data-act="live" title="' + t('live_full') + '"><ha-icon icon="mdi:monitor-eye"></ha-icon></button>' +
         ((tvInfo(h).geraete || []).length ? '<button class="ik" data-act="tv" title="' + t('tv_show') + '"><ha-icon icon="mdi:television-play"></ha-icon></button>' +
           '<button class="ik' + (tvInfo(h).brett ? ' an' : '') + '" data-act="tvbrett" title="' + t('tv_board_on') + '"><ha-icon icon="mdi:bullseye-arrow"></ha-icon></button>' : '') +
         (clipsInfo(h).an && ph === 'running' ? '<button class="ik" data-act="clip" title="' + t('clips_save') + '"><ha-icon icon="mdi:movie-open-plus-outline"></ha-icon></button>' : '') +

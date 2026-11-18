@@ -88,7 +88,7 @@ main.mb #brett{display:block}
 #brett svg{position:absolute;inset:0;width:100%;height:100%}
 #brett .lv{position:absolute;inset:0;display:none;border-radius:50%;overflow:hidden;clip-path:circle(50%)}
 #brett.kam .lv{display:block}#brett.kam .gz{display:none}
-#brett .lv img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;display:block}
+#brett .lv img,#brett .lv canvas{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;display:block}
 #brett .gz text{font-size:19px;font-weight:700;fill:#e8e8ec;text-anchor:middle;font-family:Outfit,Roboto,Arial,sans-serif}
 #brett .pf circle{stroke:#000;stroke-width:2.5}#brett .pf text{font-size:19px;font-weight:800;fill:#000;text-anchor:middle;font-family:Arial,sans-serif}
 #brett .pf>g:last-child>.in{animation:rein .45s cubic-bezier(.2,1.6,.4,1);transform-box:fill-box;transform-origin:center}
@@ -151,7 +151,7 @@ body.ov{background:transparent!important;cursor:none}
 @keyframes rein{0%{transform:scale(.6);opacity:0}100%{transform:none;opacity:1}}
 /* live impact on the board: what happens depends on the dart and the game (kn = burst, brett classes = shake/glow) */
 #brett .kl{position:absolute;inset:0;pointer-events:none;z-index:3}
-.kn{position:absolute;width:0;height:0;--g:10vh;--r:0deg;--h:0deg;filter:hue-rotate(var(--h))}
+.kn{position:absolute;width:0;height:0;--g:10vh;--r:0deg}
 .kn i{position:absolute;left:0;top:0;width:var(--g);height:var(--g);margin:calc(var(--g)/-2) 0 0 calc(var(--g)/-2);border-radius:50%;opacity:0;will-change:transform,opacity}
 .kn .k{background:radial-gradient(circle,#fff 0,#fff4c2 14%,#ffb43a 32%,rgba(255,86,24,.55) 52%,rgba(255,60,20,0) 70%);animation:kn-k .7s cubic-bezier(.15,.9,.3,1) forwards}
 .kn .w{border:calc(var(--g)*.035) solid #ffc46b;box-shadow:0 0 calc(var(--g)*.08) #ff9a3c;animation:kn-w .8s cubic-bezier(.1,.8,.3,1) forwards}
@@ -192,7 +192,7 @@ body.ov{background:transparent!important;cursor:none}
 /* the board picture itself reacts: melts on a bust, cracks at a 180, spins on a checkout, drums on the bullseye, freezes after a weak visit */
 #brett .ri{position:absolute;inset:0;border-radius:50%;overflow:hidden;pointer-events:none;z-index:2}
 #brett .ri svg{position:absolute;inset:0;width:100%;height:100%;transition:opacity .8s}
-#brett .ri svg.weg{opacity:0}
+#brett .ri svg.weg{opacity:0;animation:none}
 #brett .ri path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:riss .38s cubic-bezier(.2,.8,.3,1) forwards;animation-delay:var(--v,0s)}
 #brett .ri path.gl{stroke:#ff9a3c;stroke-width:9;opacity:.5}#brett .ri path.li{stroke:#fff6dc;stroke-width:2.6}
 #brett .ri svg.gold path.gl{stroke:#ffc107}
@@ -212,9 +212,6 @@ body.ov{background:transparent!important;cursor:none}
 @keyframes eis{25%,70%{opacity:1}100%{opacity:0}}
 .kn .w3{animation-delay:.34s}
 /* ---- turned up: flying sparks, the whole screen shakes, shock wave, ring of fire, embers, beams, fireworks ---- */
-.kn i.pt,.pt{position:absolute;left:0;top:0;width:var(--w);height:var(--w);margin:calc(var(--w)/-2) 0 0 calc(var(--w)/-2);border-radius:50%;background:var(--c,#ffd27a);box-shadow:0 0 calc(var(--w)*1.4) var(--c,#ff9a3c);opacity:0;will-change:transform,opacity;animation:pt var(--d) cubic-bezier(.12,.75,.3,1) var(--v,0s) forwards}
-.kn i.pt.st{border-radius:40%;height:calc(var(--w)*.34);margin-top:calc(var(--w)*-.17)}
-@keyframes pt{0%{opacity:1;transform:translate(0,0) rotate(var(--a)) scale(1.3)}55%{opacity:1}100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) + var(--f))) rotate(var(--a)) scale(.25)}}
 .kn .q{background:radial-gradient(circle,rgba(40,30,26,.55) 0,rgba(60,48,42,.4) 40%,transparent 70%);animation:kn-q 1.5s ease-out forwards;animation-delay:.12s}
 @keyframes kn-q{0%{opacity:0;transform:scale(.4)}25%{opacity:.9}100%{opacity:0;transform:scale(1.9) translateY(-18%)}}
 .kn .k{animation-duration:.95s}.kn .w{animation-duration:1s}.kn .f{animation-duration:.95s}
@@ -222,28 +219,27 @@ body.ov{background:transparent!important;cursor:none}
 @keyframes r1{25%{transform:translate(.5vh,-.4vh)}55%{transform:translate(-.4vh,.3vh)}80%{transform:translate(.2vh,0)}}
 @keyframes r2{10%{transform:translate(-1.3vh,.9vh) rotate(-.25deg)}28%{transform:translate(1.1vh,-.8vh) rotate(.2deg)}46%{transform:translate(-.8vh,.5vh)}64%{transform:translate(.5vh,-.3vh)}82%{transform:translate(-.2vh,.1vh)}}
 @keyframes r3{6%{transform:translate(-2.6vh,1.8vh) rotate(-.6deg) scale(1.02)}16%{transform:translate(2.4vh,-1.6vh) rotate(.5deg) scale(1.03)}27%{transform:translate(-2vh,-1.2vh) rotate(-.4deg) scale(1.02)}38%{transform:translate(1.6vh,1.1vh) rotate(.3deg)}50%{transform:translate(-1.2vh,.7vh)}62%{transform:translate(.9vh,-.5vh)}75%{transform:translate(-.5vh,.3vh)}88%{transform:translate(.25vh,0)}}
-.dw{position:fixed;left:var(--x);top:var(--y);width:20vh;height:20vh;margin:-10vh 0 0 -10vh;border-radius:50%;border:1.2vh solid rgba(255,214,150,.95);box-shadow:0 0 6vh rgba(255,140,50,.9),inset 0 0 6vh rgba(255,140,50,.6);pointer-events:none;z-index:5;animation:dw .9s cubic-bezier(.1,.7,.3,1) forwards}
-.dw.gold{border-color:rgba(255,236,160,.95);box-shadow:0 0 6vh rgba(255,200,40,.9),inset 0 0 6vh rgba(255,200,40,.6)}.dw.rot{border-color:rgba(255,120,120,.9);box-shadow:0 0 6vh rgba(255,40,50,.9),inset 0 0 6vh rgba(255,40,50,.6)}
-.dw.z2{animation-delay:.16s;opacity:0}
-@keyframes dw{0%{opacity:1;transform:scale(.1)}100%{opacity:0;transform:scale(14);border-width:.15vh}}
+/* shock wave: one ring painted once, then only scaled and faded by the compositor (a growing border with a blurred shadow was repainted over the whole screen every frame and made the page stutter) */
+.dw{--r:rgba(255,214,150,.95);--s:rgba(255,140,50,.55);position:fixed;left:var(--x);top:var(--y);width:70vh;height:70vh;margin:-35vh 0 0 -35vh;border-radius:50%;pointer-events:none;z-index:5;opacity:0;will-change:transform,opacity;
+  background:radial-gradient(circle closest-side,transparent 52%,var(--s) 80%,var(--r) 88%,var(--r) 91%,var(--s) 94%,transparent 100%);animation:dw .9s cubic-bezier(.1,.7,.3,1) forwards}
+.dw.gold{--r:rgba(255,236,160,.95);--s:rgba(255,200,40,.55)}.dw.rot{--r:rgba(255,120,120,.9);--s:rgba(255,40,50,.55)}
+.dw.z2{animation-delay:.16s}
+@keyframes dw{0%{opacity:1;transform:scale(.03)}100%{opacity:0;transform:scale(4)}}
 .weiss{position:fixed;inset:0;pointer-events:none;z-index:6;background:#fff;animation:weiss .5s ease-out forwards}
 .weiss.gold{background:#fff3c0}.weiss.rot{background:#ff3040;animation-duration:.7s}
 @keyframes weiss{0%{opacity:.85}100%{opacity:0}}
 /* ring of fire around the board while the visit is hot and after a 180 */
 #brett::before{content:'';position:absolute;inset:-3.2vh;border-radius:50%;z-index:-1;opacity:0;transition:opacity .5s;
   background:conic-gradient(from 0deg,#ff3d1f,#ffb020,#fff3b0,#ff7a1a,#ff2d1f,#ffc233,#ff5a1a,#fff0a0,#ff3d1f);
-  -webkit-mask:radial-gradient(circle,transparent 62%,#000 64%,#000 68%,transparent 71.5%);mask:radial-gradient(circle,transparent 62%,#000 64%,#000 68%,transparent 71.5%);filter:blur(.5vh)}
+  -webkit-mask:radial-gradient(circle,transparent 59%,#000 65%,#000 67%,transparent 72%);mask:radial-gradient(circle,transparent 59%,#000 65%,#000 67%,transparent 72%)}
 #brett.heiss::before,#brett.brennt::before{opacity:1;animation:ringf 1.6s linear infinite}
-#brett.brennt::before{inset:-5vh;filter:blur(.9vh);animation-duration:.8s}
+#brett.brennt::before{inset:-5vh;animation-duration:.8s}
 #brett.goldrand::before{opacity:1;background:conic-gradient(from 0deg,#ffd54f,#fff8d6,#ffb300,#ffe082,#fff3c4,#ffc107,#ffd54f);animation:ringf 2.4s linear infinite}
 @keyframes ringf{100%{transform:rotate(360deg)}}
 /* beams behind the board on a checkout */
 #brett .str{position:absolute;inset:-45%;border-radius:50%;z-index:-2;pointer-events:none;opacity:0;background:repeating-conic-gradient(rgba(255,214,90,.5) 0 6deg,transparent 6deg 20deg);-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%);animation:str 3.4s ease-out forwards}
 @keyframes str{0%{opacity:0;transform:scale(.4) rotate(0)}15%{opacity:1}70%{opacity:.9}100%{opacity:0;transform:scale(1.15) rotate(70deg)}}
 /* embers rise over the whole screen after the big ones */
-.glut{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
-.glut i{position:absolute;bottom:-3vh;left:var(--x);width:var(--w);height:var(--w);border-radius:50%;background:var(--c);box-shadow:0 0 calc(var(--w)*2) var(--c);opacity:0;animation:glut var(--d) ease-out var(--v) forwards}
-@keyframes glut{0%{opacity:0;transform:translate(0,0)}12%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-112vh) scale(.3)}}
 /* stronger board moves */
 @keyframes b1{20%{transform:translate(calc(var(--bx)*1vh),calc(var(--by)*1vh)) scale(1.015)}55%{transform:translate(calc(var(--bx)*-.5vh),calc(var(--by)*-.4vh))}}
 @keyframes b2{10%{transform:translate(calc(var(--bx)*2.2vh),calc(var(--by)*2.2vh)) scale(1.05)}26%{transform:translate(calc(var(--bx)*-1.7vh),calc(var(--by)*-1.4vh)) scale(1.03)}44%{transform:translate(calc(var(--bx)*1.1vh),calc(var(--by)*.9vh))}62%{transform:translate(calc(var(--bx)*-.6vh),calc(var(--by)*-.4vh))}80%{transform:translate(calc(var(--bx)*.25vh),0)}}
@@ -251,26 +247,28 @@ body.ov{background:transparent!important;cursor:none}
 @keyframes b3{0%{transform:scale(1)}14%{transform:scale(1.2) rotate(-1.5deg)}19%{transform:translate(calc(var(--bx)*4vh),calc(var(--by)*4vh)) scale(1.22) rotate(2deg)}27%{transform:translate(calc(var(--bx)*-3.4vh),calc(var(--by)*-2.8vh)) scale(1.18) rotate(-2deg)}36%{transform:translate(calc(var(--bx)*2.6vh),calc(var(--by)*2vh)) scale(1.14) rotate(1.4deg)}46%{transform:translate(calc(var(--bx)*-1.8vh),calc(var(--by)*-1.2vh)) scale(1.1)}58%{transform:translate(calc(var(--bx)*1.1vh),calc(var(--by)*.8vh)) scale(1.06)}72%{transform:translate(calc(var(--bx)*-.6vh),0) scale(1.03)}86%{transform:translate(.3vh,0) scale(1.01)}}
 #brett.schmelz{animation:schmelz 2.4s cubic-bezier(.45,0,.3,1)}
 @keyframes schmelz{0%{transform:none;filter:none}6%{transform:translateX(-1.8vh) rotate(-1.5deg)}12%{transform:translateX(1.6vh) rotate(1.2deg)}18%{transform:translateX(-1vh)}
-  50%,68%{transform:translateY(8vh) scaleY(1.42) scaleX(.82) skewX(-4deg);filter:saturate(2.2) hue-rotate(-28deg) brightness(.62) blur(.25vh)}86%{transform:translateY(-1.2vh) scaleY(.94) scaleX(1.04);filter:none}100%{transform:none;filter:none}}
+  50%,68%{transform:translateY(8vh) scaleY(1.42) scaleX(.82) skewX(-4deg);filter:saturate(2.2) hue-rotate(-28deg) brightness(.62)}86%{transform:translateY(-1.2vh) scaleY(.94) scaleX(1.04);filter:none}100%{transform:none;filter:none}}
 #brett .tr{width:2.6vh;height:2.6vh;margin-left:-1.3vh}
 @keyframes dreh{0%{transform:scale(1) rotate(0)}22%{transform:scale(1.28) rotate(250deg)}60%{transform:scale(1.16) rotate(700deg)}100%{transform:scale(1) rotate(720deg)}}
 #brett.dreh{animation:dreh 1.7s cubic-bezier(.3,1.1,.4,1)}
 @keyframes trommel{0%{transform:scale(1)}14%{transform:scale(.84)}38%{transform:scale(1.14)}58%{transform:scale(.96)}78%{transform:scale(1.03)}100%{transform:scale(1)}}
 #brett.trommel{animation:trommel .75s cubic-bezier(.2,1.6,.4,1)}
 @keyframes nein{12%{transform:translateX(-3vh) rotate(-2deg)}30%{transform:translateX(2.6vh) rotate(1.6deg)}48%{transform:translateX(-1.8vh) rotate(-1deg)}66%{transform:translateX(1vh)}84%{transform:translateX(-.4vh)}}
-#brett .ri path.gl{stroke-width:16;opacity:.75;animation:riss .38s cubic-bezier(.2,.8,.3,1) forwards,glimm 1.1s ease-in-out .5s infinite}#brett .ri path.li{stroke-width:4.2}
+#brett .ri path.gl{stroke-width:16;opacity:.75}#brett .ri path.li{stroke-width:4.2}
+/* the glow of the cracks pulses as one layer (pulsing every path repainted the board all the time) */
+#brett .ri svg.glw{animation:glimm 1.1s ease-in-out .5s infinite}
 @keyframes glimm{50%{opacity:.35}}
 #brett.frost .lv,#brett.frost .gz{animation:frost 2.8s ease-in-out}
 @keyframes frost{0%,100%{filter:none}18%,75%{filter:saturate(.08) brightness(.75) hue-rotate(170deg) contrast(1.2)}}
 #brett .eis{background:radial-gradient(circle,rgba(200,235,255,.25) 20%,rgba(190,230,255,.6) 62%,rgba(235,248,255,.95) 100%);animation-duration:2.8s}
 /* banners slam in */
 @keyframes fx{0%{opacity:0;transform:scale(3.2) rotate(-6deg)}11%{opacity:1;transform:scale(.9) rotate(1.5deg)}17%{transform:scale(1.12) rotate(-1deg)}24%{transform:scale(1) rotate(0)}80%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.5)}}
-.fx .g180{filter:drop-shadow(0 0 3vh rgba(255,140,40,.9)) drop-shadow(0 1vh 0 rgba(0,0,0,.5))}
+.fx .g180::before{content:'';position:absolute;left:50%;top:50%;width:110vh;height:60vh;margin:-30vh 0 0 -55vh;z-index:-1;pointer-events:none;background:radial-gradient(ellipse closest-side,rgba(255,140,40,.42),rgba(255,140,40,0))}
 /* match dart: the whole screen pulses with the heartbeat */
 body.spannung .vig{background:radial-gradient(ellipse at center,transparent 38%,rgba(0,0,0,.78) 100%);animation:puls 1.1s ease-in-out infinite}
 body.spannung.match .vig{background:radial-gradient(ellipse at center,transparent 32%,rgba(90,6,0,.82) 100%)}
 @keyframes puls{0%,40%,100%{opacity:.8}12%{opacity:1}}
-.p.fin.herz{animation:herz 1.1s ease-in-out infinite,herzg 1.1s ease-in-out infinite}
+.p.fin.herz{animation:herzg 1.1s ease-in-out infinite}
 @keyframes herzg{0%,40%,100%{transform:scale(1)}12%{transform:scale(1.035)}24%{transform:scale(1.01)}}
 #brett .zl{width:8vh;height:8vh;margin:-4vh 0 0 -4vh;border-width:.55vh;box-shadow:0 0 3.5vh #ffc107,inset 0 0 2vh rgba(255,213,79,.7)}
 /* points fly from the dart to the score, stamps for special moments, light sweep on a player change */
@@ -296,21 +294,25 @@ body.finale #brett{z-index:5;animation:fin 2.35s cubic-bezier(.5,0,.75,.4) forwa
 body.finale #brett::before{opacity:1;animation-duration:.5s}
 @keyframes fin{0%{transform:none}18%{transform:translate(calc(var(--fx)*.25),calc(var(--fy)*.25)) scale(.86) rotate(-40deg)}55%{transform:translate(var(--fx),var(--fy)) scale(1.3) rotate(540deg)}
   88%{transform:translate(var(--fx),var(--fy)) scale(1.5) rotate(1980deg)}95%{transform:translate(var(--fx),var(--fy)) scale(1.1) rotate(2340deg);opacity:1}100%{transform:translate(var(--fx),var(--fy)) scale(3.2) rotate(2520deg);opacity:0}}
-.gs{position:fixed;left:0;right:0;bottom:9vh;z-index:6;pointer-events:none;text-align:center;font-weight:900;font-size:13vh;letter-spacing:.04em;line-height:1;color:#fff;text-shadow:0 0 4vh #ffb300,0 0 1vh #ff7a2f,0 .7vh 0 rgba(0,0,0,.6);animation:gs 2.1s cubic-bezier(.2,1.4,.4,1) .2s both}
+.gs{position:fixed;left:0;right:0;bottom:9vh;z-index:6;pointer-events:none;will-change:transform,opacity;text-align:center;font-weight:900;font-size:13vh;letter-spacing:.04em;line-height:1;color:#fff;text-shadow:0 0 4vh #ffb300,0 0 1vh #ff7a2f,0 .7vh 0 rgba(0,0,0,.6);animation:gs 2.1s cubic-bezier(.2,1.4,.4,1) .2s both}
 .gs.oben{bottom:auto;top:42vh}
 @keyframes gs{0%{opacity:0;transform:scale(5)}12%{opacity:1;transform:scale(.88)}20%{transform:scale(1.1)}28%{transform:scale(1)}85%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:scale(2.4)}}
 .dunkel{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,170,40,.22),rgba(0,0,0,.6) 60%);animation:rein .5s both}
 .ende h1 b{font-weight:inherit}
 body.sieg .ende{position:relative;isolation:isolate}
-body.sieg .ende::before{content:'';position:absolute;left:50%;top:36%;width:240vh;height:240vh;margin:-120vh 0 0 -120vh;z-index:-1;pointer-events:none;background:repeating-conic-gradient(rgba(255,200,61,.2) 0 7deg,transparent 7deg 20deg);
-  -webkit-mask:radial-gradient(circle,#000 0,transparent 60%);mask:radial-gradient(circle,#000 0,transparent 60%);animation:ringf 26s linear infinite,rein 1.2s both}
+/* the beams are painted once into a small canvas and stand still (a masked gradient of several thousand pixels was too much for weak devices: missing letters, flicker) */
+.strl{display:none}
+body.sieg .ende .strl{display:block;position:absolute;left:50%;top:36%;width:200vh;height:200vh;margin:-100vh 0 0 -100vh;z-index:-1;pointer-events:none;animation:ein 1.2s both}
+@keyframes ein{0%{opacity:0}}
 body.sieg .ende::after{content:'';position:absolute;left:50%;top:36%;width:70vh;height:70vh;margin:-35vh 0 0 -35vh;z-index:-1;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(255,214,90,.5),rgba(255,140,40,.18) 45%,transparent 70%);animation:glimm 2.2s ease-in-out infinite}
-body.sieg .ende .pokal{font-size:22vh;filter:drop-shadow(0 0 5vh rgba(255,200,61,.9));animation:pokal 1.15s cubic-bezier(.3,1.3,.5,1) both,schweb 2.6s ease-in-out 1.2s infinite}
+body.sieg .ende .pokal{font-size:22vh;animation:pokal 1.15s cubic-bezier(.3,1.3,.5,1) both,schweb 2.6s ease-in-out 1.2s infinite}
 @keyframes pokal{0%{opacity:0;transform:translateY(-80vh) scale(5) rotate(-30deg)}50%{opacity:1;transform:translateY(0) scale(.8) rotate(5deg)}68%{transform:scale(1.3) rotate(-3deg)}84%{transform:scale(.95)}100%{transform:none}}
 @keyframes schweb{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-1.6vh) rotate(2deg) scale(1.05)}}
-body.sieg .ende h1{font-size:15vh;filter:drop-shadow(0 0 3.5vh rgba(255,170,40,.85)) drop-shadow(0 .8vh 0 rgba(0,0,0,.5));animation:glanz 1.8s ease-in-out 1.9s infinite}
-body.sieg .ende h1 span{background:none;-webkit-background-clip:border-box;background-clip:border-box}
-body.sieg .ende h1 b{display:inline-block;background:linear-gradient(180deg,#fffbe0,#ffd23d 50%,#ff7a2f);-webkit-background-clip:text;background-clip:text;color:transparent;animation:buchst .5s cubic-bezier(.2,1.6,.4,1) both;animation-delay:calc(.75s + var(--i)*.08s)}
+body.sieg .ende h1{font-size:15vh;animation:glanz 1.8s ease-in-out 1.9s infinite}
+body.sieg .ende h1 span{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:inherit}
+/* plain gold letters: clipped gradient letters went missing on some tablets; once they have landed the animation is taken off (.da) so no letter can stay invisible */
+body.sieg .ende h1 b{display:inline-block;color:#ffd84a;text-shadow:0 .7vh 0 #b4530f,0 0 3vh rgba(255,170,40,.85);animation:buchst .5s cubic-bezier(.2,1.6,.4,1) both;animation-delay:calc(.75s + var(--i)*.08s)}
+body.sieg .ende.da h1 b{animation:none}
 @keyframes buchst{0%{opacity:0;transform:translateY(-10vh) scale(5) rotate(-18deg)}100%{opacity:1;transform:none}}
 @keyframes glanz{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 body.sieg .ende>.grau,body.sieg .ende .tab,body.sieg .ende>div:last-child{animation:hoch .7s cubic-bezier(.2,1.2,.4,1) 1.7s both}
@@ -330,8 +332,9 @@ body.sieg .ende .tab{animation-delay:2s}
 @keyframes sweep{100%{transform:translateX(110%)}}
 /* on a finish: gold border; one dart from the leg: heartbeat, the screen closes in */
 .p.fin{border-color:var(--gelb);box-shadow:0 0 0 .5vh rgba(255,200,61,.25),0 0 4vh rgba(255,200,61,.25)}
-.p.fin.herz{animation:herz 1.1s ease-in-out infinite}
-@keyframes herz{0%,40%,100%{box-shadow:0 0 0 .5vh rgba(255,200,61,.25),0 0 4vh rgba(255,200,61,.2)}12%{box-shadow:0 0 0 .9vh rgba(255,200,61,.55),0 0 7vh rgba(255,200,61,.5)}24%{box-shadow:0 0 0 .6vh rgba(255,200,61,.35),0 0 5vh rgba(255,200,61,.3)}}
+/* heartbeat: the glow is one layer that only fades (an animated shadow repainted the card every frame) */
+.p.fin.herz::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 .5vh rgba(255,200,61,.6),inset 0 0 7vh rgba(255,200,61,.5);opacity:.3;animation:herz 1.1s ease-in-out infinite}
+@keyframes herz{0%,40%,100%{opacity:.3}12%{opacity:1}24%{opacity:.55}}
 .fl{position:absolute;right:2vw;top:2.2vh;border-radius:99vh;padding:.5vh 1.2vw;font-size:2.2vh;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:var(--gelb);color:#1d1403;animation:rein .5s cubic-bezier(.2,1.6,.4,1)}
 .fl.match{background:linear-gradient(90deg,#ffd23d,var(--or),var(--rot));color:#fff;box-shadow:0 0 3vh rgba(255,120,40,.6)}
 .vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%);opacity:0;transition:opacity 1.2s}
@@ -341,11 +344,9 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
 @keyframes flack{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 /* bust: the card shakes, the screen flashes red */
 .p.wackel{animation:nein .5s ease-out}
-.rotb{position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 18vh rgba(255,40,60,.65);animation:blz .9s ease-out forwards}
-/* confetti for leg and match */
-.konf{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}
-.konf i{position:absolute;top:-4vh;left:var(--x);width:var(--w);height:calc(var(--w)*.45);background:var(--c);border-radius:.2vh;opacity:.95;animation:konf var(--d) cubic-bezier(.25,.6,.4,1) var(--v) forwards}
-@keyframes konf{0%{transform:translate(0,0) rotate(0)}100%{transform:translate(var(--dx),112vh) rotate(var(--r));opacity:.85}}
+.rotb{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at center,rgba(255,40,60,0) 52%,rgba(255,40,60,.6) 100%);animation:blz .9s ease-out forwards}
+/* sparks, embers, confetti and fireworks are drawn on one canvas (hundreds of single elements made weak devices stutter and drop parts of the picture) */
+#pk{position:fixed;left:0;top:0;width:100%;height:100%;z-index:7;pointer-events:none}
 .fx .t small.hy{font-size:5vh;letter-spacing:.04em;margin-top:1.4vh;color:#fff}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -390,6 +391,52 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   const $ = id => document.getElementById(id);
   // effects as set in the TV card: voll, leicht (weak TVs: fewer particles, no shaking or flashes), aus
   const FXS = () => (D && D.effekte) || 'voll';
+  /* ---------- particles: sparks, embers, confetti and fireworks on one canvas ----------
+     One layer for all of them, drawn only while something flies; nothing is laid out, styled or kept as an element. */
+  const PK = (() => {
+    const cv = document.createElement('canvas'); cv.id = 'pk'; document.body.appendChild(cv);
+    const cx = cv.getContext('2d'), MAX = 700, bilder = new Map();
+    let teile = [], laeuft = false, sk = 1;
+    const groesse = () => { sk = Math.min(1, 1280 / Math.max(innerWidth, 1)); cv.width = Math.max(1, Math.round(innerWidth * sk)); cv.height = Math.max(1, Math.round(innerHeight * sk)); };
+    window.addEventListener('resize', groesse); groesse();
+    const rgb = c => { let h = String(c).replace('#', ''); if (h.length === 3) h = h.replace(/./g, x => x + x); const n = parseInt(h, 16); return isNaN(n) ? '255,210,122' : (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255); };
+    // a glowing dot per colour, painted once
+    const bild = c => { let b = bilder.get(c); if (b) return b; b = document.createElement('canvas'); b.width = b.height = 48; const g = b.getContext('2d'), f = rgb(c), v = g.createRadialGradient(24, 24, 0, 24, 24, 24);
+      v.addColorStop(0, 'rgba(' + f + ',1)'); v.addColorStop(.3, 'rgba(' + f + ',1)'); v.addColorStop(.42, 'rgba(' + f + ',.5)'); v.addColorStop(1, 'rgba(' + f + ',0)'); g.fillStyle = v; g.fillRect(0, 0, 48, 48); bilder.set(c, b); return b; };
+    function zeichne(jetzt) {
+      cx.setTransform(1, 0, 0, 1, 0, 0); cx.clearRect(0, 0, cv.width, cv.height);
+      const rest = []; let licht = null;
+      for (let i = 0; i < teile.length; i++) {
+        const p = teile[i], t = (jetzt - p.t0) / p.d;
+        if (t >= 1) continue; rest.push(p); if (t < 0) continue;
+        const hell = p.a !== 2; if (hell !== licht) { licht = hell; cx.globalCompositeOperation = hell ? 'lighter' : 'source-over'; }
+        if (p.a === 0) {  // spark: flies out, falls a little, goes out
+          const e = 1 - Math.pow(1 - t, 3), x = p.x + p.dx * e, y = p.y + p.dy * e + p.f * t * t, g = p.w * (1.3 - 1.05 * t) * 3.2;
+          cx.globalAlpha = t < .55 ? 1 : (1 - t) / .45;
+          if (p.st) { cx.setTransform(sk * p.co, sk * p.si, -sk * p.si, sk * p.co, x * sk, y * sk); cx.drawImage(p.b, -g / 2, -g * .17, g, g * .34); }
+          else { cx.setTransform(sk, 0, 0, sk, 0, 0); cx.drawImage(p.b, x - g / 2, y - g / 2, g, g); }
+        } else if (p.a === 1) {  // ember: rises from the bottom edge
+          const e = 1 - Math.pow(1 - t, 2), g = p.w * (1 - .7 * t) * 3.2;
+          cx.globalAlpha = t < .12 ? t / .12 : (1 - t) / .88; cx.setTransform(sk, 0, 0, sk, 0, 0); cx.drawImage(p.b, p.x + p.dx * e - g / 2, p.y - p.dy * e - g / 2, g, g);
+        } else {  // confetti: tumbles down
+          const e = 1 - Math.pow(1 - t, 1.5), w = p.r * e, co = Math.cos(w), si = Math.sin(w);
+          cx.globalAlpha = .95; cx.setTransform(sk * co, sk * si, -sk * si, sk * co, (p.x + p.dx * e) * sk, (p.y + p.dy * e) * sk); cx.fillStyle = p.c; cx.fillRect(-p.w / 2, -p.w * .225, p.w, p.w * .45);
+        }
+      }
+      teile = rest;
+      if (teile.length) requestAnimationFrame(zeichne); else { laeuft = false; cx.setTransform(1, 0, 0, 1, 0, 0); cx.clearRect(0, 0, cv.width, cv.height); }
+    }
+    const dazu = p => { if (teile.length >= MAX) return; teile.push(p); if (!laeuft) { laeuft = true; requestAnimationFrame(zeichne); } };
+    const jetzt = v => performance.now() + (v || 0) * 1000;
+    return {
+      // x, y: start · dx, dy: way · f: fall · w: size · c: colour · d: seconds · v: delay in seconds · st: streak
+      funke(x, y, dx, dy, f, w, c, d, v, st) { const a = Math.atan2(dy, dx); dazu({ a: 0, x, y, dx, dy, f, w, b: bild(c), d: d * 1000, t0: jetzt(v), st: !!st, co: Math.cos(a), si: Math.sin(a) }); },
+      glut(x, dx, w, c, d, v) { dazu({ a: 1, x, y: innerHeight * 1.03, dx, dy: innerHeight * 1.15, w, b: bild(c), d: d * 1000, t0: jetzt(v) }); },
+      konfetti(x, dx, w, c, d, v, r) { dazu({ a: 2, x, y: -innerHeight * .04, dx, dy: innerHeight * 1.16, w, c, r, d: d * 1000, t0: jetzt(v) }); },
+      leer() { teile = []; },
+      anzahl: () => teile.length,
+    };
+  })();
   let D = null, altHtml = '', altAnsage = null, altDarts = 0, erst = true;
   // the same page is the overlay for OBS / Streamlabs at …/overlay
   const OV = /\/overlay\/?$/.test(location.pathname), BASE = location.pathname.replace(/\/$/, '').replace(/\/(overlay|einzeln)$/, '');
@@ -544,14 +591,10 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     return n >= 2 ? '<span class="feuer" title="' + t('fire') + '">' + (n >= 3 ? '🔥🔥' : '🔥') + '</span>' : '';
   }
   let bAlt = null, bZug = null, bAuf = null, bSpiel = null, bStart = null, bMarks = null, bLeg = null;
-  function konfetti(gold) { if (FXS() === 'aus') return; 
-    const k = document.createElement('div'), farben = gold ? ['#ffd23d', '#ffe082', '#fff3c4', '#ffb300', '#ff8a3d'] : ['#ff8a3d', '#ff4d5e', '#ffc83d', '#3ddc84', '#40c4ff', '#ea80fc'];
-    k.className = 'konf';
-    let h = '';
-    for (let i = 0, n = Math.round((gold ? 170 : 90) * (FXS() === 'leicht' ? .35 : 1)); i < n; i++) {
-      h += '<i style="--x:' + (Math.random() * 100).toFixed(1) + '%;--w:' + (0.8 + Math.random() * 1.2).toFixed(2) + 'vh;--c:' + farben[i % farben.length] + ';--d:' + (2.2 + Math.random() * 1.8).toFixed(2) + 's;--v:' + (Math.random() * (gold ? 1.2 : .6)).toFixed(2) + 's;--dx:' + Math.round(Math.random() * 30 - 15) + 'vw;--r:' + Math.round(Math.random() * 1440 - 720) + 'deg"></i>';
-    }
-    k.innerHTML = h; document.body.appendChild(k); setTimeout(() => k.remove(), gold ? 5600 : 4400);
+  function konfetti(gold) { if (FXS() === 'aus') return;
+    const farben = gold ? ['#ffd23d', '#ffe082', '#fff3c4', '#ffb300', '#ff8a3d'] : ['#ff8a3d', '#ff4d5e', '#ffc83d', '#3ddc84', '#40c4ff', '#ea80fc'], vh = innerHeight / 100, vw = innerWidth / 100;
+    for (let i = 0, n = Math.round((gold ? 170 : 90) * (FXS() === 'leicht' ? .35 : 1)); i < n; i++)
+      PK.konfetti(Math.random() * innerWidth, (Math.random() * 30 - 15) * vw, (0.8 + Math.random() * 1.2) * vh, farben[i % farben.length], 2.2 + Math.random() * 1.8, Math.random() * (gold ? 1.2 : .6), (Math.random() * 1440 - 720) * Math.PI / 180);
   }
   function zaehlen(el, von, bis) {
     // the rest counts down instead of jumping
@@ -634,9 +677,17 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     const zeilen = sp.map((p, i) => '<tr' + (i === a.gewinner ? ' class="sieger"' : '') + '><td>' + esc(p.name) + '</td><td>' + p.legs + '</td><td>' + (p.avg || 0) + '</td>' +
       (x01 ? '<td>' + (p.hoechste || 0) + '</td><td>' + (p.finish || '–') + '</td>' : '<td>' + esc(gross(a, p)) + '</td>') + '</tr>').join('');
     const tu = a.turnier, champ = tu && tu.sieger;
-    return '<div class="ende"><div class="pokal">🏆</div><h1><span>' + Array.from(String(champ || g.name || '')).map((z, i) => z === ' ' ? ' ' : '<b style="--i:' + i + '">' + esc(z) + '</b>').join('') + '</span></h1><div class="grau" style="font-size:3.4vh">' + (champ ? t('champion') : t('wins')) + ' · ' + esc(modusTxt(a)) + '</div>' +
+    return '<div class="ende"><canvas class="strl" width="800" height="800"></canvas><div class="pokal">🏆</div><h1><span>' + Array.from(String(champ || g.name || '')).map((z, i) => z === ' ' ? ' ' : '<b style="--i:' + i + '">' + esc(z) + '</b>').join('') + '</span></h1><div class="grau" style="font-size:3.4vh">' + (champ ? t('champion') : t('wins')) + ' · ' + esc(modusTxt(a)) + '</div>' +
       '<table class="tab"><tr><th></th><th>' + t('legs') + '</th><th>' + t('avg') + '</th>' + (x01 ? '<th>' + t('highest') + '</th><th>' + t('finish') + '</th>' : '<th></th>') + '</tr>' + zeilen + '</table>' +
       (tu && tu.naechstes && !champ ? '<div style="font-size:3vh;margin-top:2vh">' + t('next') + ': <b>' + esc(tu.naechstes.a) + '</b> – <b>' + esc(tu.naechstes.b) + '</b></div>' : '') + '</div>';
+  }
+
+  function strahlenBild() {
+    // beams behind the winner: 18 wedges that fade out towards the edge
+    const c = document.querySelector('.ende .strl'), g = c && c.getContext('2d'); if (!g) return;
+    const v = g.createRadialGradient(400, 400, 0, 400, 400, 400); v.addColorStop(0, 'rgba(255,200,61,.2)'); v.addColorStop(1, 'rgba(255,200,61,0)');
+    g.fillStyle = v;
+    for (let k = 0; k < 18; k++) { const w = k * 20 * Math.PI / 180; g.beginPath(); g.moveTo(400, 400); g.arc(400, 400, 400, w, w + 7 * Math.PI / 180); g.closePath(); g.fill(); }
   }
 
   function bulloff(a) {
@@ -723,22 +774,17 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     n.style.left = ((x + 225) / 450 * 100) + '%'; n.style.top = ((y + 225) / 450 * 100) + '%';
     n.style.setProperty('--g', Math.round(S * gross * zufall(.88, 1.12)) + 'px');
     n.style.setProperty('--r', Math.round(zufall(0, 360)) + 'deg');
-    n.style.setProperty('--h', (art === 'gold' || art === 'bust' || art === 'ring' || art === 'rot' ? 0 : Math.round(zufall(-14, 10))) + 'deg');
     n.innerHTML = (art === '' || art === 'bust' ? '<i class="q"></i>' : '') + '<i class="k"></i><i class="w"></i><i class="f"></i>' + (art === 'gold' || art === 'rot' || gross >= .5 ? '<i class="w w2"></i>' : '') + (art === 'rot' ? '<i class="w w3"></i>' : '');
     kl.appendChild(n);
     setTimeout(() => n.remove(), 1600);
   }
-  function funken(x, y, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
+  function funken(x, y, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35));
     // sparks fly from the dart, fall a little and go out
-    const el = $('brett'), kl = el.querySelector('.kl'), S = el.clientWidth || 1, h = document.createElement('div');
-    h.className = 'kn'; h.style.left = ((x + 225) / 450 * 100) + '%'; h.style.top = ((y + 225) / 450 * 100) + '%';
-    let s = '';
+    const S = $('brett').clientWidth || 1, [px, py] = ort(x, y);
     for (let i = 0; i < n; i++) {
       const w = zufall(0, Math.PI * 2), r = S * weit * zufall(.35, 1), st = streifen && Math.random() < .6;
-      s += '<i class="pt' + (st ? ' st' : '') + '" style="--w:' + (S * zufall(.012, st ? .05 : .028)).toFixed(1) + 'px;--dx:' + (Math.cos(w) * r).toFixed(0) + 'px;--dy:' + (Math.sin(w) * r).toFixed(0) + 'px;--f:' + (S * zufall(.02, .16)).toFixed(0) +
-        'px;--a:' + (w * 180 / Math.PI).toFixed(0) + 'deg;--d:' + zufall(.55, 1.25).toFixed(2) + 's;--v:' + zufall(0, .08).toFixed(2) + 's;--c:' + farben[i % farben.length] + '"></i>';
+      PK.funke(px, py, Math.cos(w) * r, Math.sin(w) * r, S * zufall(.02, .16), S * zufall(.012, st ? .05 : .028), farben[i % farben.length], zufall(.55, 1.25), zufall(0, .08), st);
     }
-    h.innerHTML = s; kl.appendChild(h); setTimeout(() => h.remove(), 1700);
   }
   const FEUER = ['#fff3b0', '#ffd27a', '#ff9a3c', '#ff5a1a'], GOLD = ['#fff8d6', '#ffe082', '#ffc107', '#ffb300'], ROT = ['#ffb0a8', '#ff5252', '#d81b2a'], GRUEN = ['#d6ffe4', '#7dffb0', '#2ee87a'], GRAU = ['#d8d8de', '#9a9aa4'];
   function schirm(art) { if (FXS() !== 'voll') return;  const el = $('app'); el.classList.remove('r1', 'r2', 'r3'); void el.offsetWidth; el.classList.add(art); clearTimeout(schirm.z); schirm.z = setTimeout(() => el.classList.remove(art), 1200); }
@@ -747,38 +793,32 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     const [px, py] = ort(x, y); welle(px, py, art, doppelt);
   }
   function weiss(art) { if (FXS() !== 'voll') return;  const d = document.createElement('div'); d.className = 'weiss ' + art; document.body.appendChild(d); setTimeout(() => d.remove(), 800); }
-  function glut(farben, n) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
-    const g = document.createElement('div'); g.className = 'glut'; let s = '';
-    for (let i = 0; i < n; i++) s += '<i style="--x:' + zufall(0, 100).toFixed(1) + '%;--w:' + zufall(.4, 1.1).toFixed(2) + 'vh;--c:' + farben[i % farben.length] + ';--d:' + zufall(2.2, 4.6).toFixed(2) + 's;--v:' + zufall(0, 1.4).toFixed(2) + 's;--dx:' + zufall(-14, 14).toFixed(0) + 'vw"></i>';
-    g.innerHTML = s; document.body.appendChild(g); setTimeout(() => g.remove(), 6200);
+  function glut(farben, n) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35));
+    const vh = innerHeight / 100, vw = innerWidth / 100;
+    for (let i = 0; i < n; i++) PK.glut(zufall(0, innerWidth), zufall(-14, 14) * vw, zufall(.4, 1.1) * vh, farben[i % farben.length], zufall(2.2, 4.6), zufall(0, 1.4));
   }
   function strahlen() { if (FXS() === 'aus') return;  const el = $('brett'), s = document.createElement('div'); s.className = 'str'; el.appendChild(s); setTimeout(() => s.remove(), 3500); }
   function brennen(ms) { if (FXS() === 'aus') return;  const el = $('brett'); el.classList.add('brennt'); clearTimeout(brennen.z); brennen.z = setTimeout(() => el.classList.remove('brennt'), ms); }
-  function feuerwerk(anz) { if (FXS() === 'aus') return; if (FXS() === 'leicht') anz = Math.max(1, Math.round(anz * .35)); 
+  function feuerwerk(anz) { if (FXS() === 'aus') return; if (FXS() === 'leicht') anz = Math.max(1, Math.round(anz * .35));
     // match won: rockets burst all over the screen
     const farben = [GOLD, FEUER, ['#fff', '#80d8ff', '#40c4ff'], ['#fff', '#ea80fc', '#d500f9'], ['#fff', '#b9f6ca', '#00e676']];
     for (let k = 0; k < (anz || 9); k++) setTimeout(() => {
-      const h = document.createElement('div'), f = farben[k % farben.length], g = Math.min(innerWidth, innerHeight);
-      h.className = 'kn gold'; h.style.position = 'fixed'; h.style.zIndex = 7; h.style.left = zufall(8, 92).toFixed(1) + 'vw'; h.style.top = zufall(8, 70).toFixed(1) + 'vh';
+      const h = document.createElement('div'), f = farben[k % farben.length], g = Math.min(innerWidth, innerHeight), px = innerWidth * zufall(.08, .92), py = innerHeight * zufall(.08, .7);
+      h.className = 'kn gold'; h.style.position = 'fixed'; h.style.zIndex = 7; h.style.left = px + 'px'; h.style.top = py + 'px';
       h.style.setProperty('--g', Math.round(g * zufall(.1, .17)) + 'px'); h.style.setProperty('--r', Math.round(zufall(0, 360)) + 'deg');
-      let s = '<i class="k"></i><i class="w"></i>';
+      h.innerHTML = '<i class="k"></i><i class="w"></i>'; document.body.appendChild(h); setTimeout(() => h.remove(), 2000);
       for (let i = 0; i < 26; i++) { const w = i / 26 * Math.PI * 2 + zufall(-.1, .1), r = g * zufall(.16, .3);
-        s += '<i class="pt" style="--w:' + (g * zufall(.008, .016)).toFixed(1) + 'px;--dx:' + (Math.cos(w) * r).toFixed(0) + 'px;--dy:' + (Math.sin(w) * r).toFixed(0) + 'px;--f:' + (g * .1).toFixed(0) + 'px;--a:0deg;--d:' + zufall(1, 1.6).toFixed(2) + 's;--c:' + f[i % f.length] + '"></i>'; }
-      h.innerHTML = s; document.body.appendChild(h); setTimeout(() => h.remove(), 2000);
+        PK.funke(px, py, Math.cos(w) * r, Math.sin(w) * r, g * .1, g * zufall(.008, .016), f[i % f.length], zufall(1, 1.6), 0, false); }
     }, k * 330 + zufall(0, 160));
   }
   function welle(px, py, art, doppelt) { if (FXS() === 'aus') return; 
     for (let k = 0; k < (doppelt ? 2 : 1); k++) { const d = document.createElement('div'); d.className = 'dw ' + art + (k ? ' z2' : ''); d.style.setProperty('--x', px + 'px'); d.style.setProperty('--y', py + 'px'); document.body.appendChild(d); setTimeout(() => d.remove(), 1300); }
   }
-  function sterne(px, py, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35)); 
+  function sterne(px, py, n, weit, farben, streifen) { if (FXS() === 'aus') return; if (FXS() === 'leicht') n = Math.max(1, Math.round(n * .35));
     // burst of sparks anywhere on the screen (weit: share of the screen height)
-    const g = innerHeight, h = document.createElement('div');
-    h.className = 'kn'; h.style.position = 'fixed'; h.style.zIndex = 7; h.style.left = px + 'px'; h.style.top = py + 'px';
-    let s = '';
+    const g = innerHeight;
     for (let i = 0; i < n; i++) { const w = zufall(0, Math.PI * 2), r = g * weit * zufall(.3, 1), st = streifen && Math.random() < .65;
-      s += '<i class="pt' + (st ? ' st' : '') + '" style="--w:' + (g * zufall(.008, st ? .045 : .02)).toFixed(1) + 'px;--dx:' + (Math.cos(w) * r).toFixed(0) + 'px;--dy:' + (Math.sin(w) * r).toFixed(0) + 'px;--f:' + (g * zufall(.02, .14)).toFixed(0) +
-        'px;--a:' + (w * 180 / Math.PI).toFixed(0) + 'deg;--d:' + zufall(.7, 1.5).toFixed(2) + 's;--v:' + zufall(0, .1).toFixed(2) + 's;--c:' + farben[i % farben.length] + '"></i>'; }
-    h.innerHTML = s; document.body.appendChild(h); setTimeout(() => h.remove(), 2000);
+      PK.funke(px, py, Math.cos(w) * r, Math.sin(w) * r, g * zufall(.02, .14), g * zufall(.008, st ? .045 : .02), farben[i % farben.length], zufall(.7, 1.5), zufall(0, .1), st); }
   }
   function mittePunkt(el) { const r = el.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2)]; }
   function karte(i) { return document.querySelector('#inhalt .p[data-i="' + i + '"]'); }
@@ -836,8 +876,15 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
       const r = el.getBoundingClientRect(), au = a.aufnahme || { darts: [] }, darts = au.darts || [], dl = darts[darts.length - 1];
       el.style.setProperty('--fx', Math.round(cx - r.left - r.width / 2) + 'px'); el.style.setProperty('--fy', Math.round(cy * .9 - r.top - r.height / 2) + 'px');
       if (dl) { const [x, y] = dartMM(dl, darts.length - 1); knall(x, y, 'gold', 1.1); funken(x, y, 60, 1.1, GOLD, true); druckwelle(x, y, 'gold', true); risse(x, y, true); }
-      el.classList.remove('b1', 'b2', 'b3', 'nein', 'schmelz', 'dreh', 'trommel', 'heiss'); el.style.transformOrigin = '';
+      el.classList.remove('b1', 'b2', 'b3', 'nein', 'schmelz', 'dreh', 'trommel', 'heiss', 'brennt'); el.style.transformOrigin = '';
       cy *= .9;
+      // the board spins with a still image: a live image that changes ten times a second on a spinning board flickers and costs frames
+      const img = el.querySelector('.lv img');
+      if (kamAlt && img.naturalWidth) try {
+        const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0);
+        c.style.width = img.style.width; c.style.height = img.style.height; c.style.transform = img.style.transform;
+        el.querySelector('.lv').appendChild(c); img.style.visibility = 'hidden';
+      } catch (e) { /* keep the live image */ }
     }
     weiss('gold'); schirm('r3'); document.body.classList.add('finale'); document.body.classList.remove('spannung', 'match');
     // drum roll: the rings come faster and faster
@@ -846,9 +893,12 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     const zeigen = () => {
       if (fertig) return; fertig = true; el.removeEventListener('animationend', ende);
       d.remove(); g.remove(); document.body.classList.remove('finale'); finale.bis = 0;
+      const still = el.querySelector('.lv canvas'); if (still) still.remove(); el.querySelector('.lv img').style.visibility = '';
       const z = el.querySelector('.zl'); if (z) z.remove(); heilen();
       document.body.classList.add('sieg'); clearTimeout(finale.z); finale.z = setTimeout(() => document.body.classList.remove('sieg'), 60000);
       zeichnen();
+      // once the letters have landed their animation is taken off: no letter can stay invisible
+      clearTimeout(finale.b); finale.b = setTimeout(() => { const e = document.querySelector('.ende'); if (e) e.classList.add('da'); }, 1300 + 80 * String((document.querySelector('.ende h1') || {}).textContent || '').length);
       // the board bursts, the winner screen slams in
       weiss(''); schirm('r3'); welle(cx, cy, 'gold', true); welle(cx, cy, '', false); sterne(cx, cy, 90, .95, GOLD.concat(FEUER), true); sterne(cx, cy, 50, .6, ['#fff', '#fff8d6'], false);
       feuerwerk(9); setTimeout(() => glut(GOLD, 70), 400); setTimeout(() => konfetti(true), 800);
@@ -886,7 +936,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   function risse(x, y, gold) { if (FXS() !== 'voll') return; 
     // cracks run from the dart over the board and stay until the darts are pulled
     const ri = $('brett').querySelector('.ri'), n = 9 + Math.floor(Math.random() * 4), start = zufall(0, 360);
-    let wege = '';
+    let wege = '', glut_ = '';
     for (let k = 0; k < n; k++) {
       let w = start + k * 360 / n + zufall(-18, 18), px = x, py = y, d = 'M' + f1(x) + ' ' + f1(y);
       const teile = 4 + Math.floor(Math.random() * 3), lang = zufall(150, 330) / teile;
@@ -894,14 +944,15 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
         w += zufall(-32, 32); px += Math.sin(w * Math.PI / 180) * lang; py -= Math.cos(w * Math.PI / 180) * lang; d += 'L' + f1(px) + ' ' + f1(py);
         if (j === 1 && Math.random() < .6) { const w2 = w + (Math.random() < .5 ? -1 : 1) * zufall(35, 60), l2 = lang * zufall(.8, 1.6);
           const ast = 'M' + f1(px) + ' ' + f1(py) + 'L' + f1(px + Math.sin(w2 * Math.PI / 180) * l2) + ' ' + f1(py - Math.cos(w2 * Math.PI / 180) * l2);
-          wege += '<path class="gl" pathLength="1" style="--v:.2s" d="' + ast + '"/><path class="li" pathLength="1" style="--v:.2s" d="' + ast + '"/>'; }
+          glut_ += '<path class="gl" pathLength="1" style="--v:.2s" d="' + ast + '"/>'; wege += '<path class="li" pathLength="1" style="--v:.2s" d="' + ast + '"/>'; }
       }
       const v = (k * .03).toFixed(2) + 's';
-      wege += '<path class="gl" pathLength="1" style="--v:' + v + '" d="' + d + '"/><path class="li" pathLength="1" style="--v:' + v + '" d="' + d + '"/>';
+      glut_ += '<path class="gl" pathLength="1" style="--v:' + v + '" d="' + d + '"/>'; wege += '<path class="li" pathLength="1" style="--v:' + v + '" d="' + d + '"/>';
     }
-    ri.innerHTML = '<svg viewBox="-225 -225 450 450"' + (gold ? ' class="gold"' : '') + '>' + wege + '</svg>';
+    ri.querySelectorAll('svg').forEach(x => x.remove());
+    ri.insertAdjacentHTML('afterbegin', '<svg viewBox="-225 -225 450 450" class="glw' + (gold ? ' gold' : '') + '">' + glut_ + '</svg><svg viewBox="-225 -225 450 450">' + wege + '</svg>');
   }
-  function heilen() { const sv = $('brett').querySelector('.ri svg'); if (sv && !sv.classList.contains('weg')) { sv.classList.add('weg'); setTimeout(() => { if (sv.isConnected) sv.remove(); }, 900); } }
+  function heilen() { $('brett').querySelectorAll('.ri svg').forEach(sv => { if (!sv.classList.contains('weg')) { sv.classList.add('weg'); setTimeout(() => { if (sv.isConnected) sv.remove(); }, 900); } }); }
   function schmelzen() { if (FXS() !== 'voll') return; 
     // bust: the board sags and drips
     const el = $('brett'), kl = el.querySelector('.kl');
@@ -998,22 +1049,43 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   }
 
   /* ---------- instant replay of the newest highlight clip ---------- */
-  let clipAlt = null, clipZeit = null;
+  let clipAlt = null, clipNr = 0;
   function wiederholung(c) {
     const id = c && c.id;
     if (clipAlt === null || erst) { clipAlt = id || ''; return; }
     if (!id || id === clipAlt) return;
     clipAlt = id;
-    const rp = $('rp'), v = rp.querySelector('video');
-    const zu = () => { rp.classList.remove('an'); clearTimeout(clipZeit); setTimeout(() => { if (!rp.classList.contains('an')) { v.pause(); v.removeAttribute('src'); v.load(); } }, 500); };
+    // every replay has its number: timers and events of an older one (its end, its clean-up) must never touch the new one –
+    // that emptied the player just before it was shown, and the frame came up without a video
+    const rp = $('rp'), v = rp.querySelector('video'), nr = ++clipNr, W = wiederholung;
+    clearTimeout(W.z); clearTimeout(W.w); clearTimeout(W.l);
+    rp.classList.remove('an');
+    let bereit = false, dran = false, gezeigt = false;
+    const zu = () => {
+      if (nr !== clipNr) return;
+      clipNr++; rp.classList.remove('an'); clearTimeout(W.z); clearTimeout(W.w);
+      v.onended = v.onerror = v.onplaying = v.oncanplay = null;
+      W.l = setTimeout(() => { v.pause(); v.removeAttribute('src'); v.load(); }, 500);
+    };
+    // shown only when the banner is gone AND the video really plays; a video that does not load is never shown as an empty frame
+    const los = () => {
+      if (nr !== clipNr || gezeigt || !bereit || !dran) return;
+      gezeigt = true; rp.classList.add('an');
+      try { v.currentTime = 0; } catch (e) { /* plays from where it is */ }
+      const p = v.play(); if (p && p.catch) p.catch(zu);
+      clearTimeout(W.z); W.z = setTimeout(zu, ((c.dauer || 10) + 4) * 1000);
+    };
     rp.querySelector('.rt').textContent = t('replay');
     rp.querySelector('.rw').textContent = [S[c.art] || '', c.art === 'one_eighty' ? '' : (c.wert || ''), c.spieler || ''].filter(Boolean).join(' · ');
-    v.onended = zu; v.onerror = zu;
-    v.src = BASE + '/clip/' + id + '.mp4';
+    const da = () => { if (nr !== clipNr || gezeigt) return; bereit = true; if (!dran) v.pause(); los(); };
+    v.onended = () => { if (gezeigt) zu(); }; v.onerror = zu; v.onplaying = da; v.oncanplay = da;
+    v.src = BASE + '/clip/' + id + '.mp4'; v.load();
+    // some TV browsers load a video only once it is asked to play
+    const p = v.play(); if (p && p.catch) p.catch(() => {});
     // as soon as the 180 / leg banner is gone (no fixed wait: the clip usually comes after it)
     const warten = Math.max(300, (effekt.bis || 0) - Date.now() + 150);
-    setTimeout(() => { rp.classList.add('an'); const p = v.play(); if (p && p.catch) p.catch(zu); }, warten);
-    clearTimeout(clipZeit); clipZeit = setTimeout(zu, warten + ((c.dauer || 10) + 4) * 1000);
+    W.w = setTimeout(() => { dran = true; los(); }, warten);
+    W.z = setTimeout(zu, warten + 12000);
   }
 
   function zeichnen() {
@@ -1038,7 +1110,7 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
       html = overlay(a);
       if (html !== altHtml) { altHtml = html; $('ov').innerHTML = html; $('ov').classList.toggle('da', !!html); }
     } else {
-      if (html !== altHtml) { altHtml = html; $('inhalt').innerHTML = html; }
+      if (html !== altHtml) { altHtml = html; $('inhalt').innerHTML = html; strahlenBild(); }
       buehne(a);
       brettZeichnen(a, D.brett);
       regie(a, D.brett);
@@ -1052,13 +1124,31 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
     uhr();
   }
 
+  /* ---------- connection ----------
+     The browser reconnects by itself only after a plain drop. When Home Assistant restarts (update) the first tries
+     get an error page and the browser gives up for good: the page then showed the old game for ever. So the page
+     reconnects itself, and a connection that stays silent (no data, no ping) counts as lost too. */
+  let quelle = null, zuletzt = Date.now(), neuZeit = 0, getrennt = false, wegSeit = 0, version = null;
   function verbinden() {
-    const q = new EventSource(BASE + '/live');
-    let getrennt = false;
-    q.onmessage = e => { try { D = JSON.parse(e.data); } catch (x) { return; } document.body.classList.remove('weg');
-      if (getrennt) { getrennt = false; kamAlt = null; } zeichnen(); };
-    q.onerror = () => { document.body.classList.add('weg'); getrennt = true; };
+    clearTimeout(neuZeit); neuZeit = 0;
+    if (quelle) { quelle.onmessage = quelle.onerror = null; quelle.close(); }
+    const q = quelle = new EventSource(BASE + '/live');
+    zuletzt = Date.now();
+    q.onmessage = e => {
+      zuletzt = Date.now();
+      let d; try { d = JSON.parse(e.data); } catch (x) { return; }
+      // a new version was installed: load the new page
+      if (d.version) { if (version === null) version = d.version; else if (version !== d.version) { location.reload(); return; } }
+      D = d; document.body.classList.remove('weg');
+      // after a break the game may be a different one: show it as it is, without effects for what was missed
+      if (getrennt) { getrennt = false; kamAlt = null; if (Date.now() - wegSeit > 5000) erst = true; }
+      zeichnen();
+    };
+    q.addEventListener('ping', () => { zuletzt = Date.now(); });
+    q.onerror = () => { document.body.classList.add('weg'); if (!getrennt) wegSeit = Date.now(); getrennt = true; if (q.readyState === 2 && !neuZeit) neuZeit = setTimeout(verbinden, 3000); };
   }
+  setInterval(() => { if (Date.now() - zuletzt > 70000) { document.body.classList.add('weg'); if (!getrennt) wegSeit = zuletzt; getrennt = true; verbinden(); } }, 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && (!quelle || quelle.readyState === 2 || Date.now() - zuletzt > 70000)) verbinden(); });
   uhr();
   verbinden();
 })();
