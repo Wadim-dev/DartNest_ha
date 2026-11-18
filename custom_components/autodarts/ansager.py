@@ -42,6 +42,8 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 import voluptuous as vol
 
+from . import toene
+
 _LOGGER = logging.getLogger(__name__)
 
 ORDNER = ("autodarts", "caller")
@@ -150,6 +152,7 @@ EINSTELLUNGEN = vol.Schema({
     vol.Optional("rest", default=True): bool,
     vol.Optional("ende", default=True): bool,
     vol.Optional("besondere", default=True): bool,
+    vol.Optional("toene", default=True): bool,  # a sound for every dart and for big moments (1.39)
     vol.Optional("game_on", default=True): bool,
     vol.Optional("walkon", default=True): bool,
     vol.Optional("walkon_sekunden", default=15): vol.All(vol.Coerce(int), vol.Range(5, 60)),
@@ -227,6 +230,78 @@ def _mischen(ordner: Path, dateien: list[str]) -> str | None:
         w.setsampwidth(art[1])
         w.setframerate(art[2])
         w.writeframes(pause.join(teile))
+    return name
+
+
+def _verketten(ordner: Path, namen: list[str]) -> str | None:
+    """Join sound effects (all made in the same format) one after the other into ordner/_mix."""
+    name = "k_" + hashlib.sha1("+".join(namen).encode()).hexdigest()[:16] + ".wav"
+    ziel = ordner / MIX / name
+    if ziel.is_file():
+        return name
+    teile: list[bytes] = []
+    for n in namen:
+        try:
+            with wave.open(str(ordner / n), "rb") as w:
+                teile.append(w.readframes(w.getnframes()))
+        except (OSError, wave.Error, EOFError):
+            return None
+    _platz(ziel.parent)
+    with wave.open(str(ziel), "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(toene.RATE)
+        w.writeframes(b"".join(teile))
+    return name
+
+
+def _platz(mix: Path) -> None:
+    mix.mkdir(parents=True, exist_ok=True)
+    alte = sorted(mix.glob("*.wav"), key=lambda f: f.stat().st_mtime)
+    for f in alte[: max(0, len(alte) - MIX_MAX + 1)]:
+        f.unlink(missing_ok=True)
+
+
+def _mit_toenen(ffmpeg: str, ordner: Path, kopf: list[str], stimme: Path, bett: str | None, nach: list[str] | None = None) -> str | None:
+    """Sound effects in front of the voice and after it, the crowd under it: one WAV in ordner/_mix (with ffmpeg)."""
+    import subprocess
+
+    try:
+        stand = stimme.stat().st_mtime
+    except OSError:
+        return None
+    nach = nach or []
+    if not all((ordner / k).is_file() for k in [*kopf, *nach, *([bett] if bett else [])]):
+        return None  # the sounds could not be made
+    name = "s_" + hashlib.sha1(f"{kopf}|{stimme}|{stand}|{bett}|{nach}".encode()).hexdigest()[:16] + ".wav"
+    ziel = ordner / MIX / name
+    if ziel.is_file():
+        return name
+    _platz(ziel.parent)
+    eingaenge: list[str] = []
+    for d in [*(str(ordner / k) for k in kopf), str(stimme), *(str(ordner / k) for k in nach), *([str(ordner / bett)] if bett else [])]:
+        eingaenge += ["-i", d]
+    form = "aresample=44100,aformat=sample_fmts=s16:channel_layouts=mono"
+    n = len(kopf) + 1 + len(nach)
+    graph = "".join(f"[{i}:a]{form}[a{i}];" for i in range(n)) + "".join(f"[a{i}]" for i in range(n)) + f"concat=n={n}:v=0:a=1[folge]"
+    if bett:
+        vor = sum(_dauer(ordner / k) for k in kopf)
+        ms = int(vor * 1000)
+        graph += f";[{n}:a]{form},volume=0.4,adelay={ms}|{ms}[bett];[folge][bett]amix=inputs=2:duration=longest:normalize=0[aus]"
+    else:
+        graph += ";[folge]anull[aus]"
+    tmp = ziel.with_suffix(".tmp.wav")
+    try:
+        r = subprocess.run([ffmpeg, "-y", "-v", "error", *eingaenge, "-filter_complex", graph, "-map", "[aus]",
+                            "-ac", "1", "-ar", "44100", "-sample_fmt", "s16", str(tmp)],
+                           capture_output=True, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0 or not tmp.is_file():
+        tmp.unlink(missing_ok=True)
+        _LOGGER.debug("Caller: joining the sounds failed: %s", r.stderr[-300:])
+        return None
+    tmp.replace(ziel)
     return name
 
 
@@ -480,6 +555,10 @@ class Ansager:
         except vol.Invalid as err:
             _LOGGER.warning("Caller settings ignored: %s", err)
         await self._pack_lesen()
+        try:
+            await self.hass.async_add_executor_job(toene.bereitstellen, self._basis)
+        except OSError:
+            _LOGGER.warning("Caller: the sound effects could not be saved in the media folder", exc_info=True)
         self._auftrag = (await self._auftrag_store.async_load()) or {}
         self._gehoert = (await self._gehoert_store.async_load()) or {}
         if self.werkstatt() is not self:
@@ -539,7 +618,7 @@ class Ansager:
                 self._einlauf.cancel()
             self._einlauf = self.hass.async_create_background_task(self._spielbeginn(daten), "autodarts walk-on")
             return
-        if typ == "dart":
+        if typ == "dart" and not self.einst["toene"]:
             return
         self._puffer.append((typ, daten))
         if not self._geplant:
@@ -550,8 +629,46 @@ class Ansager:
     def _auswerten(self) -> None:
         self._geplant = False
         puffer, self._puffer = self._puffer, []
-        if teil := self.ansage(puffer):
-            self._einreihen(teil)
+        effekte = self.effekte(puffer)
+        teil = self.ansage(puffer)
+        if teil or (effekte and "visit" in dict(puffer)):
+            self._einreihen((*(teil or ("", "", [])), effekte))
+        elif effekte and not self._spricht and self._frei_ab <= self.hass.loop.time():
+            # the sound of a single dart: only when nothing plays, it would come too late otherwise
+            self._los(self._der_reihe_nach(("", "", [], effekte)))
+
+    def effekte(self, puffer: list[tuple[str, dict[str, Any]]]) -> tuple[list[str], str | None, list[str]] | None:
+        """Sound effects of these events: (sounds in front of the voice, crowd under the voice,
+        sounds after the voice), or None."""
+        if not self.einst["toene"]:
+            return None
+        e = dict(puffer)
+        darts = [d for t, d in puffer if t == "dart"]
+        kopf = [toene.datei(toene.dart_ton(darts[-1].get("field", "")))] if darts else []
+        bett = None
+        nach: list[str] = []
+        st = self._stand() or {}
+        x01 = st.get("art", "x01") == "x01"
+        if darts and "visit" not in e and x01:
+            im_wurf = [d.get("f") for d in ((st.get("aufnahme") or {}).get("darts") or [])]
+            if toene.riser([str(f) for f in im_wurf]):
+                kopf.append(toene.datei(toene.RISER))  # the third dart can make it
+        if "visit" in e:
+            v = e["visit"]
+            m = toene.moment(int(v.get("score") or 0) if x01 else 0, "bust" in e,
+                             "leg_won" in e or "set_won" in e, "match_won" in e or "tournament_won" in e,
+                             len(v.get("darts") or []) if x01 else 0)
+            if m:
+                lead, unter = toene.MOMENTE[m]
+                kopf.append(toene.datei(lead))
+                bett = toene.datei(unter) if unter else None
+            if x01 and m not in ("checkout", "match") and st.get("gewinner") is None and st.get("weg"):
+                spieler = st.get("spieler") or []
+                zug = st.get("am_zug")
+                wer = spieler[zug] if isinstance(zug, int) and zug < len(spieler) else {}
+                if wer and not wer.get("bot") and 1 < int(wer.get("rest") or 0) <= 170:
+                    nach.append(toene.datei(toene.HERZ))  # the next one can finish: heartbeat
+        return (kopf, bett, nach) if kopf or nach else None
 
     @callback
     def _einreihen(self, teil: tuple[Any, ...]) -> None:
@@ -585,7 +702,7 @@ class Ansager:
         self._spricht = True
         dauer = 0.0
         try:
-            dauer = await self._sagen(*teil)
+            dauer = await self._sagen(teil[0], teil[1], teil[2], effekte=teil[3] if len(teil) > 3 else None)
         finally:
             self._spricht = False
             self._frei_ab = self.hass.loop.time() + dauer
@@ -730,31 +847,36 @@ class Ansager:
         return None
 
     async def _sagen(self, schluessel: str, text: str, keys: list[str] | None = None, sprecher: str | None = None,
-                     stimme_immer: bool = False) -> float:
+                     stimme_immer: bool = False, effekte: tuple[list[str], str | None, list[str]] | None = None) -> float:
         """Play the pack files (joined), the pack file of the key, or speak the text (not with "pack only").
 
+        Sound effects (dart, big moment) come in front of it, the crowd under it.
         Returns about how long it plays (seconds), so the next announcement waits for it.
         """
         try:
             if sprecher:
                 keys, schluessel = None, ""
-            if keys:
-                keys = _abspielbar(keys, self._pack)
-            if keys and len(keys) > 1:
-                ordner = self._basis.joinpath(*ORDNER, self.einst["pack"])
-                datei = await self.hass.async_add_executor_job(_mischen, ordner, [self._pack[k] for k in keys])
-                if datei:
-                    await self._spielen(self._url((*ORDNER, self.einst["pack"], MIX), datei))
-                    return await self._laenge(ordner / MIX / datei)
-            if keys:
-                schluessel = keys[0]
-            if schluessel and schluessel.lower() in self._pack:
-                datei = self._pack[schluessel.lower()]
-                await self._spielen(self._url((*ORDNER, self.einst["pack"]), datei))
-                return await self._laenge(self._basis.joinpath(*ORDNER, self.einst["pack"], datei))
-            if self.einst["nur_pack"] and self.einst["pack"] and not sprecher and not stimme_immer:
-                _LOGGER.debug("Caller: pack %s has no sound for %s", self.einst["pack"], keys or schluessel or text)
-                return 0.0
+            pfad = await self._pack_pfad(schluessel, keys)
+            if pfad is not None:
+                if effekte:
+                    tordner = self._basis.joinpath(*toene.ORDNER)
+                    name = await self.hass.async_add_executor_job(_mit_toenen, self._ffmpeg(), tordner, effekte[0], pfad, effekte[1], effekte[2])
+                    if name:
+                        await self._spielen(self._url((*toene.ORDNER, MIX), name))
+                        return await self._laenge(tordner / MIX / name)
+                    vorlauf = await self._effekte_spielen(effekte[0], None, [])  # without ffmpeg: one after the other
+                    await asyncio.sleep(max(0.0, vorlauf - NACHLAUF))
+                await self._spielen(self._url(tuple(pfad.parent.relative_to(self._basis).parts), pfad.name))
+                return await self._laenge(pfad)
+            ohne_stimme = not text or (self.einst["nur_pack"] and self.einst["pack"] and not sprecher and not stimme_immer)
+            if ohne_stimme:
+                if text:
+                    _LOGGER.debug("Caller: pack %s has no sound for %s", self.einst["pack"], keys or schluessel or text)
+                return await self._effekte_spielen(*effekte) if effekte else 0.0
+            vorlauf = 0.0
+            if effekte:
+                vorlauf = await self._effekte_spielen(effekte[0], None, [])
+                await asyncio.sleep(max(0.0, vorlauf - NACHLAUF))
             stimme = self._stimme()
             if not stimme:
                 _LOGGER.warning("Caller: no voice (TTS) available")
@@ -774,6 +896,34 @@ class Ansager:
         except Exception:
             _LOGGER.warning("Caller could not play %s", schluessel or text, exc_info=True)
         return 0.0
+
+    async def _pack_pfad(self, schluessel: str, keys: list[str] | None) -> Path | None:
+        """The sound file of the pack for this announcement (several pack files joined), or None."""
+        if keys:
+            keys = _abspielbar(keys, self._pack)
+        ordner = self._basis.joinpath(*ORDNER, self.einst["pack"])
+        if keys and len(keys) > 1:
+            datei = await self.hass.async_add_executor_job(_mischen, ordner, [self._pack[k] for k in keys])
+            if datei:
+                return ordner / MIX / datei
+        if keys:
+            schluessel = keys[0]
+        if schluessel and schluessel.lower() in self._pack:
+            return ordner / self._pack[schluessel.lower()]
+        return None
+
+    async def _effekte_spielen(self, kopf: list[str], bett: str | None, nach: list[str]) -> float:
+        """Only the sound effects (no voice): one after the other, the crowd last."""
+        tordner = self._basis.joinpath(*toene.ORDNER)
+        namen = [*kopf, *([bett] if bett else []), *nach]
+        if not namen:
+            return 0.0
+        name = await self.hass.async_add_executor_job(_verketten, tordner, namen) if len(namen) > 1 else namen[0]
+        if not name or (len(namen) == 1 and not (tordner / name).is_file()):
+            return 0.0
+        pfad = tordner / MIX / name if len(namen) > 1 else tordner / name
+        await self._spielen(self._url((*toene.ORDNER, MIX) if len(namen) > 1 else toene.ORDNER, name))
+        return await self._laenge(pfad)
 
     async def _laenge(self, pfad: Path) -> float:
         return min(12.0, await self.hass.async_add_executor_job(_dauer, pfad)) + NACHLAUF

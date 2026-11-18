@@ -3,6 +3,24 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.39.0
+
+- **Sounds on the speakers for every dart.** The better the dart, the bigger the sound: a thud for a single, a ping for a high single, two notes for a double, a rising run for a treble, more for T19/T20, a boom for bull and bullseye, a whistle for a miss. Big moments get their own sound in front of the caller: fanfare for 180, ton-forty and ton, a win jingle for a checkout, a bigger one for the match, a buzzer for bust, sad notes for no score – with a cheering crowd under the voice for 180, ton-forty and checkouts.
+- **More suspense.** After two big trebles a rising sound waits for the third dart. When the next player can finish, a heartbeat follows the caller.
+- Everything plays on the caller's speakers and on phones and tablets with the caller on (they now play the same sounds instead of their own). Switch: *Caller → Sounds for every dart and big moments*.
+- **Live view in full screen on the tablet.** New button in the header of a running game: shows the TV page full screen on this device; ✕ or back closes it.
+- **Stopped board camera is restarted.** When a camera of the board stops delivering pictures during a game (no darts counted, live picture stands still), DartNest restarts the board software by itself. If that does not help twice, a message asks to restart the board PC.
+- **Fixed: TV lost the camera image** after Home Assistant restarted (for example for an update). The page now fetches the camera anew when it reconnects and tries again when the camera image fails.
+
+**Deutsch**
+
+- **Töne auf den Lautsprechern bei jedem Dart.** Je besser der Dart, desto größer der Ton: ein Einschlag für ein Single, ein Ping für ein hohes Single, zwei Töne für ein Double, ein Lauf für ein Triple, mehr für T19/T20, ein Wumms für Bull und Bullseye, ein Pfiff für daneben. Große Momente bekommen einen eigenen Ton vor dem Ansager: Fanfare für 180, 140+ und 100+, eine Sieg-Melodie für den Checkout, eine größere für das Match, ein Summer für Überworfen, traurige Töne für No Score – bei 180, 140+ und Checkouts jubelt ein Publikum unter der Stimme.
+- **Mehr Spannung.** Nach zwei großen Triples wartet ein ansteigender Ton auf den dritten Dart. Kann der nächste Spieler auschecken, folgt dem Ansager ein Herzschlag.
+- Alles läuft über die Lautsprecher des Ansagers und über Handy und Tablet mit Ansage (die spielen jetzt dieselben Töne statt eigener). Schalter: *Ansager → Töne bei jedem Dart und großen Momenten*.
+- **Live-Anzeige im Vollbild am Tablet.** Neuer Knopf oben im laufenden Spiel: zeigt die Fernsehseite im Vollbild auf diesem Gerät; ✕ oder Zurück schließt sie.
+- **Stehende Board-Kamera wird neu gestartet.** Liefert eine Kamera des Boards im Spiel keine Bilder mehr (keine Würfe gezählt, Livebild steht), startet DartNest die Board-Software selbst neu. Hilft das zweimal nicht, bittet eine Meldung, den Board-PC neu zu starten.
+- **Behoben: Fernseher verlor das Kamerabild** nach einem Neustart von Home Assistant (zum Beispiel für ein Update). Die Seite holt die Kamera beim Wiederverbinden neu und versucht es wieder, wenn das Kamerabild ausfällt.
+
 ## 1.38.2
 
 - **Fixed: announcements piled up.** When the game was faster than the caller, every visit was still announced one after the other, long after it was thrown. Now one announcement plays at a time; while it plays only the newest one waits and the ones in between are dropped. This holds for the speakers and for phones and tablets. A new game forgets what still waited.
