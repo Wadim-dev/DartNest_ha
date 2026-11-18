@@ -3,6 +3,14 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.41.1
+
+- **Page no longer freezes after going back.** If the DartNest tile sits inside another window of the dashboard and that window closed first (e.g. one back gesture on the phone), the DartNest window stayed open invisibly – and an open window blocks every tap on the page. DartNest windows now notice this and close themselves.
+
+**Deutsch**
+
+- **Seite friert nach Zurück nicht mehr ein.** Liegt die DartNest-Kachel in einem anderen Fenster des Dashboards und schloss dieses zuerst (z. B. eine Zurück-Geste am Handy), blieb das DartNest-Fenster unsichtbar offen – und ein offenes Fenster sperrt jedes Tippen auf der Seite. DartNest-Fenster merken das jetzt und schließen sich selbst.
+
 ## 1.41.0
 
 - **One board per card.** With several boards every DartNest card has a visual editor (*Edit dashboard → card → Board*): pick the board the card stays on – e.g. one Board Manager per board side by side. Without a choice the card follows the board button as before.

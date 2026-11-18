@@ -864,6 +864,7 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
     // eine Abkürzung im Fenster öffnet eine andere Seite: schließen, ohne zurückzugehen
     const weg = () => { if (d.open && !(history.state && history.state[merker])) { f.hist = false; d.close(); } };
     d.addEventListener('close', () => {
+      clearInterval(f.wache); f.wache = 0;
       window.removeEventListener('popstate', pop); window.removeEventListener('location-changed', weg);
       bl.style.transition = ''; bl.style.transform = '';
       if (merker === 'unterFenster') window.__feUfOffen = false;
@@ -875,6 +876,10 @@ dialog.zu .blatt{transform:translateY(100%)!important;transition:transform .24s 
       if (d.open) return false;
       bl.style.transition = ''; bl.style.transform = '';
       try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
+      // a window that holds this card (e.g. a dashboard window around the tile) closed while this one stayed open:
+      // it is then invisible but still modal and blocks every tap on the page – close it
+      clearInterval(f.wache);
+      f.wache = setInterval(() => { if (d.open && (!d.isConnected || (d.checkVisibility && !d.checkVisibility()))) { f.hist = false; d.close(); } }, 400);
       if (merker === 'unterFenster') window.__feUfOffen = true;
       d.scrollTop = 0; bl.scrollTop = 0;
       try { const s = Object.assign({}, history.state); s[merker] = 1; history.pushState(s, ''); f.hist = true; window.addEventListener('popstate', pop); window.addEventListener('location-changed', weg); } catch (e) {}
