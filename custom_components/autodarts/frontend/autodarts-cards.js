@@ -410,6 +410,52 @@ button:disabled{opacity:.38;cursor:default;transform:none}
     try { localStorage.setItem('dartnest_board', id); } catch (e) {}
     window.dispatchEvent(new CustomEvent('dartnest-board', { detail: id }));
   };
+  // card editor (Edit dashboard → card): which board the card shows – several boards, e.g. one card per board side by side
+  Object.assign(TEXTE.en, { ed_board: 'Board', ed_board_auto: 'Follows the board button (all cards together)', ed_board_h: 'Pick a board to keep this card on it – e.g. one Board Manager per board side by side.', ed_board_eins: 'Only one board: this card shows it. With more boards you pick one here.' });
+  Object.assign(TEXTE.de, { ed_board: 'Board', ed_board_auto: 'Folgt dem Board-Knopf (alle Karten gemeinsam)', ed_board_h: 'Wähle ein Board, damit diese Karte fest dabei bleibt – z. B. je Board ein Board Manager nebeneinander.', ed_board_eins: 'Nur ein Board: diese Karte zeigt es. Bei mehreren Boards wählst du hier eines.' });
+  class AutodartsKartenEditor extends HTMLElement {
+    setConfig(c) { this._c = Object.assign({}, c || {}); this._zeigen(); }
+    set hass(h) { this._h = h; sprachePruefen(h); this._zeigen(); }
+    _zeigen() {
+      if (!this._h || !this._c) return;
+      const l = boards(this._h);
+      if (!this._r) {
+        this._r = this.attachShadow({ mode: 'open' });
+        this._r.innerHTML = '<style>p{margin:4px 0 0;color:var(--secondary-text-color);font-size:13px;line-height:1.4}</style><div class="f"></div><p></p>';
+      }
+      const box = this._r.querySelector('.f'), info = this._r.querySelector('p');
+      if (l.length < 2) { box.innerHTML = ''; this._form = null; info.textContent = t('ed_board_eins'); return; }
+      info.textContent = t('ed_board_h');
+      const fest = this._c.board ? l.find(b => b.id === this._c.board || b.name.toLowerCase() === String(this._c.board).toLowerCase()) : null;
+      const schema = [{ name: 'board', selector: { select: { mode: 'dropdown', options: [{ value: 'auto', label: t('ed_board_auto') }].concat(l.map(b => ({ value: b.id, label: b.name }))) } } }];
+      if (!this._form) {
+        this._form = document.createElement('ha-form');
+        this._form.computeLabel = () => t('ed_board');
+        this._form.addEventListener('value-changed', e => {
+          const v = (e.detail.value || {}).board, c = Object.assign({}, this._c);
+          if (!v || v === 'auto') delete c.board; else c.board = v;
+          this._c = c;
+          this.dispatchEvent(new CustomEvent('config-changed', { detail: { config: c }, bubbles: true, composed: true }));
+        });
+        box.appendChild(this._form);
+      }
+      this._form.hass = this._h; this._form.schema = schema; this._form.data = { board: fest ? fest.id : 'auto' };
+    }
+  }
+  customElements.define('autodarts-karten-editor', AutodartsKartenEditor);
+  // page-wide listeners of a card hold it only weakly: a card thrown away (window closed, page left) is freed
+  // instead of staying in memory with its listeners (cards are made anew with every window)
+  // what those listeners do (defined here, outside the cards, so that they hold no card in their scope)
+  const nachBoard = k => { if (k._roh && k.isConnected) k.hass = k._roh; };
+  const ovStill = k => k.toggleAttribute('still', !k._sicht || document.hidden);
+  const fensterStill = k => k._still && k._still();
+  const seiteSicht = k => k._sichtbar && k._sichtbar();
+  const schwachRef = k => (window.WeakRef ? new WeakRef(k) : { deref: () => k });
+  const schwachHoeren = (quelle, typ, karte, fn) => {
+    const ref = schwachRef(karte); karte = null;  // the listener must not keep the card in its scope
+    const h = e => { const k = ref.deref(); if (!k) quelle.removeEventListener(typ, h); else fn(k, e); };
+    quelle.addEventListener(typ, h);
+  };
   const boardOnline = h => { const v = zst(h, E(h, 'sensor.connection')); return v !== undefined && v !== 'Offline' && v !== 'unavailable'; };
   const boardUrl = h => {
     const id = E(h, 'sensor.connection'), e = h && h.entities && h.entities[id], d = e && h.devices && h.devices[e.device_id];
@@ -579,6 +625,7 @@ button:disabled{opacity:.38;cursor:default;transform:none}
 @media (max-width:520px){.szene{height:160px}.ueber{width:62%}.zt{font-size:20px}.knoepfe.haupt4{grid-template-columns:1fr 1fr 1fr}.k.haupt{grid-column:1/-1;min-height:56px}}`;
   class AutodartsOverviewCard extends HTMLElement {
     static getStubConfig() { return {}; }
+    static getConfigElement() { return document.createElement('autodarts-karten-editor'); }
     setConfig(c) { this._orig = Object.assign({}, c || {}); this._c = Object.assign({}, this._orig); this._stromKey = null; if (this._r) { this._r = null; this.shadowRoot.innerHTML = ''; } }
     getCardSize() { return 5; }
     getGridOptions() { return { columns: 12, min_columns: 6 }; }
@@ -612,13 +659,13 @@ button:disabled{opacity:.38;cursor:default;transform:none}
       this._sicht = true;
       const still = () => this.toggleAttribute('still', !this._sicht || document.hidden);
       if (!this._io && 'IntersectionObserver' in window) { this._io = new IntersectionObserver(e => { this._sicht = e[0].isIntersecting; still(); }); this._io.observe(this); }
-      if (!this._vis) { this._vis = still; document.addEventListener('visibilitychange', still); }
+      if (!this._vis) { this._vis = true; schwachHoeren(document, 'visibilitychange', this, ovStill); }
       this._r.querySelector('.szene').addEventListener('click', e => {
         const b = e.target.closest('.bwahl');
         if (b) { e.stopPropagation(); if (!b.classList.contains('fest')) { const n = naechstesBoard(this._h); if (n) boardWaehlen(n.id); } return; }
         mehrInfo(this, E(this._h, 'sensor.status'));
       });
-      if (!this._brdAbo) { this._brdAbo = true; window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; }); }
+      if (!this._brdAbo) { this._brdAbo = true; schwachHoeren(window, 'dartnest-board', this, nachBoard); }
       this._r.querySelectorAll('.w').forEach(w => w.addEventListener('click', () => mehrInfo(this, E(this._h, w.classList.contains('sum') ? 'sensor.visit_score' : 'sensor.throw_' + (+w.dataset.i + 1)))));
       this._r.querySelector('.knoepfe').addEventListener('click', e => {
         const b = e.target.closest('button'); if (!b || b.disabled) return; const h = this._h, id = b.dataset.id;
@@ -940,7 +987,7 @@ dialog.seite .blatt{width:min(720px,100%)}
     set hass(h) {
       this._roh = h;
       h = this._h = mitBoard(h, this._c.board); sprachePruefen(h);
-      if (!this._brdAbo) { this._brdAbo = true; window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; }); }
+      if (!this._brdAbo) { this._brdAbo = true; schwachHoeren(window, 'dartnest-board', this, nachBoard); }
       if (!this._r || this._spr !== SPR) this._bauen();
       this._zeichnen();
       if (this._d && this._d.open) this._innenHass();
@@ -970,7 +1017,7 @@ dialog.seite .blatt{width:min(720px,100%)}
       this._still = still;
       if (this._io) this._io.disconnect();
       if ('IntersectionObserver' in window) { this._io = new IntersectionObserver(e => { this._sicht = e[0].isIntersecting; still(); }); if (this.isConnected) this._io.observe(this); }
-      if (!this._vis) { this._vis = () => this._still && this._still(); document.addEventListener('visibilitychange', this._vis); }
+      if (!this._vis) { this._vis = true; schwachHoeren(document, 'visibilitychange', this, fensterStill); }
       this._innen = null; this._uf = null;
     }
     connectedCallback() { if (this._io) this._io.observe(this); }
@@ -1138,6 +1185,7 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
   // base for the page cards: header, click handling, dialog, redraw only on change
   class DartsSeite extends HTMLElement {
     static getStubConfig() { return {}; }
+    static getConfigElement() { return document.createElement('autodarts-karten-editor'); }
     setConfig(c) { this._c = Object.assign({}, c || {}); this._auf = this._auf || {}; this.toggleAttribute('ohne-zurueck', this._c.back_button === false); }
     getCardSize() { return 12; }
     getGridOptions() { return { columns: 'full' }; }
@@ -1169,7 +1217,7 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
       this._in = this._r.querySelector('.inhalt');
       this._sicht = true;
       if ('IntersectionObserver' in window) new IntersectionObserver(e => { this._sicht = e[0].isIntersecting; this._sichtbar && this._sichtbar(); }).observe(this);
-      document.addEventListener('visibilitychange', () => this._sichtbar && this._sichtbar());
+      schwachHoeren(document, 'visibilitychange', this, seiteSicht);
       this._r.addEventListener('click', e => {
         const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
         const a = b.dataset.act;
@@ -1181,7 +1229,7 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
         this._klick(a, b, e);
       });
       this._r.querySelector('.modal').addEventListener('click', e => { if (e.target.classList.contains('modal')) this._modal(null); });
-      window.addEventListener('dartnest-board', () => { if (this._roh && this.isConnected) this.hass = this._roh; });
+      schwachHoeren(window, 'dartnest-board', this, nachBoard);
     }
     _setze(html) { if (this._alt !== html) { this._alt = html; this._in.innerHTML = html; } }
     _kopf(x, s, extra) {
@@ -2711,10 +2759,12 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       this._r.querySelector('.netzk button').classList.toggle('an', !!this._knetz);
       this._r.querySelector('.inhalt').addEventListener('click', e => { if (e.target.closest('.netzk')) return; const k = e.target.closest('.kam'); if (!k) return; this._live = this._live === k.dataset.key ? null : k.dataset.key; this._bilder(true); });
       this._werte.addEventListener('click', e => { const w = e.target.closest('[data-e]'); if (w) mehrInfo(this, w.dataset.e); });
-      this._takt = setInterval(() => this._bilder('takt'), 3000);
+      this._taktAn();
     }
-    disconnectedCallback() { this._live = null; this._bilder(true); }
-    connectedCallback() { if (this._r) this._bilder(true); }
+    // still images every 3 s only while the card is on the page
+    _taktAn() { if (!this._takt && this.isConnected) this._takt = setInterval(() => this._bilder('takt'), 3000); }
+    disconnectedCallback() { clearInterval(this._takt); this._takt = 0; this._live = null; this._bilder(true); }
+    connectedCallback() { if (this._r) { this._taktAn(); this._bilder(true); } }
     _sichtbar() { this._bilder(true); }
     _bilder(sofort) {
       // still images every 3 s, only while visible and the board is on; one camera as live stream on request
@@ -2891,6 +2941,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   const datum = x => { try { const d = new Date(x); return d.toLocaleDateString(LOC, { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString(LOC, { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
   class AutodartsPlayersCard extends DartsSeite {
     static get GEMEINSAM() { return true; }  // players and statistics belong to all boards
+    static get getConfigElement() { return undefined; }  // nothing to pick: the YAML editor stays
     static get CSS() { return SPL_CSS; }
     // hit map, most hit fields, trend, badges and head to head of one player
     _profil(p, alle) {
