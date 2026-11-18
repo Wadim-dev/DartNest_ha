@@ -3,6 +3,18 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.38.1
+
+- **Board bar in DartNest.** With more than one board, DartNest shows all boards at the top with their state (*playing*, *ready*, *off*); one tap switches every page. The small board button inside the cards stays for cards on your own dashboard.
+- **Boards in the order they were added.** The first board always comes first, no longer sorted by name.
+- README: pictures and an animation of two boards at once on the TV, each with its own effects.
+
+**Deutsch**
+
+- **Board-Leiste in DartNest.** Ab zwei Boards zeigt DartNest oben alle Boards mit Zustand (*spielt*, *bereit*, *aus*); ein Tipp stellt alle Seiten um. Der kleine Board-Knopf in den Karten bleibt für Karten im eigenen Dashboard.
+- **Boards in der Reihenfolge des Hinzufügens.** Das erste Board steht immer vorn, nicht mehr nach Namen sortiert.
+- README: Bilder und eine Animation mit zwei Boards gleichzeitig am Fernseher, jedes mit eigenen Effekten.
+
 ## 1.38.0
 
 - **New: several boards.** Add another Autodarts board like the first: it announces itself in the network, or use *Devices & services → DartNest → Add entry*. Name the device (e.g. *Keller*) and the name shows everywhere.
