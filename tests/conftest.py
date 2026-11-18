@@ -47,8 +47,9 @@ ELLIPSES = {"0": {"doubleOuterPoints": RING, "doubleInnerPoints": RING, "trebleO
                   "trebleInnerPoints": [], "bull": [1, 2]}, "1": "kaputt"}
 
 
-def board_mock(aioclient_mock, state=None) -> None:
+def board_mock(aioclient_mock, state=None, basis: str = BASIS) -> None:
     """Answer every board endpoint like a running board."""
+    BASIS = basis
     aioclient_mock.get(f"{BASIS}/api/state", json=STATE if state is None else state)
     aioclient_mock.get(f"{BASIS}/api/system", json=SYSTEM)
     aioclient_mock.get(f"{BASIS}/api/devices", json=DEVICES)

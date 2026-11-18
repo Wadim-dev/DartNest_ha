@@ -29,7 +29,7 @@ class SpielEreignis(EventEntity):
 
     def __init__(self, d: DartsDaten) -> None:
         self.daten = d
-        self._attr_unique_id = "autodarts_spiel_ereignis"
+        self._attr_unique_id = f"autodarts_{d.vorsilbe}spiel_ereignis"
         self._attr_device_info = d.geraet
 
     async def async_added_to_hass(self) -> None:

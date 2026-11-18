@@ -390,8 +390,11 @@ body.spannung .vig{opacity:1}body.spannung.match .vig{background:radial-gradient
   const $ = id => document.getElementById(id);
   let D = null, altHtml = '', altAnsage = null, altDarts = 0, erst = true;
   // the same page is the overlay for OBS / Streamlabs at …/overlay
-  const OV = /\/overlay\/?$/.test(location.pathname), BASE = location.pathname.replace(/\/$/, '').replace(/\/overlay$/, '');
+  const OV = /\/overlay\/?$/.test(location.pathname), BASE = location.pathname.replace(/\/$/, '').replace(/\/(overlay|einzeln)$/, '');
   if (OV) document.body.classList.add('ov');
+  // on the page of all boards each board shows its name instead of the logo text (…/einzeln#Name)
+  const boardName = () => { if (!/\/einzeln\/?$/.test(location.pathname) || !location.hash) return; const l = document.querySelector('.logo'); l.lastChild.textContent = decodeURIComponent(location.hash.slice(1)); };
+  boardName(); window.addEventListener('hashchange', boardName);
 
   function uhr() {
     const d = new Date(), z = d.toLocaleTimeString(S === T.de ? 'de-DE' : 'en-GB', { hour: '2-digit', minute: '2-digit' });

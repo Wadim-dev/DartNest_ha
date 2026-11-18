@@ -114,9 +114,10 @@ def regel_pruefen(daten: dict[str, Any]) -> dict[str, Any]:
 class Lichtshow:
     """Plays the effects of the stored rules."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, endung: str = "") -> None:
         self.hass = hass
-        self._store: Store[dict[str, Any]] = Store(hass, 1, "autodarts.lichter")
+        # every board has its own lights; the first board keeps the store of the time before several boards
+        self._store: Store[dict[str, Any]] = Store(hass, 1, f"autodarts.lichter{endung}")
         self.regeln: list[dict[str, Any]] = []
         self._vorher: dict[str, State] = {}  # state of each light before its effect
         self._besitz: dict[str, str] = {}  # light -> run that currently drives it

@@ -151,6 +151,9 @@
     },
     "pixel_offline": {
       "message": "Display not reachable: {host}."
+    },
+    "unknown_board": {
+      "message": "There is no board \"{board}\". Use the name of the board, its device or its config entry."
     }
   },
   "entity": {

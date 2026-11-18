@@ -3,6 +3,7 @@
 DOMAIN = "autodarts"
 CONF_HOST = "host"
 CONF_PORT = "port"
+CONF_KENNUNG = "kennung"  # name the board announces itself with (zeroconf), finds it again at a new address
 STANDARD_PORT = 3180
 GERAETENAME = "Autodarts Board"
 

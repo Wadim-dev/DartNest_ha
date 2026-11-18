@@ -137,7 +137,7 @@ class _SpielBasis(SensorEntity):
     def __init__(self, d: DartsDaten, schluessel: str, uebersetzung: str) -> None:
         self.daten = d
         self._attr_translation_key = uebersetzung
-        self._attr_unique_id = f"autodarts_{schluessel}"
+        self._attr_unique_id = f"autodarts_{d.vorsilbe}{schluessel}"
         self._attr_device_info = d.geraet
 
     async def async_added_to_hass(self) -> None:

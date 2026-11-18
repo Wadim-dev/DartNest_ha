@@ -55,10 +55,41 @@ async def test_user_flow_http_error(hass: HomeAssistant, aioclient_mock) -> None
 
 
 async def test_already_configured(hass: HomeAssistant, mock_entry) -> None:
+    """The same board twice is refused; another board can be added (several boards)."""
     mock_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], EINGABE)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_second_board(hass: HomeAssistant, mock_entry, aioclient_mock) -> None:
+    mock_entry.add_to_hass(hass)
+    aioclient_mock.get("http://192.0.2.60:3180/api/state", json=STATE)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+    with patch("custom_components.autodarts.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_HOST: "192.0.2.60", CONF_PORT: 3180})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Autodarts Board 2" and result["result"].unique_id == "192.0.2.60:3180"
+
+
+async def test_zeroconf_second_board(hass: HomeAssistant, mock_entry, aioclient_mock) -> None:
+    """The first board announces itself (its name is remembered), then a second board is offered."""
+    from custom_components.autodarts.const import CONF_KENNUNG
+
+    mock_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=_zeroconf())
+    assert result["reason"] == "already_configured" and mock_entry.data[CONF_KENNUNG] == "board"
+    zweites = _zeroconf("192.0.2.70")
+    zweites.name = "keller._autodarts-board._tcp.local."
+    aioclient_mock.get(f"http://192.0.2.70:{PORT}/api/state", json=STATE)
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=zweites)
+    assert result["type"] is FlowResultType.FORM and result["step_id"] == "zeroconf_confirm"
+    with patch("custom_components.autodarts.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["title"] == "Autodarts Board 2" and result["result"].unique_id == "zc:keller"
+    assert result["data"][CONF_KENNUNG] == "keller"
 
 
 def _zeroconf(adresse: str = HOST, eigenschaften: dict | None = None):
@@ -79,7 +110,7 @@ async def test_zeroconf_found_and_confirmed(hass: HomeAssistant, aioclient_mock)
     assert result["type"] is FlowResultType.FORM and result["step_id"] == "zeroconf_confirm"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == EINGABE
+    assert result["data"] == {**EINGABE, "kennung": "board"}
 
 
 async def test_zeroconf_board_not_answering(hass: HomeAssistant, aioclient_mock) -> None:

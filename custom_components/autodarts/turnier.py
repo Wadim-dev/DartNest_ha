@@ -212,9 +212,19 @@ def reihe(t: dict[str, Any]) -> list[dict[str, Any]]:
     return [x for r in baum(t) for x in r]
 
 
-def naechstes_match(t: dict[str, Any]) -> tuple[str, int, int] | None:
-    """(Schlüssel, a, b) des nächsten offenen Matches oder None."""
+def naechstes_match(t: dict[str, Any], belegt: set[str] | None = None) -> tuple[str, int, int] | None:
+    """(Schlüssel, a, b) des nächsten offenen Matches oder None.
+
+    belegt: matches that are being played on another board now (several boards); a player who
+    plays there now is not called to a second board at the same time."""
+    belegt = belegt or set()
+    spielen: set[int] = set()
     for x in reihe(t):
+        if x["k"] in belegt:
+            spielen.update(i for i in (x["a"], x["b"]) if i not in (None, FREI))
+    for x in reihe(t):
+        if x["k"] in belegt or x["a"] in spielen or x["b"] in spielen:
+            continue
         if x["sieger"] is None and x["a"] not in (None, FREI) and x["b"] not in (None, FREI):
             return x["k"], x["a"], x["b"]
     return None
@@ -268,16 +278,18 @@ def _schluessel(aktiv: Any) -> str | None:
     return str(aktiv)
 
 
-def ansicht(t: dict[str, Any], aktiv: Any) -> dict[str, Any]:
+def ansicht(t: dict[str, Any], aktiv: Any, belegt: dict[str, str] | None = None) -> dict[str, Any]:
     """Für die Karte: Namen statt Indizes, nächstes Match, Sieger, Banner für das laufende Match.
 
     aktiv: Schlüssel des laufenden Matches (oder (Runde, Match) bei K.-o./Liga).
+    belegt: several boards: match key -> board that plays it now.
     """
+    belegt = belegt or {}
     namen = t["namen"]
     modus = t.get("modus") or "ko"
     k_aktiv = _schluessel(aktiv)
     legs = t.get("legs") or {}
-    n = naechstes_match(t)
+    n = naechstes_match(t, set(belegt))
     ch = champion(t)
 
     def match(x: dict[str, Any], platz: tuple[str, str] | None = None) -> dict[str, Any]:
@@ -285,6 +297,8 @@ def ansicht(t: dict[str, Any], aktiv: Any) -> dict[str, Any]:
         out = {"k": x["k"], "a": _name(namen, x["a"]), "b": _name(namen, x["b"]),
                "sieger": None if s in (None, FREI) or x["a"] is None or x["b"] is None else (0 if s == x["a"] else 1),
                "freilos": x["freilos"], "aktiv": x["k"] == k_aktiv, "legs": legs.get(x["k"])}
+        if x["k"] in belegt:
+            out["board"] = belegt[x["k"]]
         if platz and x["a"] is None:
             out["pa"], out["pb"] = platz
         return out

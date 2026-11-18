@@ -1,7 +1,8 @@
-"""Autodarts integration: local Autodarts board plus local X01 games in Home Assistant.
+"""Autodarts integration: local Autodarts boards plus local games in Home Assistant.
 
 Everything runs locally against the Board Manager (http://<host>:3180/api/...).
-Local X01 games with players, bot and statistics live in spiel.py and x01.py.
+Local games with players, bot and statistics live in spiel.py and x01.py. Every board is a
+config entry of its own; players, statistics and tournaments are shared (spiel.Ablage).
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from homeassistant.components import panel_custom
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -23,12 +24,12 @@ from .api import board_erstellen
 from .assist import async_setup_assist
 from .clips import Clips, async_setup_clips
 from .const import CONF_HOST, CONF_PORT, DOMAIN, GERAETENAME, STANDARD_PORT
-from .coordinator import DartsDaten, DartsEntry, SystemKoordinator, ZustandKoordinator
+from .coordinator import DartsDaten, DartsEntry, SystemKoordinator, ZustandKoordinator, board_name, ist_haupt
 from .fernseher import Fernseher, async_setup_tv
 from .lichter import Lichtshow
 from .pixel import PixelAnzeigen
 from .services import async_setup_services
-from .spiel import Spielleiter
+from .spiel import Spielleiter, ablage_holen
 from .verteiler import Bildverteiler
 from .ziehen import ZiehWaechter
 
@@ -85,23 +86,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:
     system = SystemKoordinator(hass, entry, board, zustand)
     await zustand.async_config_entry_first_refresh()
     await system.async_config_entry_first_refresh()
+    haupt = ist_haupt(entry)
     geraet = DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
-        name=GERAETENAME,
+        name=GERAETENAME if haupt else entry.title,
         manufacturer="Autodarts",
         model="Board Manager (local)",
         configuration_url=board.url,
     )
-    spiel = Spielleiter(hass, board, zustand)
+    ablage = ablage_holen(hass)
+    spiel = Spielleiter(hass, board, zustand, ablage, entry.entry_id, haupt, lambda: board_name(hass, entry))
     await spiel.laden()
-    lichter = Lichtshow(hass)
+    endung = "" if haupt else f"_{entry.entry_id}"
+    lichter = Lichtshow(hass, endung)
     await lichter.laden()
-    ansager = Ansager(hass, lambda: spiel.stand, lambda: [str(p.get("name") or "") for p in spiel.daten["spieler"]])
+
+    def werkstatt() -> Ansager | None:
+        """The board that makes and checks the sound packs (they are shared): the first one."""
+        for le in ablage.alle():
+            e = hass.config_entries.async_get_entry(le.kennung)
+            if e is not None and hasattr(e, "runtime_data"):
+                w: Ansager = e.runtime_data.ansager
+                return w
+        return None
+
+    ansager = Ansager(hass, lambda: spiel.stand, lambda: [str(p.get("name") or "") for p in spiel.daten["spieler"]], endung,
+                      lambda: werkstatt() or ansager)
     await ansager.laden()
     fernseher = Fernseher(hass, spiel)
     clips = Clips(hass)
     pixel = PixelAnzeigen(hass)
-    entry.runtime_data = DartsDaten(board, zustand, system, geraet, spiel, lichter, ansager, fernseher, clips, pixel, Bildverteiler(hass, board))
+    entry.runtime_data = DartsDaten(board, zustand, system, geraet, spiel, lichter, ansager, fernseher, clips, pixel, Bildverteiler(hass, board),
+                                    "" if haupt else f"{entry.entry_id}_")
     fernseher.daten = clips.daten = pixel.daten = entry.runtime_data
     spiel.clips_info = clips.attribute
     spiel.pixel_info = pixel.attribute
@@ -114,10 +130,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:
     waechter = ZiehWaechter(hass, board, zustand)
     entry.async_on_unload(zustand.async_add_listener(waechter.aenderung))
     entry.async_on_unload(waechter.abbrechen)
-    if abmelden := async_setup_assist(hass, lambda: entry.runtime_data.spiel):
-        entry.async_on_unload(abmelden)
+    _assist(hass)
+    entry.async_on_unload(lambda: _assist(hass, ohne=entry.entry_id))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+@callback
+def _assist(hass: HomeAssistant, ohne: str | None = None) -> None:
+    """Voice commands once for all boards; they go to the board somebody plays on."""
+    daten = hass.data.setdefault(DOMAIN, {})
+    noch = [e for e in hass.config_entries.async_loaded_entries(DOMAIN) if e.entry_id != ohne] if ohne else [True]
+    if noch and "assist" not in daten:
+        ablage = ablage_holen(hass)
+        daten["assist"] = async_setup_assist(hass, ablage.aktuellster)
+    elif not noch and (abmelden := daten.pop("assist", None)):
+        abmelden()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DartsEntry) -> bool:

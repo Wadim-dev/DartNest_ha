@@ -310,7 +310,7 @@ class Clips:
 
     @property
     def einst(self) -> dict[str, Any]:
-        e: dict[str, Any] = self.daten.spiel.daten.setdefault("clips", {})
+        e: dict[str, Any] = self.daten.spiel.eigen.setdefault("clips", {})
         e.setdefault("an", False)
         if e.get("kamera") not in KAMERAS:
             e["kamera"] = "camera_1"

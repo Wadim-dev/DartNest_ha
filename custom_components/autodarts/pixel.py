@@ -141,7 +141,7 @@ class PixelAnzeigen:
 
     @property
     def einst(self) -> dict[str, Any]:
-        e: dict[str, Any] = self.daten.spiel.daten.setdefault("pixel", {})
+        e: dict[str, Any] = self.daten.spiel.eigen.setdefault("pixel", {})
         e.setdefault("an", True)
         e.setdefault("effekte", True)
         e["geraete"] = [g for g in e.get("geraete") or [] if isinstance(g, dict) and g.get("typ") in TYPEN and g.get("host")]

@@ -3,6 +3,24 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.38.0
+
+- **New: several boards.** Add another Autodarts board like the first: it announces itself in the network, or use *Devices & services → DartNest → Add entry*. Name the device (e.g. *Keller*) and the name shows everywhere.
+- **Shared and per board.** Players, statistics, ranking, Elo, tournaments and caller packs are shared. Every board has its own game, cameras, Board Manager, lights, speakers, LED clock, power plug and TV link.
+- **Board button in every screen.** With more than one board each DartNest card shows the board's name in its head; tap it for the next board, all cards follow. A card can be set to one board with `board: Keller`. With one board nothing changes.
+- **Tournaments over several boards.** When a tournament starts, every free board gets a match. *Next match* starts the next free match on the board you tap; players who are playing on another board wait. The bracket shows which match runs on which board.
+- **TV: show all boards.** New switch in the TV card: every board that plays gets its part of the screen (two boards one above the other, three or four in four parts), each with its own effects and its name. When only one board plays, it fills the screen again.
+- **Actions with `board`.** All DartNest actions and voice commands take an optional `board` (device, entry or name). Without it they go to the first board; voice commands go to the board somebody plays on.
+
+**Deutsch**
+
+- **Neu: mehrere Boards.** Ein weiteres Autodarts-Board kommt wie das erste dazu: Es meldet sich im Netz, oder *Geräte & Dienste → DartNest → Eintrag hinzufügen*. Das Gerät umbenennen (z. B. *Keller*), der Name erscheint überall.
+- **Gemeinsam und je Board.** Spieler, Statistik, Rangliste, Elo, Turniere und Ansager-Packs sind gemeinsam. Jedes Board hat eigenes Spiel, Kameras, Board Manager, Licht, Lautsprecher, LED-Uhr, Steckdose und Fernseher-Link.
+- **Board-Knopf in jeder Seite.** Ab zwei Boards zeigt jede DartNest-Karte oben den Namen des Boards; Antippen wechselt zum nächsten Board, alle Karten ziehen mit. Mit `board: Keller` lässt sich eine Karte fest auf ein Board stellen. Mit einem Board ändert sich nichts.
+- **Turniere über mehrere Boards.** Beim Turnierstart bekommt jedes freie Board eine Partie. *Nächstes Match* startet die nächste freie Partie auf dem Board, auf dem getippt wird; wer gerade auf einem anderen Board spielt, wartet. Der Turnierbaum zeigt, welche Partie auf welchem Board läuft.
+- **Fernseher: alle Boards zeigen.** Neuer Schalter in der Fernseher-Karte: Jedes Board, auf dem gespielt wird, bekommt seinen Teil des Bildes (zwei Boards untereinander, drei oder vier in vier Teilen), jeweils mit eigenen Effekten und Namen. Spielt nur noch ein Board, füllt es wieder das ganze Bild.
+- **Aktionen mit `board`.** Alle DartNest-Aktionen und Sprachbefehle nehmen ein optionales `board` (Gerät, Eintrag oder Name). Ohne gehen sie an das erste Board; Sprachbefehle an das Board, auf dem gerade gespielt wird.
+
 ## 1.37.1
 
 - **Fixed: own caller packs were often not heard.** When a pack had no sound with the player's name, the whole visit including "you require …" was spoken by the voice, so the pack's own bust or score sound never played. Now a missing name is left out, without "you require" or the rest number only the pack's own sound plays, and the voice speaks only what the pack cannot say at all.
