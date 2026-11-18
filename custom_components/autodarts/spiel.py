@@ -1048,7 +1048,8 @@ class Spielleiter:
         return {"spieler": liste, "verlauf": self.daten.get("verlauf", [])[:20], "letzte": self.daten.get("letzte"),
                 "strom": self.eigen.get("strom") or {},
                 "tv": {"geraete": tv.get("geraete") or [], "auto": bool(tv.get("auto")),
-                       "brett": bool(tv.get("brett")), "ansicht": tv.get("ansicht") or "camera_1", "alle": bool(tv.get("alle"))},
+                       "brett": bool(tv.get("brett")), "ansicht": tv.get("ansicht") or "camera_1", "alle": bool(tv.get("alle")),
+                       "effekte": tv.get("effekte") or "voll"},
                 "board": self.name(), "boards": len(self.ablage.leiter),
                 "clips": self.clips_info() if self.clips_info else {},
                 "pixel": self.pixel_info() if self.pixel_info else {}}

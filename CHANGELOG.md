@@ -3,6 +3,20 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.40.0
+
+- **Smoother sounds.** Home Assistant prepares the caller's pack once (at start and when the pack changes), so a visit is joined with its sound effects in an instant during the game instead of being converted. Phones and tablets with the caller on load the sound effects before the game and keep them, instead of fetching each one at the dart. Music Assistant speakers no longer ring their chime before every announcement, which delayed and chopped the caller.
+- **Sound effects one by one.** *Caller → Sound effects*: every dart, fanfares (180, checkout …), cheering crowd and suspense (riser, heartbeat) can each be switched on or off.
+- **Effects on the TV: Full, Light or Off.** *TV → Effects*. Light shows fewer particles and leaves out shaking and flashes – smoother on weaker TVs such as Fire TV sticks.
+- **Memory is freed** when nobody watches a camera any more and, on phones and tablets, when the board is switched off.
+
+**Deutsch**
+
+- **Flüssigere Töne.** Home Assistant bereitet das Pack des Ansagers einmal vor (beim Start und wenn das Pack wechselt). Im Spiel wird eine Aufnahme dann sofort mit ihren Toneffekten zusammengesetzt statt erst umgewandelt. Handy und Tablet mit Ansage laden die Toneffekte vor dem Spiel und behalten sie, statt jeden beim Dart zu holen. Lautsprecher über Music Assistant spielen vor der Ansage keinen Gong mehr – der verzögerte und zerhackte den Ansager.
+- **Toneffekte einzeln.** *Ansager → Toneffekte*: jeder Dart, Fanfaren (180, Checkout …), jubelndes Publikum und Spannung (ansteigender Ton, Herzschlag) lassen sich einzeln ein- und ausschalten.
+- **Effekte am Fernseher: Voll, Leicht oder Aus.** *Fernseher → Effekte*. Leicht zeigt weniger Teilchen und lässt Wackeln und Blitze weg – flüssiger auf schwächeren Fernsehern wie Fire-TV-Sticks.
+- **Speicher wird freigegeben**, wenn niemand mehr eine Kamera ansieht, und auf Handy und Tablet, wenn das Board aus ist.
+
 ## 1.39.0
 
 - **Sounds on the speakers for every dart.** The better the dart, the bigger the sound: a thud for a single, a ping for a high single, two notes for a double, a rising run for a treble, more for T19/T20, a boom for bull and bullseye, a whistle for a miss. Big moments get their own sound in front of the caller: fanfare for 180, ton-forty and ton, a win jingle for a checkout, a bigger one for the match, a buzzer for bust, sad notes for no score – with a cheering crowd under the voice for 180, ton-forty and checkouts.

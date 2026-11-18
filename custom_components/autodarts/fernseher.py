@@ -42,6 +42,7 @@ SILK = "com.amazon.cloud9"
 PING = 20.0
 # dartboard next to the scoreboard: drawn board or the straightened image of a board camera
 ANSICHTEN = ("graphic", "camera_1", "camera_2", "camera_3")
+EFFEKTE = ("voll", "leicht", "aus")  # effects on the page: all, light (weak TVs: fewer particles, no shaking), none
 _STROEME: tuple[Stream, ...] = ("cam0", "cam1", "cam2")
 SILK_AUS = "DARTNEST_SILK_OFF"  # printed by the ADB command when Silk is switched off
 
@@ -76,6 +77,8 @@ class Fernseher:
         e.setdefault("alle", False)
         if e.get("ansicht") not in ANSICHTEN:
             e["ansicht"] = "camera_1"
+        if e.get("effekte") not in EFFEKTE:
+            e["effekte"] = "voll"
         return e
 
     def token_passt(self, token: str) -> bool:
@@ -110,8 +113,11 @@ class Fernseher:
         return {"boards": liste, "sprache": self.hass.config.language}
 
     async def setzen(self, geraete: list[str] | None, auto: bool | None, neuer_link: bool,
-                     brett: bool | None = None, ansicht: str | None = None, alle: bool | None = None) -> None:
+                     brett: bool | None = None, ansicht: str | None = None, alle: bool | None = None,
+                     effekte: str | None = None) -> None:
         e = self.einst
+        if effekte in EFFEKTE:
+            e["effekte"] = effekte
         if alle is not None:
             e["alle"] = bool(alle)
         if geraete is not None:
@@ -252,6 +258,7 @@ class Fernseher:
                 for v in (sp.daten.get("verlauf") or [])[:5]
             ],
             "sprache": self.hass.config.language,
+            "effekte": self.einst["effekte"],
             "brett": self._brett(),
             "clip": self.daten.clips.neuester() if self.daten is not None else None,
         }

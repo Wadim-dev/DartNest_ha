@@ -74,6 +74,7 @@ class _Quelle:
                 self._neu.set()
                 self._neu = asyncio.Event()
             await asyncio.sleep(max(takt - dauer, dauer, 0.0) if bild else 1.0)
+        self.bild = None  # nobody watches any more: free the last image
 
     async def beenden(self) -> None:
         self.abos.clear()

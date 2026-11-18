@@ -246,3 +246,11 @@ async def test_dartscheibe(hass: HomeAssistant, mit_http, aioclient_mock, hass_c
         await _dienst(hass, "fernseher_setzen", ansicht="camera_9")
     await _dienst(hass, "fernseher_setzen", brett=False)
     assert tv.live()["brett"] is None and _tv(hass)["ansicht"] == "camera_1"
+
+
+async def test_effekte_stufe(hass: HomeAssistant, geladen) -> None:
+    f = geladen.runtime_data.fernseher
+    assert f.live()["effekte"] == "voll"
+    await _dienst(hass, "fernseher_setzen", effekte="leicht")
+    assert f.live()["effekte"] == "leicht"
+    assert hass.states.get("sensor.autodarts_board_players").attributes["tv"]["effekte"] == "leicht"

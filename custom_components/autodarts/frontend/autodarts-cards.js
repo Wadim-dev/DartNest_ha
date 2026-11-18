@@ -154,9 +154,9 @@
   Object.assign(TEXTE.de, {e_herzschlag: 'Herzschlag', e_stroboskop: 'Stroboskop', e_ausblenden: 'Ausblenden', e_wechsel: 'Zwei Farben', e_welle: 'Regenbogen-Welle', e_konfetti: 'Konfetti', e_lauflicht: 'Lauflicht', e_funkeln: 'Funkeln', e_polizei: 'Polizei', e_feuer: 'Feuer', e_gewitter: 'Gewitter', color2: 'Zweite Farbe', fx_more: 'Mehrere Lampen: Welle, Lauflicht, Funkeln und Polizei verteilen sich auf sie.' });
   // texts of the caller card (1.16)
   Object.assign(TEXTE.en, { caller_title: 'Caller', d_caller: 'Announces scores, checkouts and walk-on songs on your speakers', caller_off_hint: 'Off', caller_on_hint: 'On', caller_run: 'Caller on', speakers: 'Speakers', voice: 'Voice', no_voice: 'No voice yet. Add one under Settings → Voice assistants (e.g. Piper, Google Translate).', pack: 'Sound pack', only_voice: 'Voice only', n_files: '{n} sounds', pack_hint: 'Own packs: Media → My media → autodarts → caller → new folder, upload sounds named like 180.mp3, 140.mp3, bust.mp3, leg.mp3, match.mp3, game_on.mp3, require.mp3, name_alex.mp3. Missing sounds are spoken, unless "Pack sounds only" is on.', k_nur_pack: 'Pack sounds only', inv_sum: '{a} of {m} sounds there', inv_fehlt: '{n} missing', inv_worte: 'Calls', inv_namen: 'Player names – at leg, set, match, rest and walk-on', inv_zahlen: 'Numbers – score of every visit and rest after require', inv_tip: 'Green = there, red = missing. Upload a missing sound under exactly this name (mp3, wav, ogg, m4a or flac) to Media → My media → autodarts → caller → this pack. "You require 92" is joined from name, require and 92.',
-    pw_bust: 'Bust – instead of the score when the visit does not count', pw_game_on: 'At the start of a game, after the walk-on songs', pw_require: '"you require" – after the name, before the rest (170 or less)', pw_leg: 'Leg won – then the name', pw_set: 'Set won – then the name', pw_match: 'Match won – then the name', pw_nine: 'Nine-darter – then the name', pw_tournament: 'Tournament won – after the name', pw_walk: 'Walk-on: before the name and the song', pw_shanghai: 'Shanghai (game Shanghai)', pw_killer: 'A player becomes killer (Killer)', pw_eliminated: 'A player is out (Killer, Elimination)', pw_gotcha: 'Gotcha: another player back to zero', pw_goal: 'Goal (Football)', k_nur_pack_an: 'Only the sounds of the pack play. What it does not have stays silent – no voice in between.', k_nur_pack_aus: 'What the pack does not have is spoken by the voice.', say_what: 'Announce', c_punkte: 'Scores', c_rest: 'You require …', c_ende: 'Game shot', c_besondere: 'Specials (9-darter, Shanghai …)', c_toene: 'Sounds for every dart and big moments', c_game_on: 'Game on', c_walkon: 'Walk-on songs', walkons: 'Walk-on songs', walk_secs: 'Play time', no_song: 'none', songs_hint: 'Songs: Media → My media → autodarts → walkon → upload music files. They play at the start of a game, then "Game on".', no_songs: 'No songs yet.', no_players_yet: 'Create players first.', no_speakers: 'Choose at least one speaker.', test_caller: 'Test', saved: 'Saved' });
+    pw_bust: 'Bust – instead of the score when the visit does not count', pw_game_on: 'At the start of a game, after the walk-on songs', pw_require: '"you require" – after the name, before the rest (170 or less)', pw_leg: 'Leg won – then the name', pw_set: 'Set won – then the name', pw_match: 'Match won – then the name', pw_nine: 'Nine-darter – then the name', pw_tournament: 'Tournament won – after the name', pw_walk: 'Walk-on: before the name and the song', pw_shanghai: 'Shanghai (game Shanghai)', pw_killer: 'A player becomes killer (Killer)', pw_eliminated: 'A player is out (Killer, Elimination)', pw_gotcha: 'Gotcha: another player back to zero', pw_goal: 'Goal (Football)', k_nur_pack_an: 'Only the sounds of the pack play. What it does not have stays silent – no voice in between.', k_nur_pack_aus: 'What the pack does not have is spoken by the voice.', say_what: 'Announce', c_punkte: 'Scores', c_rest: 'You require …', c_ende: 'Game shot', c_besondere: 'Specials (9-darter, Shanghai …)', c_ton_dart: 'Every dart', c_ton_moment: 'Fanfares (180, checkout …)', c_ton_publikum: 'Cheering crowd', c_ton_spannung: 'Suspense (riser, heartbeat)', k_toene: 'Sound effects', c_game_on: 'Game on', c_walkon: 'Walk-on songs', walkons: 'Walk-on songs', walk_secs: 'Play time', no_song: 'none', songs_hint: 'Songs: Media → My media → autodarts → walkon → upload music files. They play at the start of a game, then "Game on".', no_songs: 'No songs yet.', no_players_yet: 'Create players first.', no_speakers: 'Choose at least one speaker.', test_caller: 'Test', saved: 'Saved' });
   Object.assign(TEXTE.de, { caller_title: 'Ansager', d_caller: 'Sagt Punkte, Checkouts und Einlaufmusik über deine Lautsprecher an', caller_off_hint: 'Aus', caller_on_hint: 'An', caller_run: 'Ansager an', speakers: 'Lautsprecher', voice: 'Stimme', no_voice: 'Noch keine Stimme. Unter Einstellungen → Sprachassistenten eine hinzufügen (z. B. Piper, Google Translate).', pack: 'Sound-Pack', only_voice: 'Nur Stimme', n_files: '{n} Töne', pack_hint: 'Eigene Packs: Medien → Meine Medien → autodarts → caller → neuer Ordner, Töne hochladen mit Namen wie 180.mp3, 140.mp3, bust.mp3, leg.mp3, match.mp3, game_on.mp3, require.mp3, name_alex.mp3. Was fehlt, spricht die Stimme, außer „Nur Töne aus dem Pack“ ist an.', k_nur_pack: 'Nur Töne aus dem Pack', inv_sum: '{a} von {m} Tönen da', inv_fehlt: '{n} fehlen', inv_worte: 'Ansagen', inv_namen: 'Spielernamen – bei Leg, Satz, Spiel, Rest und Einlauf', inv_zahlen: 'Zahlen – Punkte jeder Aufnahme und Restzahl nach require', inv_tip: 'Grün = da, rot = fehlt. Einen fehlenden Ton genau unter diesem Namen (mp3, wav, ogg, m4a oder flac) hochladen: Medien → Meine Medien → autodarts → caller → dieses Pack. „Du brauchst 92“ wird aus Name, require und 92 zusammengesetzt.',
-    pw_bust: 'Überworfen – statt der Punkte, wenn die Aufnahme nicht zählt', pw_game_on: 'Zum Spielbeginn, nach der Einlaufmusik', pw_require: '„du brauchst“ – nach Name, vor der Restzahl (Rest bis 170)', pw_leg: 'Leg gewonnen – danach der Name', pw_set: 'Satz gewonnen – danach der Name', pw_match: 'Spiel gewonnen – danach der Name', pw_nine: 'Neun-Darter – danach der Name', pw_tournament: 'Turniersieg – nach dem Namen', pw_walk: 'Einlauf: vor Name und Einlaufmusik', pw_shanghai: 'Shanghai (Spielart Shanghai)', pw_killer: 'Spieler wird Killer (Killer)', pw_eliminated: 'Spieler ist raus (Killer, Elimination)', pw_gotcha: 'Gotcha: anderer Spieler muss auf null', pw_goal: 'Tor (Fußball)', k_nur_pack_an: 'Es laufen nur die Töne des Packs. Was fehlt, bleibt still – keine Stimme dazwischen.', k_nur_pack_aus: 'Was dem Pack fehlt, spricht die Stimme.', say_what: 'Was ansagen', c_punkte: 'Punkte', c_rest: 'Du brauchst …', c_ende: 'Game shot', c_besondere: 'Besonderes (9-Darter, Shanghai …)', c_toene: 'Töne bei jedem Dart und großen Momenten', c_game_on: 'Game on', c_walkon: 'Einlaufmusik', walkons: 'Einlaufmusik', walk_secs: 'Spieldauer', no_song: 'keine', songs_hint: 'Lieder: Medien → Meine Medien → autodarts → walkon → Musikdateien hochladen. Sie laufen zum Spielbeginn, danach „Game on“.', no_songs: 'Noch keine Lieder.', no_players_yet: 'Lege zuerst Spieler an.', no_speakers: 'Wähle mindestens einen Lautsprecher.', test_caller: 'Testen', saved: 'Gespeichert' });
+    pw_bust: 'Überworfen – statt der Punkte, wenn die Aufnahme nicht zählt', pw_game_on: 'Zum Spielbeginn, nach der Einlaufmusik', pw_require: '„du brauchst“ – nach Name, vor der Restzahl (Rest bis 170)', pw_leg: 'Leg gewonnen – danach der Name', pw_set: 'Satz gewonnen – danach der Name', pw_match: 'Spiel gewonnen – danach der Name', pw_nine: 'Neun-Darter – danach der Name', pw_tournament: 'Turniersieg – nach dem Namen', pw_walk: 'Einlauf: vor Name und Einlaufmusik', pw_shanghai: 'Shanghai (Spielart Shanghai)', pw_killer: 'Spieler wird Killer (Killer)', pw_eliminated: 'Spieler ist raus (Killer, Elimination)', pw_gotcha: 'Gotcha: anderer Spieler muss auf null', pw_goal: 'Tor (Fußball)', k_nur_pack_an: 'Es laufen nur die Töne des Packs. Was fehlt, bleibt still – keine Stimme dazwischen.', k_nur_pack_aus: 'Was dem Pack fehlt, spricht die Stimme.', say_what: 'Was ansagen', c_punkte: 'Punkte', c_rest: 'Du brauchst …', c_ende: 'Game shot', c_besondere: 'Besonderes (9-Darter, Shanghai …)', c_ton_dart: 'Jeder Dart', c_ton_moment: 'Fanfaren (180, Checkout …)', c_ton_publikum: 'Jubelndes Publikum', c_ton_spannung: 'Spannung (ansteigender Ton, Herzschlag)', k_toene: 'Toneffekte', c_game_on: 'Game on', c_walkon: 'Einlaufmusik', walkons: 'Einlaufmusik', walk_secs: 'Spieldauer', no_song: 'keine', songs_hint: 'Lieder: Medien → Meine Medien → autodarts → walkon → Musikdateien hochladen. Sie laufen zum Spielbeginn, danach „Game on“.', no_songs: 'Noch keine Lieder.', no_players_yet: 'Lege zuerst Spieler an.', no_speakers: 'Wähle mindestens einen Lautsprecher.', test_caller: 'Testen', saved: 'Gespeichert' });
   // texts of tournaments up to 32 and the league (1.16)
   Object.assign(TEXTE.en, { tour_ko: 'Knockout', tour_liga: 'League', tour_hint: 'Knockout for 3–32 players, byes are drawn automatically. Every match uses the settings below.', liga_hint: 'League for 3–10 players: everyone plays everyone once. Win = 2 points, then leg difference.', of16: '{n} of {m}', t_last32: 'Round of 32', liga: 'League', liga_match: 'Match {n} of {m}', table: 'Table', fixtures: 'Matches', t_pl: 'P', t_w: 'W', t_pts: 'Pts', t_legs: 'Legs' });
   Object.assign(TEXTE.de, { tour_ko: 'K.-o.', tour_liga: 'Liga', tour_hint: 'K.-o. für 3–32 Spieler, Freilose werden automatisch verteilt. Jedes Match nutzt die Einstellungen unten.', liga_hint: 'Liga für 3–10 Spieler: jeder spielt einmal gegen jeden. Sieg = 2 Punkte, danach zählt die Leg-Differenz.', of16: '{n} von {m}', t_last32: 'Sechzehntelfinale', liga: 'Liga', liga_match: 'Spiel {n} von {m}', table: 'Tabelle', fixtures: 'Spiele', t_pl: 'Sp', t_w: 'S', t_pts: 'Pkt', t_legs: 'Legs' });
@@ -1156,7 +1156,7 @@ ha-card{padding:14px 14px 16px;container-type:inline-size}
     // another board: forget what was loaded for the old one (caller, lights, TV link …)
     _neuesBoard() {
       this._daten = null; this._lade = false; this._url = undefined; this._alt = null; this._kxAlt = null; this._werteAlt = null;
-      this._gew = this._auto = this._brett = this._tvAns = this._alle = this._neu = null;
+      this._gew = this._auto = this._brett = this._tvAns = this._alle = this._fxs = this._neu = null;
       if (this._m) this._modal(null);
       if (this._abo) this._abo();
       if (this._wechsel) this._wechsel();
@@ -1737,8 +1737,23 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   let hoerAbo = null, hoerOk = false, hoerQuelle = null, hoerNr = 0, hoerBesetzt = false, hoerWarte = null;
   const hoerStop = () => { hoerNr++; hoerWarte = null; hoerBesetzt = false; if (hoerQuelle) try { hoerQuelle.stop(); } catch (e) {} hoerQuelle = null; };
   // one announcement at a time: while one plays only the newest waits (a fast game builds no tail)
+  // sounds decoded once and kept while the caller plays here (preloaded: no fetch, no stutter at the dart);
+  // dropped again when nobody listens or the board is off
+  const hoerCache = new Map(), HOER_MAX = 60;
+  const hoerPuffer = (h, url) => {
+    let p = hoerCache.get(url);
+    if (p) { hoerCache.delete(url); hoerCache.set(url, p); return p; }
+    if (!fxAudio) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return Promise.reject(new Error('no audio')); fxAudio = new C(); }
+    p = fetch(h.hassUrl(url)).then(r => r.arrayBuffer()).then(buf => fxAudio.decodeAudioData(buf));
+    p.catch(() => hoerCache.delete(url));
+    hoerCache.set(url, p);
+    while (hoerCache.size > HOER_MAX) hoerCache.delete(hoerCache.keys().next().value);
+    return p;
+  };
+  const hoerLeeren = () => hoerCache.clear();
   const hoerSpielen = (h, m) => {
     if (m.stop) { hoerStop(); return; }
+    if (m.vorladen) { m.vorladen.forEach(u => hoerPuffer(h, u).catch(() => {})); return; }
     if (!m.url) return;
     if (hoerBesetzt) { hoerWarte = m; return; }
     hoerBesetzt = true;
@@ -1748,19 +1763,18 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       const w = hoerWarte; hoerWarte = null;
       if (w) hoerSpielen(h, w);
     };
-    fetch(h.hassUrl(m.url)).then(r => r.arrayBuffer()).then(buf => {
+    hoerPuffer(h, m.url).then(b => {
       if (nr !== hoerNr) return;
-      if (!fxAudio) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; fxAudio = new C(); }
-      return fxAudio.decodeAudioData(buf).then(b => new Promise(fertig => {
+      return new Promise(fertig => {
         if (nr !== hoerNr) { fertig(); return; }
         if (fxAudio.state === 'suspended') fxAudio.resume();
         const q = fxAudio.createBufferSource(); q.buffer = b; q.connect(fxAudio.destination);
         q.onended = () => { if (hoerQuelle === q) hoerQuelle = null; fertig(); };
         hoerQuelle = q; q.start();
-      }));
+      });
     }).catch(() => {}).then(weiter);
   };
-  let hoerBoard = null;
+  let hoerBoard = null, hoerUhr = 0;
   const hoerPruefen = h => {
     const brd = (h && h.__dnBoard) || null;
     if (hoerAbo && brd !== hoerBoard) { const p = hoerAbo; hoerAbo = null; hoerOk = false; p.then(ab => ab && ab()); }  // other board chosen
@@ -1768,7 +1782,12 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       hoerBoard = brd;
       hoerAbo = h.connection.subscribeMessage(m => hoerSpielen(h, m), Object.assign({ type: 'autodarts/ansager/hoeren' }, brd ? { board: brd } : {}))
         .then(ab => { hoerOk = true; return ab; }, () => null);  // older integration: the phone voice speaks instead
-    } else if (!hoerKarten.size && hoerAbo) { const p = hoerAbo; hoerAbo = null; hoerOk = false; p.then(ab => ab && ab()); hoerStop(); }
+    } else if (!hoerKarten.size && hoerAbo) { const p = hoerAbo; hoerAbo = null; hoerOk = false; p.then(ab => ab && ab()); hoerStop(); hoerLeeren(); }
+    if (!hoerUhr) hoerUhr = setInterval(() => {
+      // board switched off: free the sounds (they are loaded again with the next game)
+      const k = hoerKarten.values().next().value, hh = k && k._h, v = hh && hh.states && E(hh, 'sensor.connection');
+      if (hoerCache.size && v && (hh.states[v] || {}).state === 'Offline') hoerLeeren();
+    }, 60000);
   };
   const fxKlang = art => {
     try {
@@ -3126,7 +3145,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   customElements.define('autodarts-lights-card', AutodartsLightsCard);
 
   /* ---------- Caller card: announcements and walk-on songs on the speakers of Home Assistant ---------- */
-  const ANSAGE_ARTEN = ['punkte', 'rest', 'ende', 'besondere', 'toene', 'game_on', 'walkon'];
+  const ANSAGE_ARTEN = ['punkte', 'rest', 'ende', 'besondere', 'game_on', 'walkon'];
+  const TON_ARTEN = ['ton_dart', 'ton_moment', 'ton_publikum', 'ton_spannung'];  // sound effects, each on its own
   // sounds a caller pack can have (file name = key + .mp3/.wav/…), see ansager.py
   const PACK_WORTE = ['bust', 'game_on', 'require', 'leg', 'set', 'match', 'nine', 'tournament', 'walk', 'shanghai', 'killer', 'eliminated', 'gotcha', 'goal'];
   const PUNKTE_MOEGLICH = (() => {
@@ -3162,7 +3182,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       this._alt = null; this._zeichnen();
       if (this._dlg) this._dialog(this._dlg);  // keep an open dialog up to date (progress)
     }
-    _e() { return Object.assign({ aktiv: false, lautsprecher: [], stimme: '', pack: '', nur_pack: false, punkte: true, rest: true, ende: true, besondere: true, toene: true, game_on: true, walkon: true, walkon_sekunden: 15, songs: {} }, (this._daten || {}).einstellungen || {}); }
+    _e() { return Object.assign({ aktiv: false, lautsprecher: [], stimme: '', pack: '', nur_pack: false, punkte: true, rest: true, ende: true, besondere: true, ton_dart: true, ton_moment: true, ton_publikum: true, ton_spannung: true, game_on: true, walkon: true, walkon_sekunden: 15, songs: {} }, (this._daten || {}).einstellungen || {}); }
     _name(id) { const s = st(this._h, id); return (s && s.attributes.friendly_name) || id; }
     _stimme() { const d = this._daten || {}; return this._e().stimme || (d.stimmen || [])[0] || ''; }
     _google() { const ent = this._h.entities && this._h.entities[this._stimme()]; return !!ent && ent.platform === 'google_generative_ai_conversation'; }
@@ -3221,7 +3241,8 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       clearTimeout(this._ezT);
       if (ez.laeuft || (d.pruefung || {}).laeuft) this._ezT = setTimeout(() => { if (this.isConnected) this._laden(); }, 4000);
       // 3 · what
-      s += '<div class="schritt">' + t('k_s3') + '</div><div class="chips">' + ANSAGE_ARTEN.map(k => '<button class="chip feld' + (e[k] ? ' an' : '') + '" data-act="art" data-v="' + k + '"><ha-icon icon="' + (e[k] ? 'mdi:check' : 'mdi:close') + '" style="--mdc-icon-size:16px"></ha-icon>' + t('c_' + k) + '</button>').join('') + '</div>';
+      s += '<div class="schritt">' + t('k_s3') + '</div><div class="chips">' + ANSAGE_ARTEN.map(k => '<button class="chip feld' + (e[k] ? ' an' : '') + '" data-act="art" data-v="' + k + '"><ha-icon icon="' + (e[k] ? 'mdi:check' : 'mdi:close') + '" style="--mdc-icon-size:16px"></ha-icon>' + t('c_' + k) + '</button>').join('') + '</div>' +
+        '<label class="lb">' + t('k_toene') + '</label><div class="chips">' + TON_ARTEN.map(k => '<button class="chip feld' + (e[k] ? ' an' : '') + '" data-act="art" data-v="' + k + '"><ha-icon icon="' + (e[k] ? 'mdi:check' : 'mdi:close') + '" style="--mdc-icon-size:16px"></ha-icon>' + t('c_' + k) + '</button>').join('') + '</div>';
       // walk-on songs
       if (e.walkon) {
         s += auf('walk', this._auf.walk, 'mdi:music-note', t('k_s4'), Object.keys(e.songs).length + ' / ' + spieler.length);
@@ -3317,12 +3338,12 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
   customElements.define('autodarts-caller-card', AutodartsCallerCard);
 
   /* ---------- TV card: the scoreboard on Fire TV, Google TV or any browser ---------- */
-  Object.assign(TEXTE.en, { live_full: 'Live view in full screen', tv_title: 'TV', d_tv: 'Shows the game big on the TV, with clock and ranking in between', tv_sub_none: 'No TV chosen yet', tv_show: 'Show on TV', tv_stop: 'Take off TV', tv_pick: 'Which TV?', tv_auto: 'Show by itself when a game starts', tv_auto_s: 'The TV switches on and opens the scoreboard', tv_link: 'Link for any browser', tv_copy: 'Copy', tv_open: 'Open', tv_new: 'New link', tv_new_q: 'Old link stops working – sure?', tv_copied: 'Link copied',
+  Object.assign(TEXTE.en, { live_full: 'Live view in full screen', tv_fx: 'Effects', tv_fx_voll: 'Full', tv_fx_leicht: 'Light', tv_fx_aus: 'Off', tv_fx_s: 'Light: fewer particles, no shaking or flashes – smoother on weaker TVs such as Fire TV sticks.', tv_title: 'TV', d_tv: 'Shows the game big on the TV, with clock and ranking in between', tv_sub_none: 'No TV chosen yet', tv_show: 'Show on TV', tv_stop: 'Take off TV', tv_pick: 'Which TV?', tv_auto: 'Show by itself when a game starts', tv_auto_s: 'The TV switches on and opens the scoreboard', tv_link: 'Link for any browser', tv_copy: 'Copy', tv_open: 'Open', tv_new: 'New link', tv_new_q: 'Old link stops working – sure?', tv_copied: 'Link copied',
     tv_none: 'No suitable TV found yet. Add it in Home Assistant first:', tv_firetv: 'Fire TV and Android TV: integration "Android Debug Bridge"', tv_gtv: 'Google TV: integration "Android TV Remote"',
     tv_hint: 'Between games the TV shows the clock, the ranking and the last games. The link works without login – share it only at home.', tv_sent: 'Sent to the TV', tv_off: 'off', tv_on_state: 'on', tv_preview: 'Preview', settings_title: 'Settings', d_settings: 'All DartNest settings behind clear buttons: board, lights, caller, TV',
     m_board: 'Board', m_board_s: 'Cameras, calibration, power', m_lights_s: 'Lights at 180, checkout …', m_caller_s: 'Speakers, voice, walk-on songs', m_tv_s: 'Scoreboard and clock on the TV', online: 'online', offline: 'offline', n_tv: '{n} TV',
     tv_board: 'Show the dartboard', tv_board_s: 'Next to the score, with the darts of the visit', tv_v_g: 'Drawn', tv_v_c: 'Camera {n}', tv_v_hint: 'The camera image appears while the board detects darts, otherwise the drawn board.', tv_board_on: 'Dartboard on the TV' });
-  Object.assign(TEXTE.de, { live_full: 'Live-Anzeige im Vollbild', tv_title: 'Fernseher', d_tv: 'Zeigt das Spiel groß auf dem Fernseher, dazwischen Uhr und Rangliste', tv_sub_none: 'Noch kein Fernseher gewählt', tv_show: 'Auf dem Fernseher zeigen', tv_stop: 'Vom Fernseher nehmen', tv_pick: 'Welcher Fernseher?', tv_auto: 'Von selbst zeigen, wenn ein Spiel startet', tv_auto_s: 'Der Fernseher geht an und öffnet die Anzeige', tv_link: 'Link für jeden Browser', tv_copy: 'Kopieren', tv_open: 'Öffnen', tv_new: 'Neuer Link', tv_new_q: 'Alter Link geht dann nicht mehr – sicher?', tv_copied: 'Link kopiert',
+  Object.assign(TEXTE.de, { live_full: 'Live-Anzeige im Vollbild', tv_fx: 'Effekte', tv_fx_voll: 'Voll', tv_fx_leicht: 'Leicht', tv_fx_aus: 'Aus', tv_fx_s: 'Leicht: weniger Teilchen, kein Wackeln und Blitzen – flüssiger auf schwächeren Fernsehern wie Fire-TV-Sticks.', tv_title: 'Fernseher', d_tv: 'Zeigt das Spiel groß auf dem Fernseher, dazwischen Uhr und Rangliste', tv_sub_none: 'Noch kein Fernseher gewählt', tv_show: 'Auf dem Fernseher zeigen', tv_stop: 'Vom Fernseher nehmen', tv_pick: 'Welcher Fernseher?', tv_auto: 'Von selbst zeigen, wenn ein Spiel startet', tv_auto_s: 'Der Fernseher geht an und öffnet die Anzeige', tv_link: 'Link für jeden Browser', tv_copy: 'Kopieren', tv_open: 'Öffnen', tv_new: 'Neuer Link', tv_new_q: 'Alter Link geht dann nicht mehr – sicher?', tv_copied: 'Link kopiert',
     tv_none: 'Noch kein passender Fernseher gefunden. Zuerst in Home Assistant hinzufügen:', tv_firetv: 'Fire TV und Android TV: Integration „Android Debug Bridge“', tv_gtv: 'Google TV: Integration „Android TV Remote“',
     tv_hint: 'Zwischen den Spielen zeigt der Fernseher Uhr, Rangliste und die letzten Spiele. Der Link geht ohne Anmeldung – nur zu Hause weitergeben.', tv_sent: 'An den Fernseher geschickt', tv_off: 'aus', tv_on_state: 'an', tv_preview: 'Vorschau', settings_title: 'Einstellungen', d_settings: 'Alle DartNest-Einstellungen hinter klaren Knöpfen: Board, Licht, Ansager, Fernseher',
     m_board: 'Board', m_board_s: 'Kameras, Kalibrierung, Strom', m_lights_s: 'Licht bei 180, Checkout …', m_caller_s: 'Lautsprecher, Stimme, Einlaufmusik', m_tv_s: 'Spielstand und Uhr auf dem Fernseher', online: 'online', offline: 'offline', n_tv: '{n} Fernseher',
@@ -3411,11 +3432,17 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (this._tvAns && this._tvAns === tv.ansicht) this._tvAns = null;
       const al = this._alle != null ? this._alle : !!tv.alle;
       if (this._alle != null && this._alle === !!tv.alle) this._alle = null;
+      const fxs = this._fxs || tv.effekte || 'voll';
+      if (this._fxs && this._fxs === tv.effekte) this._fxs = null;
       s += '<button class="schalter feld' + (auto ? ' an' : '') + '" data-act="auto"' + (gew.length ? '' : ' disabled') + '><ha-icon icon="' + (auto ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_auto') + '</b><small>' + t('tv_auto_s') + '</small></span></button>' +
         '<button class="schalter feld' + (br ? ' an' : '') + '" data-act="brett"><ha-icon icon="' + (br ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_board') + '</b><small>' + t('tv_board_s') + '</small></span></button>' +
         (br ? '<div class="ansicht">' + [['graphic', 'mdi:bullseye', t('tv_v_g')], ['camera_1', 'mdi:cctv', t('tv_v_c', { n: 1 })], ['camera_2', 'mdi:cctv', t('tv_v_c', { n: 2 })], ['camera_3', 'mdi:cctv', t('tv_v_c', { n: 3 })]]
           .map(([v, ic, x]) => '<button class="feld' + (v === an ? ' an' : '') + '" data-act="ansicht" data-v="' + v + '"><ha-icon icon="' + ic + '"></ha-icon>' + x + '</button>').join('') + '</div><div class="klein">' + t('tv_v_hint') + '</div>' : '') +
         (boards(h).length > 1 ? '<button class="schalter feld' + (al ? ' an' : '') + '" data-act="alle"><ha-icon icon="' + (al ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline') + '"></ha-icon><span><b>' + t('tv_all') + '</b><small>' + t('tv_all_s') + '</small></span></button>' : '') +
+        '<div class="titel"><ha-icon icon="mdi:creation"></ha-icon>' + t('tv_fx') + '</div><div class="ansicht" style="grid-template-columns:repeat(3,1fr)">' +
+        [['voll', 'mdi:creation', t('tv_fx_voll')], ['leicht', 'mdi:feather', t('tv_fx_leicht')], ['aus', 'mdi:close-circle-outline', t('tv_fx_aus')]]
+          .map(([v, ic, x]) => '<button class="feld' + (v === fxs ? ' an' : '') + '" data-act="tvfx" data-v="' + v + '"><ha-icon icon="' + ic + '"></ha-icon>' + x + '</button>').join('') +
+        '</div><div class="klein">' + t('tv_fx_s') + '</div>' +
         '<div class="titel"><ha-icon icon="mdi:link-variant"></ha-icon>' + t('tv_link') + '</div>' +
         '<div class="link feld"><code>' + esc(tv.url) + '</code><button class="feld" data-act="kopie"><ha-icon icon="mdi:content-copy"></ha-icon>' + t('tv_copy') + '</button></div>' +
         '<button class="neuer feld" data-act="neu" data-lbl="' + t('tv_new') + '"><ha-icon icon="mdi:link-variant-off" style="--mdc-icon-size:16px"></ha-icon><span class="lbl">' + t('tv_new') + '</span></button>' +
@@ -3435,6 +3462,7 @@ ha-card.fx-stoss{animation:fx-stoss .45s ease-out}
       if (act === 'geraet') { const id = b.dataset.id; this._gew = gew.includes(id) ? gew.filter(x => x !== id) : gew.concat(id); this._alt = null; this._zeichnen(); this._setzen({ geraete: this._gew }); return; }
       if (act === 'auto') { this._auto = !(this._auto != null ? this._auto : tv.auto); this._alt = null; this._zeichnen(); this._setzen({ auto: this._auto }); return; }
       if (act === 'brett') { this._brett = !(this._brett != null ? this._brett : !!tv.brett); this._alt = null; this._zeichnen(); this._setzen({ brett: this._brett }); return; }
+      if (act === 'tvfx') { this._fxs = b.dataset.v; this._alt = null; this._zeichnen(); this._setzen({ effekte: this._fxs }); return; }
       if (act === 'alle') { this._alle = !(this._alle != null ? this._alle : !!tv.alle); this._alt = null; this._zeichnen(); this._setzen({ alle: this._alle }); return; }
       if (act === 'ansicht') { this._tvAns = b.dataset.v; this._alt = null; this._zeichnen(); this._setzen({ ansicht: this._tvAns }); return; }
       if (act === 'oeffnen') { if (tv.url) window.open(new URL(tv.url).pathname, '_blank', 'noopener'); return; }
