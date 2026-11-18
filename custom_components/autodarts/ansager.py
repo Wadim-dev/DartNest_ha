@@ -57,6 +57,7 @@ GOOGLE_AI = "google_generative_ai_conversation"  # voices with selectable speake
 ORIGINAL = "_original"  # copies of pack files before a repair (1.20)
 FENSTER = 0.02  # seconds per window when looking for pauses in a sound
 STILLE = 0.2  # a pause of at least this long separates two parts of a sound
+NACHLAUF = 0.35  # seconds the speakers need after a sound before the next one
 MEHRTEILIG = {"leg", "set", "match", "nine", "tournament", "walk"}  # pack sounds that may have a pause of their own
 VERSUCHE = 3  # a score sound that does not say its number is spoken this often at most
 HOER_RATE = 16000  # speech-to-text gets 16 kHz 16-bit mono PCM
@@ -183,6 +184,17 @@ TEXTE = {
 
 def _slug(name: Any) -> str:
     return "name_" + (re.sub(r"\W+", "_", str(name).lower()).strip("_") or "x")
+
+
+def _dauer(pfad: Path) -> float:
+    """Length of a sound file in seconds (WAV exact, other files estimated from their size)."""
+    try:
+        if pfad.suffix.lower() == ".wav":
+            with wave.open(str(pfad), "rb") as w:
+                return w.getnframes() / float(w.getframerate() or 1)
+        return pfad.stat().st_size / 16000  # about 128 kbit/s
+    except (OSError, wave.Error, EOFError):
+        return 2.0
 
 
 def _mischen(ordner: Path, dateien: list[str]) -> str | None:
@@ -433,6 +445,12 @@ class Ansager:
         self.einst: dict[str, Any] = EINSTELLUNGEN({})
         self._puffer: list[tuple[str, dict[str, Any]]] = []
         self._geplant = False
+        # one announcement at a time: while one plays only the newest waits, older ones are dropped,
+        # so a fast game never builds a long tail of announcements (1.38.2)
+        self._spricht = False
+        self._frei_ab = 0.0
+        self._wartet: tuple[Any, ...] | None = None
+        self._frei_wecker: Callable[[], None] | None = None
         self._pack: dict[str, str] = {}
         self._aufgaben: set[asyncio.Task[None]] = set()
         self._einlauf: asyncio.Task[None] | None = None
@@ -499,6 +517,10 @@ class Ansager:
         if self._wecker:
             self._wecker()
             self._wecker = None
+        if self._frei_wecker:
+            self._frei_wecker()
+            self._frei_wecker = None
+        self._wartet = None
         alle = [t for t in [*self._aufgaben, self._einlauf, self._erzeuger, self._hoerprobe] if t]
         for t in alle:
             t.cancel()
@@ -512,6 +534,7 @@ class Ansager:
         if not self._boxen and not self._hoerer:
             return
         if typ == "game_started":
+            self._wartet = None  # nothing of the last game is said any more
             if self._einlauf:
                 self._einlauf.cancel()
             self._einlauf = self.hass.async_create_background_task(self._spielbeginn(daten), "autodarts walk-on")
@@ -528,7 +551,46 @@ class Ansager:
         self._geplant = False
         puffer, self._puffer = self._puffer, []
         if teil := self.ansage(puffer):
-            self._los(self._sagen(*teil))
+            self._einreihen(teil)
+
+    @callback
+    def _einreihen(self, teil: tuple[Any, ...]) -> None:
+        """Play now, or keep it as the one that comes next (replacing an older one that waits)."""
+        rest = self._frei_ab - self.hass.loop.time()
+        if not self._spricht and rest <= 0:
+            self._wartet = None
+            self._los(self._der_reihe_nach(teil))
+            return
+        if self._wartet is not None:
+            _LOGGER.debug("Caller: dropped %s, a newer announcement came", self._wartet[1])
+        self._wartet = teil
+        if not self._spricht:
+            self._frei_planen(rest)
+
+    @callback
+    def _frei_planen(self, sekunden: float) -> None:
+        if self._frei_wecker:
+            self._frei_wecker()
+
+        @callback
+        def frei(_jetzt: Any) -> None:
+            self._frei_wecker = None
+            if self._wartet is not None and not self._spricht:
+                teil, self._wartet = self._wartet, None
+                self._los(self._der_reihe_nach(teil))
+
+        self._frei_wecker = async_call_later(self.hass, max(0.0, sekunden), frei)
+
+    async def _der_reihe_nach(self, teil: tuple[Any, ...]) -> None:
+        self._spricht = True
+        dauer = 0.0
+        try:
+            dauer = await self._sagen(*teil)
+        finally:
+            self._spricht = False
+            self._frei_ab = self.hass.loop.time() + dauer
+            if self._wartet is not None:
+                self._frei_planen(dauer)
 
     def ansage(self, puffer: list[tuple[str, dict[str, Any]]]) -> tuple[str, str, list[str]] | None:
         """(sound file key, text, keys of the pack files to join) for the events of one visit, or None."""
@@ -668,8 +730,11 @@ class Ansager:
         return None
 
     async def _sagen(self, schluessel: str, text: str, keys: list[str] | None = None, sprecher: str | None = None,
-                     stimme_immer: bool = False) -> None:
-        """Play the pack files (joined), the pack file of the key, or speak the text (not with "pack only")."""
+                     stimme_immer: bool = False) -> float:
+        """Play the pack files (joined), the pack file of the key, or speak the text (not with "pack only").
+
+        Returns about how long it plays (seconds), so the next announcement waits for it.
+        """
         try:
             if sprecher:
                 keys, schluessel = None, ""
@@ -680,19 +745,20 @@ class Ansager:
                 datei = await self.hass.async_add_executor_job(_mischen, ordner, [self._pack[k] for k in keys])
                 if datei:
                     await self._spielen(self._url((*ORDNER, self.einst["pack"], MIX), datei))
-                    return
+                    return await self._laenge(ordner / MIX / datei)
             if keys:
                 schluessel = keys[0]
             if schluessel and schluessel.lower() in self._pack:
-                await self._spielen(self._url((*ORDNER, self.einst["pack"]), self._pack[schluessel.lower()]))
-                return
+                datei = self._pack[schluessel.lower()]
+                await self._spielen(self._url((*ORDNER, self.einst["pack"]), datei))
+                return await self._laenge(self._basis.joinpath(*ORDNER, self.einst["pack"], datei))
             if self.einst["nur_pack"] and self.einst["pack"] and not sprecher and not stimme_immer:
                 _LOGGER.debug("Caller: pack %s has no sound for %s", self.einst["pack"], keys or schluessel or text)
-                return
+                return 0.0
             stimme = self._stimme()
             if not stimme:
                 _LOGGER.warning("Caller: no voice (TTS) available")
-                return
+                return 0.0
             optionen = {"voice": sprecher} if sprecher and self._google(stimme) else self._optionen(stimme)
             if self._boxen:
                 await self._dienst("tts", "speak", {"entity_id": stimme, "media_player_entity_id": self.einst["lautsprecher"],
@@ -701,10 +767,16 @@ class Ansager:
                 from homeassistant.components.tts import generate_media_source_id
 
                 await self._handy(generate_media_source_id(self.hass, text, engine=stimme, options=optionen, cache=True))
+            # the voice: about 14 characters a second plus the start of the speakers
+            return 1.0 + len(text) / 14 + NACHLAUF
         except asyncio.CancelledError:
             raise
         except Exception:
             _LOGGER.warning("Caller could not play %s", schluessel or text, exc_info=True)
+        return 0.0
+
+    async def _laenge(self, pfad: Path) -> float:
+        return min(12.0, await self.hass.async_add_executor_job(_dauer, pfad)) + NACHLAUF
 
     async def _spielen(self, url: str, ansage: bool = True) -> None:
         if self._hoerer:

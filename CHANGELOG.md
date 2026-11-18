@@ -3,6 +3,14 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.38.2
+
+- **Fixed: announcements piled up.** When the game was faster than the caller, every visit was still announced one after the other, long after it was thrown. Now one announcement plays at a time; while it plays only the newest one waits and the ones in between are dropped. This holds for the speakers and for phones and tablets. A new game forgets what still waited.
+
+**Deutsch**
+
+- **Behoben: Ansagen stauten sich.** War das Spiel schneller als der Ansager, kam jede Aufnahme trotzdem der Reihe nach, lange nachdem sie geworfen war. Jetzt läuft immer nur eine Ansage; solange sie spielt, wartet nur die neueste, die dazwischen fallen weg. Das gilt für die Lautsprecher und für Handy und Tablet. Ein neues Spiel vergisst, was noch wartete.
+
 ## 1.38.1
 
 - **Board bar in DartNest.** With more than one board, DartNest shows all boards at the top with their state (*playing*, *ready*, *off*); one tap switches every page. The small board button inside the cards stays for cards on your own dashboard.
