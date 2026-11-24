@@ -6,13 +6,14 @@ from http import HTTPStatus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.autodarts import spiel as spiel_modul
 from custom_components.autodarts.const import CONF_HOST, CONF_PORT, DOMAIN
+from custom_components.autodarts.coordinator import board_geraet
 
 from .conftest import PORT, board_mock
 
@@ -68,13 +69,13 @@ async def test_eigene_entitaeten_und_geraete(hass: HomeAssistant, zwei) -> None:
     eins, zwei_ = _spiel(hass, erstes), _spiel(hass, zweites)
     assert eins.startswith("sensor.autodarts_board_") and zwei_.startswith("sensor.autodarts_board_2_") and eins != zwei_
     assert reg.async_get_entity_id("sensor", DOMAIN, f"autodarts_{zweites.entry_id}_verbindung").startswith("sensor.autodarts_board_2_")
-    geraete = dr.async_get(hass)
-    assert geraete.async_get_device(identifiers={(DOMAIN, zweites.entry_id)}).name == "Autodarts Board 2"
+    assert board_geraet(hass, zweites.entry_id).name == "Autodarts Board 2"
+    assert board_geraet(hass, "gibt-es-nicht") is None
 
 
 async def test_spiel_je_board_spieler_gemeinsam(hass: HomeAssistant, zwei) -> None:
     erstes, zweites = zwei
-    geraet = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, zweites.entry_id)})
+    geraet = board_geraet(hass, zweites.entry_id)
     a, b = await _spieler(hass, "Alex", "Sam")
     await hass.services.async_call(DOMAIN, "spiel_starten", {"spieler": [a, b], "board": geraet.id}, blocking=True)
     await hass.async_block_till_done()

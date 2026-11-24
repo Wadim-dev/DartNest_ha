@@ -212,9 +212,22 @@ def ist_haupt(entry: ConfigEntry) -> bool:
     return entry.unique_id == DOMAIN
 
 
+def board_geraet(hass: HomeAssistant, entry_id: str) -> dr.DeviceEntry | None:
+    """Device of a board, looked up among the devices of its own config entry.
+
+    Works on every Home Assistant version: the lookup by identifier alone is
+    deprecated because identifiers are no longer unique across config entries.
+    """
+    kennung = (DOMAIN, entry_id)
+    for geraet in dr.async_entries_for_config_entry(dr.async_get(hass), entry_id):
+        if kennung in geraet.identifiers:
+            return geraet
+    return None
+
+
 def board_name(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Name of the board as the user sees it (device name, changeable in Home Assistant)."""
-    geraet = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    geraet = board_geraet(hass, entry.entry_id)
     return str((geraet and (geraet.name_by_user or geraet.name)) or entry.title)
 
 
