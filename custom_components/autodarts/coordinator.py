@@ -214,7 +214,12 @@ def ist_haupt(entry: ConfigEntry) -> bool:
 
 def board_name(hass: HomeAssistant, entry: ConfigEntry) -> str:
     """Name of the board as the user sees it (device name, changeable in Home Assistant)."""
-    geraet = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    reg = dr.async_get(hass)
+    suche = getattr(reg, "async_get_device_by_identifier", None)
+    if suche is not None:
+        geraet = suche((DOMAIN, entry.entry_id), entry.entry_id)
+    else:  # Home Assistant before the device registry got per-entry lookups
+        geraet = reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     return str((geraet and (geraet.name_by_user or geraet.name)) or entry.title)
 
 

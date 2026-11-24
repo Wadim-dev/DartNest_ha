@@ -69,12 +69,12 @@ async def test_eigene_entitaeten_und_geraete(hass: HomeAssistant, zwei) -> None:
     assert eins.startswith("sensor.autodarts_board_") and zwei_.startswith("sensor.autodarts_board_2_") and eins != zwei_
     assert reg.async_get_entity_id("sensor", DOMAIN, f"autodarts_{zweites.entry_id}_verbindung").startswith("sensor.autodarts_board_2_")
     geraete = dr.async_get(hass)
-    assert geraete.async_get_device(identifiers={(DOMAIN, zweites.entry_id)}).name == "Autodarts Board 2"
+    assert geraete.async_get_device_by_identifier((DOMAIN, zweites.entry_id), zweites.entry_id).name == "Autodarts Board 2"
 
 
 async def test_spiel_je_board_spieler_gemeinsam(hass: HomeAssistant, zwei) -> None:
     erstes, zweites = zwei
-    geraet = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, zweites.entry_id)})
+    geraet = dr.async_get(hass).async_get_device_by_identifier((DOMAIN, zweites.entry_id), zweites.entry_id)
     a, b = await _spieler(hass, "Alex", "Sam")
     await hass.services.async_call(DOMAIN, "spiel_starten", {"spieler": [a, b], "board": geraet.id}, blocking=True)
     await hass.async_block_till_done()

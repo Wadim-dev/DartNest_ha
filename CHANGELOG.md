@@ -3,6 +3,14 @@
 Each version lists the changes in English and German. The release notes on GitHub
 and in the Home Assistant update dialog are taken from this file automatically.
 
+## 1.42.1
+
+- **Ready for coming Home Assistant versions.** The board name is now looked up in the device registry the way current Home Assistant versions ask for. The old lookup logged a warning and stops working in Home Assistant 2027.8. Nothing changes for you.
+
+**Deutsch**
+
+- **Bereit für kommende Home-Assistant-Versionen.** Der Name des Boards wird jetzt so im Geräteverzeichnis gesucht, wie aktuelle Home-Assistant-Versionen es verlangen. Die alte Suche schrieb eine Warnung ins Log und funktioniert ab Home Assistant 2027.8 nicht mehr. Für dich ändert sich nichts.
+
 ## 1.42.0
 
 - **TV page rebuilt to run smoothly.** Match dart, the winner screen and big visits stuttered on tablets, phones and TV sticks; the live image flickered and letters of the winner's name could be missing. The effects are built anew: sparks, embers, fireworks and confetti are drawn on one canvas instead of hundreds of single elements, shock waves and the heartbeat glow are only moved and faded instead of repainted every frame, and the oversized layers behind the winner are gone. While the board spins at the match dart it shows a still image. The look stays the same.
